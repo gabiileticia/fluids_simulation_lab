@@ -15,7 +15,7 @@ int main()
 	std::cout << "Generating a sample scene...";
 
 	// Load a obj surface mesh
-	const std::vector<learnSPH::TriMesh> meshes = learnSPH::read_tri_meshes_from_obj("../res/box.obj");
+	const std::vector<learnSPH::TriMesh> meshes = learnSPH::read_tri_meshes_from_obj("./res/box.obj");
 	const learnSPH::TriMesh& box = meshes[0];
 
 	// Sample the mesh with particles
@@ -47,7 +47,7 @@ int main()
 		}
 
 		// Save output
-		const std::string filename = "../res/example_" + std::to_string(time_step) + ".vtk";
+		const std::string filename = "./res/example_" + std::to_string(time_step) + ".vtk";
 		learnSPH::write_particles_to_vtk(filename, particles, particles_scalar_data, particles_vector_data);
 	}
 
