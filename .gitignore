@@ -11,8 +11,14 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 
-##Output folders
+## Output folders
 /output
 /framework/res
 
 *Zone.Identifier
+*.vtk
+*.a
+
+## From the course
+tests/learnSPH_tests
+app/learnSPH_app
