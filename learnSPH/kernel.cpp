@@ -43,11 +43,12 @@ double learnSPH::kernel::cubic_grad_spline(const double q)
 
 Eigen::Vector3d learnSPH::kernel::kernel_gradient(Eigen::Vector3d x, const double h)
 {
-	const double q = x.norm() / h; // Maybe pass the norm already computed to the function would be better
+	const x_norm = x.norm();
+	const double q = x_norm / h; 
 	double del_w_del_q = (1 / (h*h*h)) * cubic_grad_spline(q);
-	if (x.norm() == 0.0){
+	if (x_norm == 0.0){
 		return Eigen::Vector3d(0, 0, 0);
 	}
-	return del_w_del_q * x / (h * x.norm());
+	return x * del_w_del_q / (h * x_norm);
 }
 
