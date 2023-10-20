@@ -22,3 +22,6 @@ _deps
 ## From the course
 tests/learnSPH_tests
 app/learnSPH_app
+
+## VSCode related
+.vscode
