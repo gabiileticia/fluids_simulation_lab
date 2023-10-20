@@ -52,8 +52,11 @@ struct KernelFunction
         return learnSPH::kernel::kernel_function(xi - xj,h) >= 0.0;
     }
 
-    bool compactness()
+    bool compactness(Eigen::Vector3d xi, Eigen::Vector3d xj, double h, double beta, double tolerance)
     {
+        if ((xi - xj).norm() > beta * h){
+            return fabs(learnSPH::kernel::kernel_function(xi - xj,h) - 0.0) < tolerance;
+        }
         return true;
     }
 };
@@ -128,11 +131,20 @@ TEST_CASE( "Tests for our kernel function", "[kernel]" )
     }
     
     SECTION("Testing properties of the kernel function"){
+        for(int i = 0 ; i < 1000; i++)
+        {
+            double beta = 2.0;
+            double h = dis(gen) * 5;
+            Eigen::Vector3d xi = Eigen::Vector3d(dis(gen), dis(gen), dis(gen));
+            Eigen::Vector3d xj = Eigen::Vector3d(dis(gen), dis(gen), dis(gen));
+
+            REQUIRE(kernel.compactness(xi,xj,h,beta,EPSILON));
+        }
+        
         REQUIRE(kernel.unity());
         REQUIRE(kernel.symmetry(xi,xj,h));
         REQUIRE(kernel.delta());
         REQUIRE(kernel.nonnegative(xi,xj,h));
-        REQUIRE(kernel.compactness());
     }
 
     SECTION("Testing the gradient cubic spline") {
