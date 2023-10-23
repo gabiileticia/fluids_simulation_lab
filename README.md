@@ -2,6 +2,8 @@
 
 ## To compile
 
+group: 2
+
 ```
 cmake .
 cmake --build ./
