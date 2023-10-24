@@ -13,28 +13,45 @@
 
 struct CubicSpline
 {
-    static constexpr double alpha = 3.0 / (2.0 * learnSPH::kernel::PI);
-    bool branch01(double tolerance)
+    bool branch01_00(double tolerance)
     {
+        // Branch 0-1
+        const double q = 0.0;
+        return fabs(learnSPH::kernel::cubic_spline(q) - 0.31831) < tolerance;
+    }
+
+    bool branch01_05(double tolerance)
+    {
+        // Branch 0-1
         const double q = 0.5;
-        const double result = (alpha * (2.0/3.0 - q * q + .5*std::pow(q,3)));
-        std::cout << "\nExpected result: " << result;
-        return fabs(learnSPH::kernel::cubic_spline(q) - result) < tolerance;
-        //return fabs(learnSPH::kernel::cubic_spline(q) - 0.228785) < tolerance;
+        return fabs(learnSPH::kernel::cubic_spline(q) - 0.228785) < tolerance;
         
     }
 
-    bool branch12(double tolerance)
-    {  
+    bool branch12_10(double tolerance)
+    {
+        // Branch 1-2
+        const double q = 1.0;
+        return fabs(learnSPH::kernel::cubic_spline(q) - 0.0795775) < tolerance;
+    }
+    
+    bool branch12_15(double tolerance)
+    {
+        // Branch 1-2
         const double q = 1.5;
-        const double result = (alpha * (1.0/6.0*std::pow(2-q, 3)));
-        std::cout << "\nExpected result: " << result;
-        return fabs(learnSPH::kernel::cubic_spline(q) - result) < tolerance;
-        //return fabs(learnSPH::kernel::cubic_spline(q) - 0.00994718) < tolerance;
+        return fabs(learnSPH::kernel::cubic_spline(q) - 0.00994718) < tolerance;
     }
 
-    bool branch2plus()
+    bool branch2plus_20()
     {
+        // Branch 2+
+        const double q = 2.0;
+        return learnSPH::kernel::cubic_spline(q) == 0.0;
+    }
+
+    bool branch2plus_25()
+    {
+        // Branch 2+
         const double q = 2.5;
         return learnSPH::kernel::cubic_spline(q) == 0.0;
     }
@@ -62,28 +79,55 @@ struct KernelFunction
         return learnSPH::kernel::kernel_function(xi - xj,h) >= 0.0;
     }
 
-    bool compactness()
+    bool compactness(Eigen::Vector3d xi, Eigen::Vector3d xj, double h, double beta, double tolerance)
     {
+        if ((xi - xj).norm() > beta * h){
+            return learnSPH::kernel::kernel_function(xi - xj,h) == 0.0;
+        }
         return true;
     }
 };
 
 struct GradientCubicSpline
 {
-    bool branch01(double tolerance)
+    bool branch01_00()
     {
+        // Branch 0-1
+        const double q = 0.0;
+        return learnSPH::kernel::cubic_grad_spline(q) == 0.0;
+    }
+
+    bool branch01_05(double tolerance)
+    {
+        // Branch 0-1
         const double q = 0.5;
         return fabs(learnSPH::kernel::cubic_grad_spline(q) - (-0.298416)) < tolerance;
     }
 
-    bool branch12(double tolerance)
-    {  
+    bool branch12_10(double tolerance)
+    {
+        // Branch 1-2
+        const double q = 1.0;
+        return fabs(learnSPH::kernel::cubic_grad_spline(q) - (-0.238732)) < tolerance;
+    }
+
+    bool branch12_15(double tolerance)
+    {
+        // Branch 1-2
         const double q = 1.5;
         return fabs(learnSPH::kernel::cubic_grad_spline(q) - (-0.0596831)) < tolerance;
     }
 
-    bool branch2plus()
+    bool branch2plus_20()
     {
+        // Branch 2+
+        const double q = 2.0;
+        return learnSPH::kernel::cubic_grad_spline(q) == 0.0;
+    }
+    
+    bool branch2plus_25()
+    {
+        // Branch 2+
         const double q = 2.5;
         return learnSPH::kernel::cubic_grad_spline(q) == 0.0;
     }
@@ -132,23 +176,41 @@ TEST_CASE( "Tests for our kernel function", "[kernel]" )
     const double EPSILON = 0.000001;
 
     SECTION("Testing the branches of the cubic spline") {
-        REQUIRE(cubic.branch01(EPSILON));
-        REQUIRE(cubic.branch12(EPSILON));
-        REQUIRE(cubic.branch2plus());
+        REQUIRE(cubic.branch01_00(EPSILON));
+        REQUIRE(cubic.branch01_05(EPSILON));
+        REQUIRE(cubic.branch12_10(EPSILON));
+        REQUIRE(cubic.branch12_15(EPSILON));
+        REQUIRE(cubic.branch2plus_20());
+        REQUIRE(cubic.branch2plus_25());
     }
     
     SECTION("Testing properties of the kernel function"){
+        for(int i = 0 ; i < 1000; i++)
+        {
+            double beta = 2.0;
+            double h = dis(gen) * 5;
+            Eigen::Vector3d xi = Eigen::Vector3d(dis(gen), dis(gen), dis(gen));
+            Eigen::Vector3d xj = Eigen::Vector3d(dis(gen), dis(gen), dis(gen));
+
+            REQUIRE(kernel.compactness(xi,xj,h,beta,EPSILON));
+            REQUIRE(kernel.symmetry(xi,xj,h));
+            REQUIRE(kernel.nonnegative(xi,xj,h));
+        }
+        
         REQUIRE(kernel.unity());
-        REQUIRE(kernel.symmetry(xi,xj,h));
         REQUIRE(kernel.delta());
-        REQUIRE(kernel.nonnegative(xi,xj,h));
-        REQUIRE(kernel.compactness());
     }
 
-    SECTION("Testing the gradient cubic spline") {
-        REQUIRE(gradient.branch01(EPSILON));
-        REQUIRE(gradient.branch12(EPSILON));
-        REQUIRE(gradient.branch2plus());
+    SECTION("Testing the branches of gradient cubic spline") {
+        REQUIRE(gradient.branch01_00());
+        REQUIRE(gradient.branch01_05(EPSILON));
+        REQUIRE(gradient.branch12_10(EPSILON));
+        REQUIRE(gradient.branch12_15(EPSILON));
+        REQUIRE(gradient.branch2plus_20());
+        REQUIRE(gradient.branch2plus_25());
+    }
+
+    SECTION("Testing gradient cubic spline") {
         REQUIRE(gradient.finite_differences_compare(xi,xj,h,EPSILON));
         REQUIRE(gradient.gradient_zero_distance(xi,h,EPSILON));
     }
