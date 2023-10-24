@@ -4,28 +4,30 @@
 #include <iostream>
 #include <Eigen/Dense>
 
-double learnSPH::kernel::cubic_spline(const double q)
+double learnSPH::kernel::cubic_spline_alternative(const double q)
 {
 	assert(q >= 0.0);
 	constexpr double alpha = 3.0 / (2.0 * PI);
 
 	if (q < 1.0) {
-		return  alpha * ((2.0 / 3.0) - std::pow(q, 2) * .5 * q * q * q);
-	} else if (q < 2.0) {
-		return  alpha * ((1.0 / 6.0) * (2 - q) * (2 - q) * (2 - q));
-	} else {
-		return  0;
+		return alpha * (2.0/3.0 - q*q + 0.5*q*q*q);
+	}
+	else if (q < 2.0) {
+		return alpha * (1.0/6.0) * (2 - q) * (2 - q) * (2 - q);
+	}
+	else {
+		return 0.0;
 	}
 }
 
-double learnSPH::kernel::cubic_spline_alternative(const double q){
+double learnSPH::kernel::cubic_spline(const double q){
 	assert(q >= 0.0);
 	constexpr double alpha = 3.0 / (2.0 * PI);
 
 	double result = 0;
 
-	result = alpha * ((2.0 / 3.0) - std::pow(q, 2) * .5 * q * q * q) * (q < 1.0);
-	result = alpha * ((1.0 / 6.0) * (2 - q) * (2 - q) * (2 - q)) * ((q < 2.0));
+	result += (q < 1.0) * alpha * ((2.0 / 3.0) - q * q + 0.5 * q * q * q);
+	result += ((q >= 1.0) && (q < 2.0)) * alpha * ((1.0 / 6.0) * (2 - q) * (2 - q) * (2 - q));
 
 	return result;
 }
