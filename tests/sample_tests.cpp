@@ -13,6 +13,18 @@
 
 struct CubicSpline
 {
+    bool branch01_00_alt(double tolerance){
+        // Branch 0-1 alternative computed value for branch checking
+        const double q = 0.0;
+        constexpr double alpha = 3.0 / (2.0 * learnSPH::kernel::PI);
+        const double exp_result = alpha *((2.0 / 3.0) - q * q + (1.0/2.0) * q * q * q);
+
+        double error = fabs(learnSPH::kernel::cubic_spline_alternative(q) - exp_result);
+
+        std::cout << error;
+
+        return error < tolerance;
+    }
     bool branch01_00(double tolerance)
     {
         // Branch 0-1
@@ -176,6 +188,7 @@ TEST_CASE( "Tests for our kernel function", "[kernel]" )
     const double EPSILON = 0.000001;
 
     SECTION("Testing the branches of the cubic spline") {
+        REQUIRE(cubic.branch01_00_alt(EPSILON));
         REQUIRE(cubic.branch01_00(EPSILON));
         REQUIRE(cubic.branch01_05(EPSILON));
         REQUIRE(cubic.branch12_10(EPSILON));
