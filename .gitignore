@@ -25,3 +25,9 @@ app/learnSPH_app
 
 ## VSCode related
 .vscode
+
+## Cmake vscode extension outputs
+/build
+
+## ClangD output
+/.cache
