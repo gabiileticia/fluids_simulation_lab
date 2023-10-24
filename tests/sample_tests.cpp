@@ -1,5 +1,7 @@
+#include <cmath>
 #include <stdlib.h>
 #include <iostream>
+#include <math.h>
 #include <Eigen/Dense>
 #include <random>
 
@@ -11,16 +13,24 @@
 
 struct CubicSpline
 {
+    static constexpr double alpha = 3.0 / (2.0 * learnSPH::kernel::PI);
     bool branch01(double tolerance)
     {
         const double q = 0.5;
-        return fabs(learnSPH::kernel::cubic_spline(q) - 0.228785) < tolerance;
+        const double result = (alpha * (2.0/3.0 - q * q + .5*std::pow(q,3)));
+        std::cout << "\nExpected result: " << result;
+        return fabs(learnSPH::kernel::cubic_spline(q) - result) < tolerance;
+        //return fabs(learnSPH::kernel::cubic_spline(q) - 0.228785) < tolerance;
+        
     }
 
     bool branch12(double tolerance)
     {  
         const double q = 1.5;
-        return fabs(learnSPH::kernel::cubic_spline(q) - 0.00994718) < tolerance;
+        const double result = (alpha * (1.0/6.0*std::pow(2-q, 3)));
+        std::cout << "\nExpected result: " << result;
+        return fabs(learnSPH::kernel::cubic_spline(q) - result) < tolerance;
+        //return fabs(learnSPH::kernel::cubic_spline(q) - 0.00994718) < tolerance;
     }
 
     bool branch2plus()
