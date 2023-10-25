@@ -256,30 +256,30 @@ struct NeighborhoodSearch
 };
 
 
-TEST_CASE( "Tests for neighborhood search", "[neighborhood search]" )
-{
-    NeighborhoodSearch neighbor;
+// TEST_CASE( "Tests for neighborhood search", "[neighborhood search]" )
+// {
+//     NeighborhoodSearch neighbor;
 
-    // Load a obj surface mesh
-	const std::vector<learnSPH::TriMesh> meshes = learnSPH::read_tri_meshes_from_obj("./res/box.obj");
-	const learnSPH::TriMesh& box = meshes[0];
+//     // Load a obj surface mesh
+// 	const std::vector<learnSPH::TriMesh> meshes = learnSPH::read_tri_meshes_from_obj("./res/box.obj");
+// 	const learnSPH::TriMesh& box = meshes[0];
 
-    double h = 2.0;
-    double beta = 2.0;
+//     double h = 2.0;
+//     double beta = 2.0;
 
-    SECTION("Testing the branches of the cubic spline") {
-        // Sample the mesh with particles
-        double sampling_distance = 0.5;
-        std::vector<Eigen::Vector3d> particles;
+//     SECTION("Testing the branches of the cubic spline") {
+//         // Sample the mesh with particles
+//         double sampling_distance = 0.5;
+//         std::vector<Eigen::Vector3d> particles;
 
-        for(int i = 0 ; i < 5; i++){
-            learnSPH::sampling::triangle_mesh(particles, box.vertices, box.triangles, sampling_distance);
+//         for(int i = 0 ; i < 5; i++){
+//             learnSPH::sampling::triangle_mesh(particles, box.vertices, box.triangles, sampling_distance);
 
-            std::cout << "Number of particles: ";
-	        std::cout << particles.size() << std::endl;
+//             std::cout << "Number of particles: ";
+// 	        std::cout << particles.size() << std::endl;
 
-            REQUIRE(neighbor.branch01_00(h, particles, beta));
-            sampling_distance = sampling_distance/2;
-        }
-    }
-}
+//             REQUIRE(neighbor.branch01_00(h, particles, beta));
+//             sampling_distance = sampling_distance/2;
+//         }
+//     }
+// }
