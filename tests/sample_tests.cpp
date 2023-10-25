@@ -1,5 +1,7 @@
+#include <cmath>
 #include <stdlib.h>
 #include <iostream>
+#include <math.h>
 #include <Eigen/Dense>
 #include <random>
 
@@ -31,6 +33,7 @@ struct CubicSpline
         // Branch 0-1
         const double q = 0.5;
         return fabs(learnSPH::kernel::cubic_spline(q) - 0.228785) < tolerance;
+        
     }
 
     bool branch12_10(double tolerance)
