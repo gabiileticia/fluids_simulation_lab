@@ -33,15 +33,6 @@ double learnSPH::kernel::cubic_grad_spline(const double q)
 	result += (q < 1.0) * alpha * (- 2.0*q + 1.5*q*q);
 	result += ((q >= 1.0) && (q < 2.0)) * alpha * (-0.5) * (2 - q) * (2 - q);
 
-	// if (q < 1.0) {
-	// 	return alpha * (- 2.0*q + 1.5*q*q);
-	// }
-	// else if (q < 2.0) {
-	// 	return alpha * (-0.5) * (2 - q) * (2 - q);
-	// }
-	// else {
-	// 	return 0.0;
-	// }
 	return result;
 }
 
