@@ -7,6 +7,14 @@
 #include "catch.hpp"
 
 #include "../learnSPH/kernel.h"
+#include "../learnSPH/neighborhood_search.h"
+
+#include "../learnSPH/io.h"
+#include "../learnSPH/sampling.h"
+#include "../extern/CompactNSearch/include/CompactNSearch/CompactNSearch"
+
+
+#include <chrono>
 
 
 struct CubicSpline
@@ -210,5 +218,65 @@ TEST_CASE( "Tests for our kernel function", "[kernel]" )
     SECTION("Testing gradient cubic spline") {
         REQUIRE(gradient.finite_differences_compare(xi,xj,h,EPSILON));
         REQUIRE(gradient.gradient_zero_distance(xi,h,EPSILON));
+    }
+}
+
+
+struct NeighborhoodSearch
+{
+    bool branch01_00(double h, std::vector<Eigen::Vector3d> particles, double beta)
+    {
+        auto start_brute = std::chrono::high_resolution_clock::now();
+
+        learnSPH::neighborhood_search::brute_force_neighbors(h, particles, beta);
+
+        auto stop_brute = std::chrono::high_resolution_clock::now();
+        auto duration_brute = std::chrono::duration_cast<std::chrono::microseconds>(stop_brute - start_brute);
+        std::cout << "Brute force time: ";
+        std::cout << duration_brute.count();
+        std::cout << " microseconds." << std::endl;
+
+
+        auto start_compact = std::chrono::high_resolution_clock::now();
+
+        CompactNSearch::NeighborhoodSearch nsearch(beta);
+        unsigned int point_set_id = nsearch.add_point_set(particles.front().data(), particles.size());
+        nsearch.find_neighbors();
+
+        auto stop_compact = std::chrono::high_resolution_clock::now();
+        auto duration_compact = std::chrono::duration_cast<std::chrono::microseconds>(stop_compact - start_compact);
+        std::cout << "CompactNSearch time: ";
+        std::cout << duration_compact.count();
+        std::cout << " microseconds." << std::endl;
+        return true;
+    }
+};
+
+
+TEST_CASE( "Tests for neighborhood search", "[neighborhood search]" )
+{
+    NeighborhoodSearch neighbor;
+
+    // Load a obj surface mesh
+	const std::vector<learnSPH::TriMesh> meshes = learnSPH::read_tri_meshes_from_obj("./res/box.obj");
+	const learnSPH::TriMesh& box = meshes[0];
+
+    double h = 2.0;
+    double beta = 2.0;
+
+    SECTION("Testing the branches of the cubic spline") {
+        // Sample the mesh with particles
+        double sampling_distance = 0.5;
+        std::vector<Eigen::Vector3d> particles;
+
+        for(int i = 0 ; i < 5; i++){
+            learnSPH::sampling::triangle_mesh(particles, box.vertices, box.triangles, sampling_distance);
+
+            std::cout << "Number of particles: ";
+	        std::cout << particles.size() << std::endl;
+
+            REQUIRE(neighbor.branch01_00(h, particles, beta));
+            sampling_distance = sampling_distance/2;
+        }
     }
 }

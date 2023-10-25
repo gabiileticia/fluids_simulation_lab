@@ -19,7 +19,10 @@ set(SOURCE_FILES
 	sampling.h
 	sampling.cpp
 	kernel.cpp
-	kernel.h)
+	kernel.h
+	neighborhood_search.cpp
+	neighborhood_search.h)
+
     
 # Create a library version so it can be linked with other modules
 add_library(learnSPH ${SOURCE_FILES})
