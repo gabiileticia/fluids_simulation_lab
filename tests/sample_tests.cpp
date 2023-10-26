@@ -153,13 +153,13 @@ struct GradientCubicSpline
         double fin_diff_z = learnSPH::kernel::kernel_function(xi - xj + tolerance * ez,h) - learnSPH::kernel::kernel_function(xi - xj - tolerance * ez,h);
 
         //Finite differences
-        Eigen::Vector3d fin_diff = Eigen::Vector3d(fin_diff_x, fin_diff_y, fin_diff_z) / (2 * tolerance) ;
+        Eigen::Vector3d fin_diff = Eigen::Vector3d(fin_diff_x, fin_diff_y, fin_diff_z) / (2.0 * tolerance) ;
 
         return (fin_diff - learnSPH::kernel::kernel_gradient(xi - xj,h)).norm() < tolerance;
     }
 
     bool gradient_zero_distance(Eigen::Vector3d x, double h, double tolerance){
-        return (learnSPH::kernel::kernel_gradient(x - x,h) - Eigen::Vector3d(0, 0, 0)).norm() < tolerance;
+        return learnSPH::kernel::kernel_gradient(x - x,h) == Eigen::Vector3d(0, 0, 0);
     }
 
 };
@@ -174,9 +174,9 @@ TEST_CASE( "Tests for our kernel function", "[kernel]" )
     //Generate random number for h, and vectors xi, xj
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dis(0, 1);
+    std::uniform_real_distribution<> dis(-1, 1);
 
-    double h = dis(gen) * 5;
+    double h = fabs(dis(gen)) * 5;
     Eigen::Vector3d xi = Eigen::Vector3d(dis(gen), dis(gen), dis(gen));
     Eigen::Vector3d xj = Eigen::Vector3d(dis(gen), dis(gen), dis(gen));
 
@@ -196,7 +196,7 @@ TEST_CASE( "Tests for our kernel function", "[kernel]" )
         for(int i = 0 ; i < 1000; i++)
         {
             double beta = 2.0;
-            double h = dis(gen) * 5;
+            double h = fabs(dis(gen)) * 5;
             Eigen::Vector3d xi = Eigen::Vector3d(dis(gen), dis(gen), dis(gen));
             Eigen::Vector3d xj = Eigen::Vector3d(dis(gen), dis(gen), dis(gen));
 
@@ -219,8 +219,16 @@ TEST_CASE( "Tests for our kernel function", "[kernel]" )
     }
 
     SECTION("Testing gradient cubic spline") {
-        REQUIRE(gradient.finite_differences_compare(xi,xj,h,EPSILON));
-        REQUIRE(gradient.gradient_zero_distance(xi,h,EPSILON));
+        for(int i = 0 ; i < 1000; i++)
+        {
+            double beta = 2.0;
+            double h = fabs(dis(gen)) * 5;
+            Eigen::Vector3d xi = Eigen::Vector3d(dis(gen), dis(gen), dis(gen));
+            Eigen::Vector3d xj = Eigen::Vector3d(dis(gen), dis(gen), dis(gen));
+
+            REQUIRE(gradient.finite_differences_compare(xi,xj,h,EPSILON));
+            REQUIRE(gradient.gradient_zero_distance(xi,h,EPSILON));
+        }
     }
 }
 
