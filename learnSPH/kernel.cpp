@@ -11,8 +11,8 @@ double learnSPH::kernel::cubic_spline(const double q){
 
 	double result = 0;
 
-	result += (q < 1.0) * alpha * ((2.0 / 3.0) - q * q + 0.5 * q * q * q);
-	result += ((q >= 1.0) && (q < 2.0)) * alpha * ((1.0 / 6.0) * (2 - q) * (2 - q) * (2 - q));
+	result += (q < 1.0) * alpha * ((2.0 / 3.0) - q*q + 0.5 *q*q*q);
+	result += ((q >= 1.0) && (q < 2.0)) * alpha * ((1.0 / 6.0) * (2 - q)*(2 - q)*(2 - q));
 
 	return result;
 }
@@ -20,7 +20,7 @@ double learnSPH::kernel::cubic_spline(const double q){
 double learnSPH::kernel::kernel_function(Eigen::Vector3d x, const double h)
 {
 	const double q = x.norm() / h;
-	return (1 / (std::pow(h, 3))) * cubic_spline(q);
+	return (1 / (h*h*h)) * cubic_spline(q);
 }
 
 double learnSPH::kernel::cubic_grad_spline(const double q)
