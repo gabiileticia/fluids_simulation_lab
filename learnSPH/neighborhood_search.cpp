@@ -44,4 +44,4 @@ std::vector<std::vector<int>> learnSPH::neighborhood_search::brute_force_search(
 			}
 		}
 		return neighbors;
-	}
+}

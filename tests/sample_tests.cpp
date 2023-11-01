@@ -25,14 +25,14 @@ struct CubicSpline
     {
         // Branch 0-1
         const double q = 0.0;
-        return fabs(learnSPH::kernel::cubic_spline(q) - 0.31831) < tolerance;
+        return std::abs(learnSPH::kernel::cubic_spline(q) - 0.31831) < tolerance;
     }
 
     bool branch01_05(double tolerance)
     {
         // Branch 0-1
         const double q = 0.5;
-        return fabs(learnSPH::kernel::cubic_spline(q) - 0.228785) < tolerance;
+        return std::abs(learnSPH::kernel::cubic_spline(q) - 0.228785) < tolerance;
         
     }
 
@@ -40,14 +40,14 @@ struct CubicSpline
     {
         // Branch 1-2
         const double q = 1.0;
-        return fabs(learnSPH::kernel::cubic_spline(q) - 0.0795775) < tolerance;
+        return std::abs(learnSPH::kernel::cubic_spline(q) - 0.0795775) < tolerance;
     }
     
     bool branch12_15(double tolerance)
     {
         // Branch 1-2
         const double q = 1.5;
-        return fabs(learnSPH::kernel::cubic_spline(q) - 0.00994718) < tolerance;
+        return std::abs(learnSPH::kernel::cubic_spline(q) - 0.00994718) < tolerance;
     }
 
     bool branch2plus_20()
@@ -109,21 +109,21 @@ struct GradientCubicSpline
     {
         // Branch 0-1
         const double q = 0.5;
-        return fabs(learnSPH::kernel::cubic_grad_spline(q) - (-0.298416)) < tolerance;
+        return std::abs(learnSPH::kernel::cubic_grad_spline(q) - (-0.298416)) < tolerance;
     }
 
     bool branch12_10(double tolerance)
     {
         // Branch 1-2
         const double q = 1.0;
-        return fabs(learnSPH::kernel::cubic_grad_spline(q) - (-0.238732)) < tolerance;
+        return std::abs(learnSPH::kernel::cubic_grad_spline(q) - (-0.238732)) < tolerance;
     }
 
     bool branch12_15(double tolerance)
     {
         // Branch 1-2
         const double q = 1.5;
-        return fabs(learnSPH::kernel::cubic_grad_spline(q) - (-0.0596831)) < tolerance;
+        return std::abs(learnSPH::kernel::cubic_grad_spline(q) - (-0.0596831)) < tolerance;
     }
 
     bool branch2plus_20()
@@ -176,7 +176,7 @@ TEST_CASE( "Tests for our kernel function", "[kernel]" )
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> dis(-1, 1);
 
-    double h = fabs(dis(gen)) * 5;
+    double h = std::abs(dis(gen)) * 5;
     Eigen::Vector3d xi = Eigen::Vector3d(dis(gen), dis(gen), dis(gen));
     Eigen::Vector3d xj = Eigen::Vector3d(dis(gen), dis(gen), dis(gen));
 
@@ -196,7 +196,7 @@ TEST_CASE( "Tests for our kernel function", "[kernel]" )
         for(int i = 0 ; i < 1000; i++)
         {
             double beta = 2.0;
-            double h = fabs(dis(gen)) * 5;
+            double h = std::abs(dis(gen)) * 5;
             Eigen::Vector3d xi = Eigen::Vector3d(dis(gen), dis(gen), dis(gen));
             Eigen::Vector3d xj = Eigen::Vector3d(dis(gen), dis(gen), dis(gen));
 
@@ -222,7 +222,7 @@ TEST_CASE( "Tests for our kernel function", "[kernel]" )
         for(int i = 0 ; i < 1000; i++)
         {
             double beta = 2.0;
-            double h = fabs(dis(gen)) * 5;
+            double h = std::abs(dis(gen)) * 5;
             Eigen::Vector3d xi = Eigen::Vector3d(dis(gen), dis(gen), dis(gen));
             Eigen::Vector3d xj = Eigen::Vector3d(dis(gen), dis(gen), dis(gen));
 
@@ -248,10 +248,12 @@ struct NeighborhoodSearch
         std::cout << " microseconds." << std::endl;
 
 
-        auto start_compact = std::chrono::high_resolution_clock::now();
+        
 
         CompactNSearch::NeighborhoodSearch nsearch(beta);
         unsigned int point_set_id = nsearch.add_point_set(particles.front().data(), particles.size());
+
+        auto start_compact = std::chrono::high_resolution_clock::now();
         nsearch.find_neighbors();
 
         auto stop_compact = std::chrono::high_resolution_clock::now();
@@ -273,7 +275,7 @@ TEST_CASE( "Tests for neighborhood search", "[neighborhood search]" )
 	const learnSPH::TriMesh& box = meshes[0];
 
     double h = 2.0;
-    double beta = 2.0;
+    double beta = 0.1;
 
     SECTION("Testing the branches of the cubic spline") {
         // Sample the mesh with particles
