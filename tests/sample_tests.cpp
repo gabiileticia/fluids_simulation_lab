@@ -93,49 +93,72 @@ struct KernelFunction
     bool branch01_00(double tolerance)
     {
         // Branch 0-1
-        const double q = 0.0;
-        // return std::abs(learnSPH::kernel::cubic_spline(q) - 0.31831) < tolerance;
-        return true;
+        // q = 0
+        Eigen::Vector3d xi = Eigen::Vector3d(0.3, 0.3, 0.3);
+        Eigen::Vector3d xj = Eigen::Vector3d(0.3, 0.3, 0.3);
+        double h = 2.0;
+        double q = (xi - xj).norm() / h;
+        return std::abs(learnSPH::kernel::kernel_function(xi - xj,h) -0.0397887) < tolerance;
     }
 
     bool branch01_05(double tolerance)
     {
         // Branch 0-1
-        const double q = 0.5;
-        // return std::abs(learnSPH::kernel::cubic_spline(q) - 0.228785) < tolerance;
-        return true;
+        // q = 0.5
+        Eigen::Vector3d xi = Eigen::Vector3d(0.0, 0.0, 0.0);
+        Eigen::Vector3d xj = Eigen::Vector3d(1.0, 0.0, 0.0);
+        double h = 2.0;
+        double q = (xi - xj).norm() / h;
+
+        return std::abs(learnSPH::kernel::kernel_function(xi - xj,h) - 0.0285982) < tolerance;
     }
 
     bool branch12_10(double tolerance)
     {
         // Branch 1-2
-        const double q = 1.0;
-        // return std::abs(learnSPH::kernel::cubic_spline(q) - 0.0795775) < tolerance;
-        return true;
+        // q = 1.0
+        Eigen::Vector3d xi = Eigen::Vector3d(-1.0, 0.0, 0.0);
+        Eigen::Vector3d xj = Eigen::Vector3d(1.0, 0.0, 0.0);
+        double h = 2.0;
+        double q = (xi - xj).norm() / h;
+
+        return std::abs(learnSPH::kernel::kernel_function(xi - xj,h) - 0.00994718) < tolerance;
     }
     
     bool branch12_15(double tolerance)
     {
         // Branch 1-2
-        const double q = 1.5;
-        // return std::abs(learnSPH::kernel::cubic_spline(q) - 0.00994718) < tolerance;
-        return true;
+        // q = 1.5
+        Eigen::Vector3d xi = Eigen::Vector3d(-1.0, -1.0, 0.0);
+        Eigen::Vector3d xj = Eigen::Vector3d(1.0, 1.0, 1.0);
+        double h = 2.0;
+        double q = (xi - xj).norm() / h;
+
+        return std::abs(learnSPH::kernel::kernel_function(xi - xj,h) - 0.0012434) < tolerance;
     }
 
-    bool branch2plus_20()
+    bool branch2plus_20(double tolerance)
     {
         // Branch 2+
-        const double q = 2.0;
-        // return learnSPH::kernel::cubic_spline(q) == 0.0;
-        return true;
+        // q = 2.0
+        Eigen::Vector3d xi = Eigen::Vector3d(-1.0, 0.0, 0.0);
+        Eigen::Vector3d xj = Eigen::Vector3d(3.0, 0.0, 0.0);
+        double h = 2.0;
+        double q = (xi - xj).norm() / h;
+
+        return std::abs(learnSPH::kernel::kernel_function(xi - xj,h) - 0.0) < tolerance;
     }
 
-    bool branch2plus_25()
+    bool branch2plus_25(double tolerance)
     {
         // Branch 2+
-        const double q = 2.5;
-        // return learnSPH::kernel::cubic_spline(q) == 0.0;
-        return true;
+        // q = 2.44949
+        Eigen::Vector3d xi = Eigen::Vector3d(-1.0, -1.0, -1.0);
+        Eigen::Vector3d xj = Eigen::Vector3d(3.0, 1.0, 1.0);
+        double h = 2.0;
+        double q = (xi - xj).norm() / h;
+
+        return std::abs(learnSPH::kernel::kernel_function(xi - xj,h) - 0.0) < tolerance;
     }
 };
 
@@ -232,6 +255,15 @@ TEST_CASE( "Tests for our kernel function", "[kernel]" )
         REQUIRE(cubic.branch12_15(EPSILON));
         REQUIRE(cubic.branch2plus_20(EPSILON));
         REQUIRE(cubic.branch2plus_25(EPSILON));
+    }
+
+    SECTION("Testing the branches of the kernel function") {
+        REQUIRE(kernel.branch01_00(EPSILON));
+        REQUIRE(kernel.branch01_05(EPSILON));
+        REQUIRE(kernel.branch12_10(EPSILON));
+        REQUIRE(kernel.branch12_15(EPSILON));
+        REQUIRE(kernel.branch2plus_20(EPSILON));
+        REQUIRE(kernel.branch2plus_25(EPSILON));
     }
     
     SECTION("Testing properties of the kernel function"){
