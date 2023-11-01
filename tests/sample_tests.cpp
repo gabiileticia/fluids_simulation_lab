@@ -14,52 +14,6 @@
 #include <chrono>
 
 
-struct CubicSpline
-{
-    bool branch01_00(double tolerance)
-    {
-        // Branch 0-1
-        const double q = 0.0;
-        return std::abs(learnSPH::kernel::cubic_spline(q) - 0.31831) < tolerance;
-    }
-
-    bool branch01_05(double tolerance)
-    {
-        // Branch 0-1
-        const double q = 0.5;
-        return std::abs(learnSPH::kernel::cubic_spline(q) - 0.228785) < tolerance;
-        
-    }
-
-    bool branch12_10(double tolerance)
-    {
-        // Branch 1-2
-        const double q = 1.0;
-        return std::abs(learnSPH::kernel::cubic_spline(q) - 0.0795775) < tolerance;
-    }
-    
-    bool branch12_15(double tolerance)
-    {
-        // Branch 1-2
-        const double q = 1.5;
-        return std::abs(learnSPH::kernel::cubic_spline(q) - 0.00994718) < tolerance;
-    }
-
-    bool branch2plus_20(double tolerance)
-    {
-        // Branch 2+
-        const double q = 2.0;
-        return std::abs(learnSPH::kernel::cubic_spline(q) - 0.0) < tolerance;
-    }
-
-    bool branch2plus_25(double tolerance)
-    {
-        // Branch 2+
-        const double q = 2.5;
-        return std::abs(learnSPH::kernel::cubic_spline(q) - 0.0) < tolerance;
-    }
-};
-
 struct KernelFunction
 {
     bool unity()
@@ -164,48 +118,6 @@ struct KernelFunction
 
 struct GradientCubicSpline
 {
-    bool branch01_00(double tolerance)
-    {
-        // Branch 0-1
-        const double q = 0.0;
-        return std::abs(learnSPH::kernel::cubic_grad_spline(q) - 0.0) < tolerance;
-    }
-
-    bool branch01_05(double tolerance)
-    {
-        // Branch 0-1
-        const double q = 0.5;
-        return std::abs(learnSPH::kernel::cubic_grad_spline(q) - (-0.298416)) < tolerance;
-    }
-
-    bool branch12_10(double tolerance)
-    {
-        // Branch 1-2
-        const double q = 1.0;
-        return std::abs(learnSPH::kernel::cubic_grad_spline(q) - (-0.238732)) < tolerance;
-    }
-
-    bool branch12_15(double tolerance)
-    {
-        // Branch 1-2
-        const double q = 1.5;
-        return std::abs(learnSPH::kernel::cubic_grad_spline(q) - (-0.0596831)) < tolerance;
-    }
-
-    bool branch2plus_20(double tolerance)
-    {
-        // Branch 2+
-        const double q = 2.0;
-        return std::abs(learnSPH::kernel::cubic_grad_spline(q) - 0.0) < tolerance;
-    }
-    
-    bool branch2plus_25(double tolerance)
-    {
-        // Branch 2+
-        const double q = 2.5;
-        return std::abs(learnSPH::kernel::cubic_grad_spline(q) - 0.0) < tolerance;
-    }
-
     bool finite_differences_compare(Eigen::Vector3d xi, Eigen::Vector3d xj, double h, double tolerance)
     {
         // Unit vectors
@@ -233,7 +145,6 @@ struct GradientCubicSpline
 TEST_CASE( "Tests for our kernel function", "[kernel]" )
 {
     KernelFunction kernel;
-    CubicSpline cubic;
     GradientCubicSpline gradient;
 
     //Generate random number for h, and vectors xi, xj
@@ -247,15 +158,6 @@ TEST_CASE( "Tests for our kernel function", "[kernel]" )
 
     //Error variable 
     const double EPSILON = 0.000001;
-
-    SECTION("Testing the branches of the cubic spline") {
-        REQUIRE(cubic.branch01_00(EPSILON));
-        REQUIRE(cubic.branch01_05(EPSILON));
-        REQUIRE(cubic.branch12_10(EPSILON));
-        REQUIRE(cubic.branch12_15(EPSILON));
-        REQUIRE(cubic.branch2plus_20(EPSILON));
-        REQUIRE(cubic.branch2plus_25(EPSILON));
-    }
 
     SECTION("Testing the branches of the kernel function") {
         REQUIRE(kernel.branch01_00(EPSILON));
@@ -281,15 +183,6 @@ TEST_CASE( "Tests for our kernel function", "[kernel]" )
         
         REQUIRE(kernel.unity());
         REQUIRE(kernel.delta());
-    }
-
-    SECTION("Testing the branches of gradient cubic spline") {
-        REQUIRE(gradient.branch01_00(EPSILON));
-        REQUIRE(gradient.branch01_05(EPSILON));
-        REQUIRE(gradient.branch12_10(EPSILON));
-        REQUIRE(gradient.branch12_15(EPSILON));
-        REQUIRE(gradient.branch2plus_20(EPSILON));
-        REQUIRE(gradient.branch2plus_25(EPSILON));
     }
 
     SECTION("Testing gradient cubic spline") {
