@@ -18,6 +18,7 @@
 #include "../learnSPH/time_integration.h"
 
 #include <chrono>
+#include <vector>
 
 
 struct KernelFunction
@@ -141,6 +142,12 @@ struct GradientCubicSpline
     }
 };
 
+struct TimeIntegration {
+    bool gravity_time_integration(learnSPH::timeIntegration::semiImplicitEuler &integrator, std::vector<learnSPH::types::Particle> &particles, double tolerance){
+        return false;
+    }
+};
+
 // Check out https://github.com/catchorg/Catch2 for more information about how to use Catch2
 TEST_CASE( "Tests for our kernel function", "[kernel]" )
 {
@@ -206,4 +213,27 @@ TEST_CASE( "Tests for our kernel function", "[kernel]" )
             REQUIRE(gradient.finite_differences_compare(cubicSpline, xi,xj, EPSILON));
         }
     }
+}
+TEST_CASE("Test for our time integration scheme. [semi-implicit Euler]"){
+    double particle_radius = 0.25;
+    // double particle_diameter = 2 * particle_radius;
+    // double fluid_sampling_distance = particle_diameter; 
+    // double boundary_sampling_distance = .8 * particle_diameter;
+    // double smoothing_length = 1.2*particle_diameter;
+    // double compact_support = 2.0 * smoothing_length;
+
+    double dt = .5;
+    double v_max = 981;
+
+    double tolerance = 1e-7;
+
+    TimeIntegration integrate_test;
+    learnSPH::timeIntegration::semiImplicitEuler semImpEuler(dt, particle_radius, v_max);
+
+    std::vector<learnSPH::types::Particle> particles(1000);
+
+    SECTION("Testing time integration with gravity only."){
+        REQUIRE(integrate_test.gravity_time_integration(semImpEuler,particles, tolerance))
+    }
+
 }
