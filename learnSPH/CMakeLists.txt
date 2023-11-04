@@ -21,7 +21,9 @@ set(SOURCE_FILES
 	kernel.cpp
 	kernel.h
 	neighborhood_search.cpp
-	neighborhood_search.h)
+	neighborhood_search.h
+	densities.cpp
+	densities.h)
 
     
 # Create a library version so it can be linked with other modules
