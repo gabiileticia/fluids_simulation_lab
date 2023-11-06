@@ -5,9 +5,9 @@
 #include <math.h>
 
 learnSPH::kernel::CubicSplineKernel::CubicSplineKernel(double h){
-  h = h;
-  h_inverse = 1 / h;
-  gama = alpha / (h * h * h);
+  this->h = h;
+  this->h_inverse = 1 / h;
+  this->gama = alpha / (h * h * h);
 }
 
   double learnSPH::kernel::CubicSplineKernel::kernel_function(Eigen::Vector3d x){
