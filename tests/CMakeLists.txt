@@ -5,7 +5,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(SOURCE_FILES
     test_main.cpp
 	sample_tests.cpp
-    performance_tests.cpp)
+    performance_tests.cpp
+    density_tests.cpp)
     
 add_executable(learnSPH_tests ${SOURCE_FILES})
 add_dependencies(learnSPH_tests learnSPH)
