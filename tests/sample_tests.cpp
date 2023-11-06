@@ -143,8 +143,44 @@ struct GradientCubicSpline
 };
 
 struct TimeIntegration {
-    bool gravity_time_integration(learnSPH::timeIntegration::semiImplicitEuler &integrator, std::vector<learnSPH::types::Particle> &particles, double tolerance){
-        return false;
+    bool gravity_time_integration(
+        learnSPH::timeIntegration::semiImplicitEuler &integrator, 
+        std::vector<Eigen::Vector3d> &positions,
+        std::vector<Eigen::Vector3d> &velocity,
+        std::vector<Eigen::Vector3d> &forces,
+        double tolerance
+        ){
+
+        Eigen::Vector3d zero_vec = {tolerance,tolerance,tolerance};
+        std::vector<Eigen::Vector3d> predicted_speed;
+        std::vector<Eigen::Vector3d> predicted_position;
+
+        
+        predicted_speed.push_back({0,0, -4.905});
+        predicted_speed.push_back({0,0,-9.81});
+        predicted_speed.push_back({0,0,-14.715});
+        predicted_speed.push_back({0,0,-19.62});
+        predicted_speed.push_back({0,0,-24.525});
+
+        predicted_position.push_back({0,0,-2.4525});
+        predicted_position.push_back({0,0,-7.3575});
+        predicted_position.push_back({0,0,-14.715});
+        predicted_position.push_back({0,0,-24.525});
+        predicted_position.push_back({0,0,-36.7875});
+
+        
+
+        for (int i = 0; i < 5; ++i){
+            integrator.integrationStep(positions, velocity, forces);
+            for (int j = 0; j < positions.size(); ++j){
+                if (!( (velocity[j] - predicted_speed[i]).norm() < tolerance))
+                    return false;
+                if(!((positions[j] - predicted_position[i]).norm() < tolerance))
+                    return false;
+            }
+        }
+
+        return true;
     }
 };
 
@@ -180,6 +216,7 @@ TEST_CASE( "Tests for our kernel function", "[kernel]" )
     
     SECTION("Testing properties of the kernel function"){
         double beta = 2.0;
+
         double h = std::abs(dis(gen)) * 5;
         learnSPH::kernel::CubicSplineKernel cubicSpline2(h);
 
@@ -214,7 +251,9 @@ TEST_CASE( "Tests for our kernel function", "[kernel]" )
         }
     }
 }
-TEST_CASE("Test for our time integration scheme. [semi-implicit Euler]"){
+
+TEST_CASE("Test for our time integration scheme. [integration]")
+{
     double particle_radius = 0.25;
     // double particle_diameter = 2 * particle_radius;
     // double fluid_sampling_distance = particle_diameter; 
@@ -223,17 +262,35 @@ TEST_CASE("Test for our time integration scheme. [semi-implicit Euler]"){
     // double compact_support = 2.0 * smoothing_length;
 
     double dt = .5;
-    double v_max = 981;
+    double n = 1000;
 
     double tolerance = 1e-7;
 
     TimeIntegration integrate_test;
-    learnSPH::timeIntegration::semiImplicitEuler semImpEuler(dt, particle_radius, v_max);
+    learnSPH::timeIntegration::semiImplicitEuler semImpEuler(dt, particle_radius);
 
-    std::vector<learnSPH::types::Particle> particles(1000);
+    std::vector<Eigen::Vector3d> position(n);
+    std::vector<Eigen::Vector3d> velocity(n);
+    std::vector<Eigen::Vector3d> forces(n);
 
-    SECTION("Testing time integration with gravity only."){
-        REQUIRE(integrate_test.gravity_time_integration(semImpEuler,particles, tolerance))
+    // populate particles
+    // Generate random number for h, and vectors xi, xj
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(0 , 10);
+
+    double x, y, z;
+
+    for (int i = 0; i < position.size(); ++i){
+        x = dis(gen);
+        y = dis(gen);
+        z = dis(gen);
+        position[i] = {x, y, z};
+        forces[i] = {0,0,0};
+        velocity[i] = {0, 0, 0};
     }
 
+    SECTION("Testing time integration with gravity only."){
+        REQUIRE(integrate_test.gravity_time_integration(semImpEuler, position, velocity, forces, tolerance));
+    }
 }
