@@ -24,7 +24,9 @@ set(SOURCE_FILES
 	neighborhood_search.h
 	time_integration.cpp
 	time_integration.h
-	types.h)
+	types.h
+	acceleration.h
+	acceleration.cpp)
 
     
 # Create a library version so it can be linked with other modules
