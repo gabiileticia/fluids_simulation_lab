@@ -21,10 +21,10 @@ learnSPH::timeIntegration::semiImplicitEuler::semiImplicitEuler(double dt,
 void learnSPH::timeIntegration::semiImplicitEuler::integrationStep(
     std::vector<Eigen::Vector3d> &positions,
     std::vector<Eigen::Vector3d> &velocity,
-    std::vector<Eigen::Vector3d> &forces) {
+    std::vector<Eigen::Vector3d> &accelerations) {
   for (int i = 0; i < positions.size(); i++) {
 
-    velocity[i] = velocity[i] + dt * (gravity + forces[i]);
+    velocity[i] = velocity[i] + dt * (gravity + accelerations[i]);
     positions[i] = positions[i] + dt * velocity[i];
 
     if (velocity[i].norm() > v_max)
