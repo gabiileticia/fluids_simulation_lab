@@ -153,7 +153,8 @@ struct TimeIntegration {
 
         Eigen::Vector3d zero_vec = {tolerance,tolerance,tolerance};
         std::vector<Eigen::Vector3d> predicted_speed;
-        std::vector<Eigen::Vector3d> predicted_position;
+        std::vector<Eigen::Vector3d> position_delta;
+        std::vector<std::vector<Eigen::Vector3d>> predicted_positions(5);
 
         
         predicted_speed.push_back({0,0, -4.905});
@@ -162,24 +163,25 @@ struct TimeIntegration {
         predicted_speed.push_back({0,0,-19.62});
         predicted_speed.push_back({0,0,-24.525});
 
-        predicted_position.push_back({0,0,-2.4525});
-        predicted_position.push_back({0,0,-7.3575});
-        predicted_position.push_back({0,0,-14.715});
-        predicted_position.push_back({0,0,-24.525});
-        predicted_position.push_back({0,0,-36.7875});
+        position_delta.push_back({0,0,-2.4525});
+        position_delta.push_back({0,0,-7.3575});
+        position_delta.push_back({0,0,-14.715});
+        position_delta.push_back({0,0,-24.525});
+        position_delta.push_back({0,0,-36.7875});
 
-        
+        for (int i = 0; i < 5; ++i){
+            for (int j = 0; j < positions.size(); ++j){
+                predicted_positions[i].push_back(positions[j] + position_delta[i]);
+            }
+        }
 
         for (int i = 0; i < 5; ++i){
             integrator.integrationStep(positions, velocity, forces);
             for (int j = 0; j < positions.size(); ++j){
-                if (!( (velocity[j] - predicted_speed[i]).norm() < tolerance))
-                    return false;
-                if(!((positions[j] - predicted_position[i]).norm() < tolerance))
-                    return false;
+                REQUIRE((velocity[j] - predicted_speed[i]).norm() < tolerance);
+                REQUIRE((positions[j] - predicted_positions[i][j]).norm() < tolerance);
             }
         }
-
         return true;
     }
 };
@@ -271,7 +273,7 @@ TEST_CASE("Test for our time integration scheme. [integration]")
 
     std::vector<Eigen::Vector3d> position(n);
     std::vector<Eigen::Vector3d> velocity(n);
-    std::vector<Eigen::Vector3d> forces(n);
+    std::vector<Eigen::Vector3d> accelerations(n);
 
     // populate particles
     // Generate random number for h, and vectors xi, xj
@@ -286,11 +288,11 @@ TEST_CASE("Test for our time integration scheme. [integration]")
         y = dis(gen);
         z = dis(gen);
         position[i] = {x, y, z};
-        forces[i] = {0,0,0};
+        accelerations[i] = {0,0,0};
         velocity[i] = {0, 0, 0};
     }
 
     SECTION("Testing time integration with gravity only."){
-        REQUIRE(integrate_test.gravity_time_integration(semImpEuler, position, velocity, forces, tolerance));
+        integrate_test.gravity_time_integration(semImpEuler, position, velocity, accelerations, tolerance);
     }
 }
