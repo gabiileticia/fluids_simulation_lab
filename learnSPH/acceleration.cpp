@@ -1,5 +1,6 @@
 #include "acceleration.h"
 
+#include <omp.h>
 #include "kernel.h"
 #include <algorithm>
 #include <vector>
@@ -59,11 +60,13 @@ void learnSPH::acceleration::Acceleration::accelerations(
 
     for (int i = 0; i < fluid_particles.size(); ++i) {
 
+        double roh_square_i = roh[i] * roh[i];
+        
         for (size_t j = 0; j < fluid_neighbors.n_neighbors(ps_id_fluid, i); j++) {
   
             unsigned int pid = fluid_neighbors.neighbor(ps_id_fluid, i, j);
             ff_inter_pressure += fluid_mass *
-                    (p[i] / (roh[i] * roh[i]) + p[pid] / (roh[pid] * roh[pid])) *
+                    (p[i] / (roh_square_i) + p[pid] / (roh[pid] * roh[pid])) *
                     kernel.kernel_gradient(fluid_particles[i] - fluid_particles[pid]);
 
             dx = fluid_particles[i] - fluid_particles[pid];
@@ -74,6 +77,7 @@ void learnSPH::acceleration::Acceleration::accelerations(
                                                      (dx.norm() * dx.norm() + 0.01 * this->h * this->h);
         }
 
+        
         for (size_t j = 0; j < fluid_neighbors.n_neighbors(ps_id_boundary, i); ++j) 
         {
             unsigned int pid = fluid_neighbors.neighbor(ps_id_boundary, i, j);
@@ -83,7 +87,7 @@ void learnSPH::acceleration::Acceleration::accelerations(
             fs_inter_pressure += kernel.kernel_gradient(dx);
 
             fs_inter_pressure += this-> roh_0 * boundary_volume *
-                                                     (p[i] / (roh[i] * roh[i])) *
+                                                     (p[i] / (roh_square_i)) *
                                                      kernel.kernel_gradient(dx);
 
             fs_inter_velocity += boundary_volume * velocity[i] * dx.transpose() *

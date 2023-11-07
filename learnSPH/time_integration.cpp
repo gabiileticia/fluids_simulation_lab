@@ -22,7 +22,7 @@ void learnSPH::timeIntegration::semiImplicitEuler::integrationStep(
 {
     
   for (int i = 0; i < positions.size(); i++) {
-    velocity[i] = velocity[i] + dt * (gravity + accelerations[i]);
+    velocity[i] = velocity[i] + dt * accelerations[i];
     positions[i] = positions[i] + dt * velocity[i];
 
     if (velocity[i].norm() > v_max)
