@@ -28,7 +28,9 @@ set(SOURCE_FILES
 	acceleration.h
 	acceleration.cpp
 	densities.h
-	densities.cpp)
+	densities.cpp
+	geometry.h
+	geometry.cpp)
 
     
 # Create a library version so it can be linked with other modules

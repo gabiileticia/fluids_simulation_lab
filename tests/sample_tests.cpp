@@ -148,7 +148,8 @@ struct TimeIntegration {
         std::vector<Eigen::Vector3d> &positions,
         std::vector<Eigen::Vector3d> &velocity,
         std::vector<Eigen::Vector3d> &forces,
-        double tolerance
+        double tolerance,
+        double dt
         ){
 
         Eigen::Vector3d zero_vec = {tolerance,tolerance,tolerance};
@@ -176,7 +177,7 @@ struct TimeIntegration {
         }
 
         for (int i = 0; i < 5; ++i){
-            integrator.integrationStep(positions, velocity, forces);
+            integrator.integrationStep(positions, velocity, forces, dt);
             for (int j = 0; j < positions.size(); ++j){
                 REQUIRE((velocity[j] - predicted_speed[i]).norm() < tolerance);
                 REQUIRE((positions[j] - predicted_positions[i][j]).norm() < tolerance);
@@ -269,7 +270,7 @@ TEST_CASE("Test for our time integration scheme. [integration]")
     double tolerance = 1e-7;
 
     TimeIntegration integrate_test;
-    learnSPH::timeIntegration::semiImplicitEuler semImpEuler(dt, particle_radius);
+    learnSPH::timeIntegration::semiImplicitEuler semImpEuler(particle_radius);
 
     std::vector<Eigen::Vector3d> position(n);
     std::vector<Eigen::Vector3d> velocity(n);
@@ -293,6 +294,6 @@ TEST_CASE("Test for our time integration scheme. [integration]")
     }
 
     SECTION("Testing time integration with gravity only."){
-        integrate_test.gravity_time_integration(semImpEuler, position, velocity, accelerations, tolerance);
+        integrate_test.gravity_time_integration(semImpEuler, position, velocity, accelerations, tolerance, dt);
     }
 }

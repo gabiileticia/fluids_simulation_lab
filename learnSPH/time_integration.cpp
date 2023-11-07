@@ -9,11 +9,7 @@
 
 #include "types.h"
 
-learnSPH::timeIntegration::semiImplicitEuler::semiImplicitEuler(double dt,
-                                                                double radius) {
-  assert(dt <=
-         0.5 * radius / std::pow(std::pow(v_max, 2) + std::pow(v_max, 2), 0.5));
-  this->dt = dt;
+learnSPH::timeIntegration::semiImplicitEuler::semiImplicitEuler(double radius) {
   this->radius = radius;
   this->v_max = 0;
 }
@@ -21,10 +17,10 @@ learnSPH::timeIntegration::semiImplicitEuler::semiImplicitEuler(double dt,
 void learnSPH::timeIntegration::semiImplicitEuler::integrationStep(
     std::vector<Eigen::Vector3d> &positions,
     std::vector<Eigen::Vector3d> &velocity,
-    std::vector<Eigen::Vector3d> &accelerations) {
-  assert(dt <=
-         0.5 * radius / std::pow(std::pow(v_max, 2) + std::pow(v_max, 2), 0.5));
-
+    std::vector<Eigen::Vector3d> &accelerations,
+    double dt) 
+{
+    
   for (int i = 0; i < positions.size(); i++) {
     velocity[i] = velocity[i] + dt * (gravity + accelerations[i]);
     positions[i] = positions[i] + dt * velocity[i];
@@ -32,15 +28,15 @@ void learnSPH::timeIntegration::semiImplicitEuler::integrationStep(
     if (velocity[i].norm() > v_max)
       v_max = velocity[i].norm();
 
-    if (positions[i].x() > x_boundary_max ||
-        positions[i].x() < x_boundary_min ||
-        positions[i].y() > y_boundary_max ||
-        positions[i].y() < y_boundary_min ||
-        positions[i].z() > z_boundary_max ||
-        positions[i].z() < z_boundary_min) {
-      positions.erase(positions.begin() + i);
-      velocity.erase(velocity.begin() + i);
-      accelerations.erase(accelerations.begin() + i);
-    }
+    // if (positions[i].x() > x_boundary_max ||
+    //     positions[i].x() < x_boundary_min ||
+    //     positions[i].y() > y_boundary_max ||
+    //     positions[i].y() < y_boundary_min ||
+    //     positions[i].z() > z_boundary_max ||
+    //     positions[i].z() < z_boundary_min) {
+    //   positions.erase(positions.begin() + i);
+    //   velocity.erase(velocity.begin() + i);
+    //   accelerations.erase(accelerations.begin() + i);
+    // }
   }
 }
