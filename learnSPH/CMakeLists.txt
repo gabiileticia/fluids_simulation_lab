@@ -26,7 +26,9 @@ set(SOURCE_FILES
 	time_integration.h
 	types.h
 	acceleration.h
-	acceleration.cpp)
+	acceleration.cpp
+	densities.h
+	densities.cpp)
 
     
 # Create a library version so it can be linked with other modules

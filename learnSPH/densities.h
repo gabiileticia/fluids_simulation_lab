@@ -4,6 +4,7 @@
 
 #include <Eigen/Dense>
 #include "../extern/CompactNSearch/include/CompactNSearch/CompactNSearch"
+#include "kernel.h"
 
 
 namespace learnSPH {
@@ -14,7 +15,7 @@ namespace learnSPH {
             unsigned int point_set_id,
             CompactNSearch::PointSet const& pointset,
             const double density,
-            double h);
+            learnSPH::kernel::CubicSplineKernel &kernel);
         void compute_fluid_density(
             std::vector<double>& output,
             std::vector<Eigen::Vector3d>& particles,
@@ -25,7 +26,7 @@ namespace learnSPH {
             unsigned int point_set_id_boundary,
             CompactNSearch::PointSet const& ps_boundary,
             const double fluid_mass,
-            double h
+            learnSPH::kernel::CubicSplineKernel &kernel
             );
     }
 }

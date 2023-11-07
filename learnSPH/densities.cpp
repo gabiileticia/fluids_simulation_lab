@@ -11,7 +11,7 @@ void learnSPH::densities::compute_boundary_masses(
     unsigned int point_set_id,
     CompactNSearch::PointSet const& pointset,
     const double density,
-    double h) 
+    learnSPH::kernel::CubicSplineKernel &cubic_kernel) 
 {
     for (int i = 0; i < pointset.n_points(); ++i)
     {
@@ -20,7 +20,7 @@ void learnSPH::densities::compute_boundary_masses(
         for (size_t j = 0; j < pointset.n_neighbors(point_set_id, i); ++j)
         {
             const unsigned int pid = pointset.neighbor(point_set_id, i, j);
-            kernel_sum += learnSPH::kernel::kernel_function(boundary_particles[i] - boundary_particles[pid],h);
+            kernel_sum += cubic_kernel.kernel_function(boundary_particles[i] - boundary_particles[pid]);
         }
         output[i] = density / kernel_sum;
     }
@@ -36,7 +36,7 @@ void learnSPH::densities::compute_fluid_density(
     unsigned int point_set_id_boundary,
     CompactNSearch::PointSet const& ps_boundary,
     const double fluid_mass,
-    double h
+    learnSPH::kernel::CubicSplineKernel &cubic_kernel
     ) 
 {
     for (int i = 0; i < ps_fluid.n_points(); ++i)
@@ -47,7 +47,7 @@ void learnSPH::densities::compute_fluid_density(
         for (size_t j = 0; j < ps_fluid.n_neighbors(point_set_id_fluid, i); ++j)
         {
             const unsigned int pid = ps_fluid.neighbor(point_set_id_fluid, i, j);
-            density_sum += fluid_mass * learnSPH::kernel::kernel_function(particles[i] - particles[pid],h);
+            density_sum += fluid_mass * cubic_kernel.kernel_function(particles[i] - particles[pid]);
         }
 
         // Get boundary neighbors of fluid point set.
@@ -55,7 +55,7 @@ void learnSPH::densities::compute_fluid_density(
         {
             const unsigned int pid = ps_fluid.neighbor(point_set_id_boundary, i, j);
             density_sum += boundary_particles_masses[pid] * 
-                            learnSPH::kernel::kernel_function(particles[i] - boundary_particles[pid],h);
+                            cubic_kernel.kernel_function(particles[i] - boundary_particles[pid]);
         }
         output[i] = density_sum;
     }

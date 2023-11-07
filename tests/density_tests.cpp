@@ -45,6 +45,9 @@ TEST_CASE( "Tests for density computation", "[density]" )
 	const double fluid_volume = 800000.0;
 	const double fluid_mass = fluid_volume/fluid_density;
 
+	// create cubic spline kernel
+	learnSPH::kernel::CubicSplineKernel cubic_kernel(h);
+
 	// Load boundary surface mesh
 	const std::vector<learnSPH::TriMesh> boundary_meshes = learnSPH::read_tri_meshes_from_obj("./res/box_density_test.obj");
 	const learnSPH::TriMesh& boundary = boundary_meshes[0];
@@ -89,7 +92,7 @@ TEST_CASE( "Tests for density computation", "[density]" )
 
 	// Compute boundary masses
 	std::vector<double> boundary_particles_masses(boundary_particles.size());
-	learnSPH::densities::compute_boundary_masses(boundary_particles_masses, boundary_particles, point_set_id_boundary, ps_boundary, fluid_density, h);
+	learnSPH::densities::compute_boundary_masses(boundary_particles_masses, boundary_particles, point_set_id_boundary, ps_boundary, fluid_density, cubic_kernel);
 
     // Compute fluid particles densities
 	std::vector<double> particles_densities(particles.size());
@@ -102,7 +105,7 @@ TEST_CASE( "Tests for density computation", "[density]" )
 											, point_set_id_boundary
 											, ps_boundary
 											, fluid_particle_mass
-											, h);
+											, cubic_kernel);
 
 	std::vector<double> boundary_particles_densities(boundary_particles.size(), fluid_density);
 	boundary_particles.insert(boundary_particles.end(), particles.begin(), particles.end());
