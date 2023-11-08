@@ -57,23 +57,23 @@ void learnSPH::timeIntegration::semiImplicitEuler::integrationStep(
   if (copyFlag && boundary_checking) {
     std::cout << "Deleting " << count_del << " elements from particle vectors."
               << std::endl;
-    std::vector<Eigen::Vector3d> position_copy(positions.size() - count_del);
-    std::vector<Eigen::Vector3d> velocity_copy(positions.size() - count_del);
-    std::vector<Eigen::Vector3d> accelerations_copy(positions.size() -
-                                                    count_del);
     int counter = 0;
     for (int i = 0; i < positions.size(); i++) {
+      // skip marked for deletion element and don't increase conter
       if (deleteFlat[i]) {
         continue;
       }
-      position_copy[counter] = positions[i];
-      velocity_copy[counter] = velocity[i];
-      accelerations_copy[counter] = accelerations[i];
+      // copy only if element has to be shifted
+      if(counter != i){
+        positions[counter] = positions[i];
+        velocity[counter] = velocity[i];
+        accelerations[counter] = accelerations[i];
+      }
       counter++;
     }
-    positions = position_copy;
-    velocity = velocity_copy;
-    accelerations = accelerations_copy;
+    positions.resize(counter);
+    velocity.resize(counter);
+    accelerations.resize(counter);
 
     std::cout << "Done. New number of particles is: " << positions.size()
             << std::endl;
