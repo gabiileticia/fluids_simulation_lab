@@ -29,5 +29,6 @@ app/learnSPH_app
 ## Cmake vscode extension outputs
 /build
 
-## ClangD output
+## ClangD 
 /.cache
+.clang-format
