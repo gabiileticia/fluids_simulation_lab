@@ -42,6 +42,7 @@ void learnSPH::timeIntegration::semiImplicitEuler::integrationStep(
     if (velocity[i].norm() > v_max)
       v_max = velocity[i].norm();
 
+    // mark out of bound elements for deletion if activated
     if (this->boundary_checking && (positions[i].x() > max_boundary.x() ||
                                     positions[i].x() < min_boundary.x() ||
                                     positions[i].y() > max_boundary.y() ||
