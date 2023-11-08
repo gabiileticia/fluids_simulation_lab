@@ -47,7 +47,7 @@ void learnSPH::acceleration::Acceleration::accelerations(
         std::vector<Eigen::Vector3d> &fluid_particles,
         std::vector<Eigen::Vector3d> &boundary_particles,
         std::vector<Eigen::Vector3d> &velocity,
-        double boundary_volume,
+        std::vector<double> boundary_mass,
         const double fluid_mass)
 {
 
@@ -92,12 +92,12 @@ void learnSPH::acceleration::Acceleration::accelerations(
             kernel_grad = kernel.kernel_gradient(dx);
             dx_norm = dx.norm();
 
-            fs_inter_pressure += this-> roh_0 * boundary_volume * p[i] * roh_square_i_inverse * kernel_grad;
+            fs_inter_pressure += boundary_mass[pid] * p[i] * roh_square_i_inverse * kernel_grad;
 
-            fs_inter_velocity += boundary_volume * velocity[i] * dx.transpose() * kernel_grad / (dx_norm * dx_norm + h_square_cent);
+            fs_inter_velocity += (boundary_mass[pid]/this -> roh_0) * velocity[i] * dx.transpose() * kernel_grad / (dx_norm * dx_norm + h_square_cent);
         }
 
-        ap = -ff_inter_pressure - fs_inter_pressure;
+        ap = (-ff_inter_pressure - fs_inter_pressure);
         av = 2 * this->v_f * ff_inter_velocity + 2 * this->v_b * fs_inter_velocity;
         ae = this->gravity;
 
