@@ -1,5 +1,5 @@
 #include "acceleration.h"
-
+#include <stdlib.h> // rand
 #include <omp.h>
 #include "kernel.h"
 #include <algorithm>
@@ -29,9 +29,10 @@ void learnSPH::acceleration::Acceleration::pressure(
         , double rest_density) 
 {
     double delta_density;
+
     for (int i = 0; i < particles_density.size(); i++) {
         delta_density = this->B * (particles_density[i] - rest_density);
-        particles_pressure[i] = (delta_density > 0.0) ? delta_density : 0.0;
+        particles_pressure[i] = std::max(0.0, delta_density);
     }
 }
 
@@ -47,26 +48,26 @@ void learnSPH::acceleration::Acceleration::accelerations(
         std::vector<Eigen::Vector3d> &boundary_particles,
         std::vector<Eigen::Vector3d> &velocity,
         double boundary_volume,
-        const double fluid_mass) 
+        const double fluid_mass)
 {
 
     Eigen::Vector3d ap, av, ae; // pressure, velocity and mass forces
     Eigen::Vector3d ff_inter_pressure
-                                , fs_inter_pressure
-                                , ff_inter_velocity
-                                , fs_inter_velocity; // fluid fluid and fluid solid interaction
+                , fs_inter_pressure
+                , ff_inter_velocity
+                , fs_inter_velocity; // fluid fluid and fluid solid interaction
     Eigen::Vector3d dx;
-    ff_inter_pressure = {0, 0, 0};
-    fs_inter_pressure = {0, 0, 0};
-    ff_inter_velocity = {0, 0, 0};
-    fs_inter_velocity = {0, 0, 0};
     Eigen::Vector3d kernel_grad;
     double dx_norm;
     double h_square_cent = 0.01 * this->h_square;
     double roh_square_i_inverse;
 
-    for (int i = 0; i < fluid_particles.size(); ++i) {
+    for (int i = 0; i < fluid_neighbors.n_points(); ++i) {
 
+        ff_inter_pressure = {0, 0, 0};
+        fs_inter_pressure = {0, 0, 0};
+        ff_inter_velocity = {0, 0, 0};
+        fs_inter_velocity = {0, 0, 0};
         roh_square_i_inverse = 1 / (roh[i] * roh[i]);
         
         for (size_t j = 0; j < fluid_neighbors.n_neighbors(ps_id_fluid, i); j++) {
