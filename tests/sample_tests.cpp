@@ -157,6 +157,9 @@ struct TimeIntegration {
         std::vector<Eigen::Vector3d> position_delta;
         std::vector<std::vector<Eigen::Vector3d>> predicted_positions(5);
 
+        Eigen::Vector3d min_boundary = integrator.min_boundary;
+        Eigen::Vector3d max_boundary = integrator.max_boundary;
+
         
         predicted_speed.push_back({0,0, -4.905});
         predicted_speed.push_back({0,0,-9.81});
@@ -172,7 +175,15 @@ struct TimeIntegration {
 
         for (int i = 0; i < 5; ++i){
             for (int j = 0; j < positions.size(); ++j){
-                predicted_positions[i].push_back(positions[j] + position_delta[i]);
+                Eigen::Vector3d new_pos = positions[j] + position_delta[i];
+                if(!(new_pos.x() < min_boundary.x() || 
+                   new_pos.x() > max_boundary.x() || 
+                   new_pos.y() < min_boundary.y() || 
+                   new_pos.y() > max_boundary.y() || 
+                   new_pos.z() < min_boundary.z() || 
+                   new_pos.z() > max_boundary.z())){
+                    predicted_positions[i].push_back(positions[j] + position_delta[i]);
+                }
             }
         }
 
@@ -266,11 +277,13 @@ TEST_CASE("Test for our time integration scheme. [integration]")
 
     double dt = .5;
     double n = 1000;
+    Eigen::Vector3d min_boundary = {-100, -100, -100};
+    Eigen::Vector3d max_boundary = {100, 100, 100};
 
     double tolerance = 1e-7;
 
     TimeIntegration integrate_test;
-    learnSPH::timeIntegration::semiImplicitEuler semImpEuler(particle_radius);
+    learnSPH::timeIntegration::semiImplicitEuler semImpEuler(particle_radius, max_boundary, min_boundary);
 
     std::vector<Eigen::Vector3d> position(n);
     std::vector<Eigen::Vector3d> velocity(n);
@@ -280,16 +293,18 @@ TEST_CASE("Test for our time integration scheme. [integration]")
     // Generate random number for h, and vectors xi, xj
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dis(0 , 10);
+    std::uniform_real_distribution<> dis(-10 , 10);
 
     double x, y, z;
+
+    Eigen::Vector3d gravity = {0,0,-9.81};
 
     for (int i = 0; i < position.size(); ++i){
         x = dis(gen);
         y = dis(gen);
         z = dis(gen);
         position[i] = {x, y, z};
-        accelerations[i] = {0,0,0};
+        accelerations[i] = gravity;
         velocity[i] = {0, 0, 0};
     }
 
