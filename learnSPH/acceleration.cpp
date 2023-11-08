@@ -18,7 +18,10 @@ learnSPH::acceleration::Acceleration::Acceleration(
                                                       , h(h)
                                                       , kernel(kernel)
                                                       , roh_0(roh_0)
-                                                      , gravity(gravity) {}
+                                                      , gravity(gravity)
+{
+    this->h_square = h * h;
+}
 
 void learnSPH::acceleration::Acceleration::pressure(
         std::vector<double> &particles_pressure
@@ -27,7 +30,7 @@ void learnSPH::acceleration::Acceleration::pressure(
 {
     double delta_density;
     for (int i = 0; i < particles_density.size(); i++) {
-        delta_density = this->B * particles_density[i] - rest_density;
+        delta_density = this->B * (particles_density[i] - rest_density);
         particles_pressure[i] = (delta_density > 0.0) ? delta_density : 0.0;
     }
 }
@@ -57,43 +60,42 @@ void learnSPH::acceleration::Acceleration::accelerations(
     fs_inter_pressure = {0, 0, 0};
     ff_inter_velocity = {0, 0, 0};
     fs_inter_velocity = {0, 0, 0};
+    Eigen::Vector3d kernel_grad;
+    double dx_norm;
+    double h_square_cent = 0.01 * this->h_square;
+    double roh_square_i_inverse;
 
     for (int i = 0; i < fluid_particles.size(); ++i) {
 
-        double roh_square_i = roh[i] * roh[i];
+        roh_square_i_inverse = 1 / (roh[i] * roh[i]);
         
         for (size_t j = 0; j < fluid_neighbors.n_neighbors(ps_id_fluid, i); j++) {
   
             unsigned int pid = fluid_neighbors.neighbor(ps_id_fluid, i, j);
-            ff_inter_pressure += fluid_mass *
-                    (p[i] / (roh_square_i) + p[pid] / (roh[pid] * roh[pid])) *
-                    kernel.kernel_gradient(fluid_particles[i] - fluid_particles[pid]);
-
             dx = fluid_particles[i] - fluid_particles[pid];
+            kernel_grad = kernel.kernel_gradient(dx);
+            dx_norm = dx.norm();
 
-            ff_inter_velocity += fluid_mass / roh[pid] *
-                                                     (velocity[i] - velocity[pid]) * (dx).transpose() *
-                                                     kernel.kernel_gradient(dx) /
-                                                     (dx.norm() * dx.norm() + 0.01 * this->h * this->h);
+            ff_inter_pressure += fluid_mass *
+                    (p[i] * roh_square_i_inverse + p[pid] / (roh[pid] * roh[pid])) * kernel_grad;            
+
+            ff_inter_velocity += fluid_mass * 
+                    (velocity[i] - velocity[pid]) * (dx).transpose() * kernel_grad / (roh[pid] * (dx_norm * dx_norm + h_square_cent));
         }
 
         
         for (size_t j = 0; j < fluid_neighbors.n_neighbors(ps_id_boundary, i); ++j) 
         {
             unsigned int pid = fluid_neighbors.neighbor(ps_id_boundary, i, j);
-
             dx = fluid_particles[i] - boundary_particles[pid];
+            kernel_grad = kernel.kernel_gradient(dx);
+            dx_norm = dx.norm();
 
-            fs_inter_pressure += kernel.kernel_gradient(dx);
+            fs_inter_pressure += this-> roh_0 * boundary_volume * p[i] * roh_square_i_inverse * kernel_grad;
 
-            fs_inter_pressure += this-> roh_0 * boundary_volume *
-                                                     (p[i] / (roh_square_i)) *
-                                                     kernel.kernel_gradient(dx);
-
-            fs_inter_velocity += boundary_volume * velocity[i] * dx.transpose() *
-                                                     kernel.kernel_gradient(dx) /
-                                                     (dx.norm() * dx.norm() + 0.01 * h * h);
+            fs_inter_velocity += boundary_volume * velocity[i] * dx.transpose() * kernel_grad / (dx_norm * dx_norm + h_square_cent);
         }
+
         ap = -ff_inter_pressure - fs_inter_pressure;
         av = 2 * this->v_f * ff_inter_velocity + 2 * this->v_b * fs_inter_velocity;
         ae = this->gravity;

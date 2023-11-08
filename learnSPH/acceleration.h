@@ -15,6 +15,7 @@ namespace learnSPH {
       double v_b;   // friction with boundary
       double h;     // timestepsize
       double roh_0; // fluid rest density
+      double h_square;
       Eigen::Vector3d gravity;
       learnSPH::kernel::CubicSplineKernel kernel;
 
