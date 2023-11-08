@@ -33,9 +33,9 @@ int main() {
 
     learnSPH::kernel::CubicSplineKernel cubicSpline(h);
 
-    const double fluid_density = 1000.0;
+    const double fluid_mass = 1000.0;
     const double fluid_volume = 1.0;
-    const double fluid_mass = fluid_volume / fluid_density;
+    const double fluid_density = fluid_mass / fluid_volume;
 
     // create cubic spline kernel
     learnSPH::kernel::CubicSplineKernel cubic_kernel(h);
@@ -58,8 +58,8 @@ int main() {
 
     int end_of_box1 = particles_positions.size() - 1;
 
-    learnSPH::sampling::fluid_box(particles_positions, {1.05, 0.0, 0.0},
-                                {2.05, 1.0, 1.0}, fluid_sampling_distance);
+    learnSPH::sampling::fluid_box(particles_positions, {1.1, 0.0, 0.0},
+                                {2.1, 1.0, 1.0}, fluid_sampling_distance);
     int end_of_box2 = particles_positions.size() - 1;
 
     std::cout << "Number of fluid particles" << std::endl;
@@ -104,8 +104,8 @@ int main() {
     double t_next_frame = 0;
     double t_between_frames = 0.001;
     double t_simulation = 0;
-    double B = 1000;
-    double v_f = 0;
+    double B = 1000 * 1.02;
+    double v_f = 1.002 * 10e-6;
     double v_b = 0;
     Eigen::Vector3d gravity = Eigen::Vector3d(0.0, 0.0, 0.0);
 
@@ -115,10 +115,10 @@ int main() {
 
 
     for (int i = 0; i <= end_of_box1; ++i) {
-        particles_velocities[i] = {2, 0, 0};
+        particles_velocities[i] = {1, 0, 0};
     }
     for (int i = end_of_box1 + 1; i <= end_of_box2; ++i) {
-        particles_velocities[i] = {-2, 0, 0};
+        particles_velocities[i] = {-1, 0, 0};
     }
 
 
@@ -128,7 +128,7 @@ int main() {
     learnSPH::acceleration::Acceleration acceleration(B, v_f, v_b, h, fluid_density, gravity, cubic_kernel);
     learnSPH::timeIntegration::semiImplicitEuler semImpEuler(particle_radius);
 
-    const std::string filename = "./res/wcsph_aii/wcsph_0.vtk";
+    const std::string filename = "./res/wcsph/wcsph_0.vtk";
     learnSPH::write_particles_to_vtk(filename, particles_positions);
 
     // Simulation loop
@@ -214,7 +214,7 @@ int main() {
 
         // Save output
         if (t_simulation >= t_next_frame) {
-            const std::string filename = "./res/wcsph_aii/wcsph_" + std::to_string((int)(t_simulation * 1000)) +".vtk";
+            const std::string filename = "./res/wcsph/wcsph_" + std::to_string((int)(t_simulation * 1000)) +".vtk";
             learnSPH::write_particles_to_vtk(filename, particles_positions);
             t_next_frame += t_between_frames;
         }
