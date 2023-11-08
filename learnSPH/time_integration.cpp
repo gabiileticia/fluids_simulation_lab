@@ -36,7 +36,7 @@ void learnSPH::timeIntegration::semiImplicitEuler::integrationStep(
   std::vector<bool> deleteFlat(positions.size(), false);
 
   for (int i = 0; i < positions.size(); i++) {
-    velocity[i] = velocity[i] + dt * (accelerations[i]);
+    velocity[i] = velocity[i] + dt * accelerations[i];
     positions[i] = positions[i] + dt * velocity[i];
 
     if (velocity[i].norm() > v_max)
