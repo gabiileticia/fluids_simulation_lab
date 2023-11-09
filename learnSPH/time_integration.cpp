@@ -29,7 +29,9 @@ learnSPH::timeIntegration::semiImplicitEuler::semiImplicitEuler(
 void learnSPH::timeIntegration::semiImplicitEuler::integrationStep(
     std::vector<Eigen::Vector3d> &positions,
     std::vector<Eigen::Vector3d> &velocity,
-    std::vector<Eigen::Vector3d> &accelerations, double dt) {
+    std::vector<Eigen::Vector3d> &accelerations,
+    std::vector<double> &densities,
+    double dt) {
   v_max = 0;
   bool copyFlag = false;
   int count_del = 0;
@@ -69,12 +71,14 @@ void learnSPH::timeIntegration::semiImplicitEuler::integrationStep(
         positions[counter] = positions[i];
         velocity[counter] = velocity[i];
         accelerations[counter] = accelerations[i];
+        densities[counter] = densities[i];
       }
       counter++;
     }
     positions.resize(counter);
     velocity.resize(counter);
     accelerations.resize(counter);
+    densities.resize(counter);
 
     std::cout << "Done. New number of particles is: " << positions.size()
             << std::endl;

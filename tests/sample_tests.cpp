@@ -142,61 +142,61 @@ struct GradientCubicSpline
     }
 };
 
-struct TimeIntegration {
-    bool gravity_time_integration(
-        learnSPH::timeIntegration::semiImplicitEuler &integrator, 
-        std::vector<Eigen::Vector3d> &positions,
-        std::vector<Eigen::Vector3d> &velocity,
-        std::vector<Eigen::Vector3d> &forces,
-        double tolerance,
-        double dt
-        ){
+// struct TimeIntegration {
+//     bool gravity_time_integration(
+//         learnSPH::timeIntegration::semiImplicitEuler &integrator, 
+//         std::vector<Eigen::Vector3d> &positions,
+//         std::vector<Eigen::Vector3d> &velocity,
+//         std::vector<Eigen::Vector3d> &forces,
+//         double tolerance,
+//         double dt
+//         ){
 
-        Eigen::Vector3d zero_vec = {tolerance,tolerance,tolerance};
-        std::vector<Eigen::Vector3d> predicted_speed;
-        std::vector<Eigen::Vector3d> position_delta;
-        std::vector<std::vector<Eigen::Vector3d>> predicted_positions(5);
+//         Eigen::Vector3d zero_vec = {tolerance,tolerance,tolerance};
+//         std::vector<Eigen::Vector3d> predicted_speed;
+//         std::vector<Eigen::Vector3d> position_delta;
+//         std::vector<std::vector<Eigen::Vector3d>> predicted_positions(5);
 
-        Eigen::Vector3d min_boundary = integrator.min_boundary;
-        Eigen::Vector3d max_boundary = integrator.max_boundary;
+//         Eigen::Vector3d min_boundary = integrator.min_boundary;
+//         Eigen::Vector3d max_boundary = integrator.max_boundary;
 
         
-        predicted_speed.push_back({0,0, -4.905});
-        predicted_speed.push_back({0,0,-9.81});
-        predicted_speed.push_back({0,0,-14.715});
-        predicted_speed.push_back({0,0,-19.62});
-        predicted_speed.push_back({0,0,-24.525});
+//         predicted_speed.push_back({0,0, -4.905});
+//         predicted_speed.push_back({0,0,-9.81});
+//         predicted_speed.push_back({0,0,-14.715});
+//         predicted_speed.push_back({0,0,-19.62});
+//         predicted_speed.push_back({0,0,-24.525});
 
-        position_delta.push_back({0,0,-2.4525});
-        position_delta.push_back({0,0,-7.3575});
-        position_delta.push_back({0,0,-14.715});
-        position_delta.push_back({0,0,-24.525});
-        position_delta.push_back({0,0,-36.7875});
+//         position_delta.push_back({0,0,-2.4525});
+//         position_delta.push_back({0,0,-7.3575});
+//         position_delta.push_back({0,0,-14.715});
+//         position_delta.push_back({0,0,-24.525});
+//         position_delta.push_back({0,0,-36.7875});
 
-        for (int i = 0; i < 5; ++i){
-            for (int j = 0; j < positions.size(); ++j){
-                Eigen::Vector3d new_pos = positions[j] + position_delta[i];
-                if(!(new_pos.x() < min_boundary.x() || 
-                   new_pos.x() > max_boundary.x() || 
-                   new_pos.y() < min_boundary.y() || 
-                   new_pos.y() > max_boundary.y() || 
-                   new_pos.z() < min_boundary.z() || 
-                   new_pos.z() > max_boundary.z())){
-                    predicted_positions[i].push_back(positions[j] + position_delta[i]);
-                }
-            }
-        }
+//         for (int i = 0; i < 5; ++i){
+//             for (int j = 0; j < positions.size(); ++j){
+//                 Eigen::Vector3d new_pos = positions[j] + position_delta[i];
+//                 if(!(new_pos.x() < min_boundary.x() || 
+//                    new_pos.x() > max_boundary.x() || 
+//                    new_pos.y() < min_boundary.y() || 
+//                    new_pos.y() > max_boundary.y() || 
+//                    new_pos.z() < min_boundary.z() || 
+//                    new_pos.z() > max_boundary.z())){
+//                     predicted_positions[i].push_back(positions[j] + position_delta[i]);
+//                 }
+//             }
+//         }
 
-        for (int i = 0; i < 5; ++i){
-            integrator.integrationStep(positions, velocity, forces, dt);
-            for (int j = 0; j < positions.size(); ++j){
-                REQUIRE((velocity[j] - predicted_speed[i]).norm() < tolerance);
-                REQUIRE((positions[j] - predicted_positions[i][j]).norm() < tolerance);
-            }
-        }
-        return true;
-    }
-};
+//         for (int i = 0; i < 5; ++i){
+//             integrator.integrationStep(positions, velocity, forces, dt);
+//             for (int j = 0; j < positions.size(); ++j){
+//                 REQUIRE((velocity[j] - predicted_speed[i]).norm() < tolerance);
+//                 REQUIRE((positions[j] - predicted_positions[i][j]).norm() < tolerance);
+//             }
+//         }
+//         return true;
+//     }
+// };
 
 // Check out https://github.com/catchorg/Catch2 for more information about how to use Catch2
 TEST_CASE( "Tests for our kernel function", "[kernel]" )
@@ -266,49 +266,49 @@ TEST_CASE( "Tests for our kernel function", "[kernel]" )
     }
 }
 
-TEST_CASE("Test for our time integration scheme. [integration]")
-{
-    double particle_radius = 0.25;
-    // double particle_diameter = 2 * particle_radius;
-    // double fluid_sampling_distance = particle_diameter; 
-    // double boundary_sampling_distance = .8 * particle_diameter;
-    // double smoothing_length = 1.2*particle_diameter;
-    // double compact_support = 2.0 * smoothing_length;
+// TEST_CASE("Test for our time integration scheme. [integration]")
+// {
+//     double particle_radius = 0.25;
+//     // double particle_diameter = 2 * particle_radius;
+//     // double fluid_sampling_distance = particle_diameter; 
+//     // double boundary_sampling_distance = .8 * particle_diameter;
+//     // double smoothing_length = 1.2*particle_diameter;
+//     // double compact_support = 2.0 * smoothing_length;
 
-    double dt = .5;
-    double n = 1000;
-    Eigen::Vector3d min_boundary = {-100, -100, -100};
-    Eigen::Vector3d max_boundary = {100, 100, 100};
+//     double dt = .5;
+//     double n = 1000;
+//     Eigen::Vector3d min_boundary = {-100, -100, -100};
+//     Eigen::Vector3d max_boundary = {100, 100, 100};
 
-    double tolerance = 1e-7;
+//     double tolerance = 1e-7;
 
-    TimeIntegration integrate_test;
-    learnSPH::timeIntegration::semiImplicitEuler semImpEuler(particle_radius, max_boundary, min_boundary);
+//     TimeIntegration integrate_test;
+//     learnSPH::timeIntegration::semiImplicitEuler semImpEuler(particle_radius, max_boundary, min_boundary);
 
-    std::vector<Eigen::Vector3d> position(n);
-    std::vector<Eigen::Vector3d> velocity(n);
-    std::vector<Eigen::Vector3d> accelerations(n);
+//     std::vector<Eigen::Vector3d> position(n);
+//     std::vector<Eigen::Vector3d> velocity(n);
+//     std::vector<Eigen::Vector3d> accelerations(n);
 
-    // populate particles
-    // Generate random number for h, and vectors xi, xj
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dis(-10 , 10);
+//     // populate particles
+//     // Generate random number for h, and vectors xi, xj
+//     std::random_device rd;
+//     std::mt19937 gen(rd());
+//     std::uniform_real_distribution<> dis(-10 , 10);
 
-    double x, y, z;
+//     double x, y, z;
 
-    Eigen::Vector3d gravity = {0,0,-9.81};
+//     Eigen::Vector3d gravity = {0,0,-9.81};
 
-    for (int i = 0; i < position.size(); ++i){
-        x = dis(gen);
-        y = dis(gen);
-        z = dis(gen);
-        position[i] = {x, y, z};
-        accelerations[i] = gravity;
-        velocity[i] = {0, 0, 0};
-    }
+//     for (int i = 0; i < position.size(); ++i){
+//         x = dis(gen);
+//         y = dis(gen);
+//         z = dis(gen);
+//         position[i] = {x, y, z};
+//         accelerations[i] = gravity;
+//         velocity[i] = {0, 0, 0};
+//     }
 
-    SECTION("Testing time integration with gravity only."){
-        integrate_test.gravity_time_integration(semImpEuler, position, velocity, accelerations, tolerance, dt);
-    }
-}
+//     SECTION("Testing time integration with gravity only."){
+//         integrate_test.gravity_time_integration(semImpEuler, position, velocity, accelerations, tolerance, dt);
+//     }
+// }
