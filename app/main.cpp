@@ -42,9 +42,9 @@ int main() {
 
     const double fluid_density = 1000.0;
 	std::cout << "fluid_density: " << fluid_density << std::endl;
-	Eigen::Vector3d fluid_begin = Eigen::Vector3d(0.005, 0.01, 0.01);
+	Eigen::Vector3d fluid_begin = Eigen::Vector3d(0.000, 0.000, 0.000);
 	std::cout << "fluid_begin: " << fluid_begin.transpose() << std::endl;
-	Eigen::Vector3d fluid_end = Eigen::Vector3d(0.145, 0.25, 0.5);
+	Eigen::Vector3d fluid_end = Eigen::Vector3d(0.15, 0.25, 0.5);
 	std::cout << "fluid_end: " << fluid_end.transpose() << std::endl;
     const double fluid_volume = fluid_end.x() * fluid_end.y() * fluid_end.z();
 	std::cout << "fluid_volume: " << fluid_volume << std::endl;
@@ -57,9 +57,10 @@ int main() {
 	std::cout << "boundary_begin: " << boundary_begin.transpose() << std::endl;
 	Eigen::Vector3d boundary_end = Eigen::Vector3d(0.15, 0.8, 1.0);
 	std::cout << "boundary_end: " << boundary_end.transpose() << std::endl;
-    const double boundary_volume = 0.01 * particle_diameter * (2 * boundary_end.x() * boundary_end.y() + 
-														2 * boundary_end.x() * boundary_end.z() + 
-														2 * boundary_end.y() * boundary_end.z());
+    const double boundary_volume = 0.001 * boundary_end.x() * boundary_end.y() * boundary_end.z();
+    // const double boundary_volume = particle_diameter * (2 * boundary_end.x() * boundary_end.y() + 
+	// 													2 * boundary_end.x() * boundary_end.z() + 
+	// 													2 * boundary_end.y() * boundary_end.z());
 	std::cout << "boundary_volume: " << boundary_volume << std::endl;
     const double boundary_mass = boundary_volume * fluid_density;
 	std::cout << "boundary_mass: " << boundary_mass << std::endl;
@@ -182,9 +183,9 @@ int main() {
         std::cout << "t_simulation " << t_simulation << std::endl;
         std::cout << "v_max " << semImpEuler.v_max << std::endl;
         // Compute dt
-        dt_cfl = 0.5 * particle_radius * (1 / std::min(200.0, semImpEuler.v_max));
+        dt_cfl = 0.5 * particle_radius * (1 / std::min(50.0, semImpEuler.v_max));
         dt = std::min(dt_cfl, dt_default);
-        std::cout << "dt " << dt << std::endl;
+        // std::cout << "dt " << dt << std::endl;
 
         // Find neighbors
         nsearch.find_neighbors();
