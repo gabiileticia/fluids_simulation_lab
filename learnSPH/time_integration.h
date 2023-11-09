@@ -19,7 +19,9 @@ public:
                     Eigen::Vector3d min_boundary);
   void integrationStep(std::vector<Eigen::Vector3d> &positions,
                        std::vector<Eigen::Vector3d> &velocity,
-                       std::vector<Eigen::Vector3d> &accelerations, double dt);
+                       std::vector<Eigen::Vector3d> &accelerations,
+                       std::vector<double> &densities,
+                       double dt);
 };
 } // namespace timeIntegration
 } // namespace learnSPH
