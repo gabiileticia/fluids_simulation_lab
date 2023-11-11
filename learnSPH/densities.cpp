@@ -32,7 +32,7 @@ void learnSPH::densities::compute_boundary_masses(
     std::vector<Eigen::Vector3d>& boundary_particles,
     unsigned int point_set_id,
     CompactNSearch::PointSet const& pointset,
-    std::vector<double> density,
+    double density,
     learnSPH::kernel::CubicSplineKernel &cubic_kernel) 
 {
     for (int i = 0; i < pointset.n_points(); ++i)
@@ -44,7 +44,7 @@ void learnSPH::densities::compute_boundary_masses(
             const unsigned int pid = pointset.neighbor(point_set_id, i, j);
             kernel_sum += cubic_kernel.kernel_function(boundary_particles[i] - boundary_particles[pid]);
         }
-        output[i] = density[i] / kernel_sum;
+        output[i] = density / kernel_sum;
     }
 }
 

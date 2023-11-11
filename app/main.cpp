@@ -40,15 +40,15 @@ int main() {
 	std::cout << "beta: " << beta << std::endl;
 
 
-    const double fluid_density = 1000.0;
-	std::cout << "fluid_density: " << fluid_density << std::endl;
+    const double fluid_rest_density = 1000.0;
+	std::cout << "fluid_density: " << fluid_rest_density << std::endl;
 	Eigen::Vector3d fluid_begin = Eigen::Vector3d(0.000, 0.000, 0.000);
 	std::cout << "fluid_begin: " << fluid_begin.transpose() << std::endl;
-	Eigen::Vector3d fluid_end = Eigen::Vector3d(0.15, 0.25, 0.5);
+	Eigen::Vector3d fluid_end = Eigen::Vector3d(0.125, 0.25, 0.5);
 	std::cout << "fluid_end: " << fluid_end.transpose() << std::endl;
     const double fluid_volume = fluid_end.x() * fluid_end.y() * fluid_end.z();
 	std::cout << "fluid_volume: " << fluid_volume << std::endl;
-    const double fluid_mass = fluid_volume * fluid_density;
+    const double fluid_mass = fluid_volume * fluid_rest_density;
 	std::cout << "fluid_mass: " << fluid_mass << std::endl;
 
 	const std::string boundary_file = "./res/boundary.obj";
@@ -57,12 +57,18 @@ int main() {
 	std::cout << "boundary_begin: " << boundary_begin.transpose() << std::endl;
 	Eigen::Vector3d boundary_end = Eigen::Vector3d(0.15, 0.8, 1.0);
 	std::cout << "boundary_end: " << boundary_end.transpose() << std::endl;
+    double a,b,c;
+    a = 0.15;
+    b = 0.8;
+    c = 1.0;
+    // const double particle_volume = 4.0/3.0 * learnSPH::kernel::PI * particle_radius*particle_radius*particle_radius;
+    // const double boundary_volume = 2 * particle_volume * (a*b + a*c + a*c);
     const double boundary_volume = 0.001 * boundary_end.x() * boundary_end.y() * boundary_end.z();
     // const double boundary_volume = particle_diameter * (2 * boundary_end.x() * boundary_end.y() + 
 	// 													2 * boundary_end.x() * boundary_end.z() + 
 	// 													2 * boundary_end.y() * boundary_end.z());
 	std::cout << "boundary_volume: " << boundary_volume << std::endl;
-    const double boundary_mass = boundary_volume * fluid_density;
+    const double boundary_mass = boundary_volume * fluid_rest_density;
 	std::cout << "boundary_mass: " << boundary_mass << std::endl;
 
     double dt_cfl, dt;
@@ -71,19 +77,19 @@ int main() {
     double t_next_frame = 0;
     double t_between_frames = 0.0005;
     double t_simulation = 0;
-    double B = 1000;
+    double B = 1000 * 1.02;
 	std::cout << "B: " << B << std::endl;
     double v_f = 0.0025;
 	std::cout << "v_f: " << v_f << std::endl;
     double v_b = 0.0;
 	std::cout << "v_b: " << v_b << std::endl;
-    Eigen::Vector3d gravity = Eigen::Vector3d(0.0, 0.0,-9.8);
+    Eigen::Vector3d gravity = Eigen::Vector3d(0.0, 0.0,-9.81);
 	std::cout << "gravity: " << gravity.transpose() << std::endl;
 
 
     // instantiating some classes
     learnSPH::kernel::CubicSplineKernel cubic_kernel(h);
-    learnSPH::acceleration::Acceleration acceleration(B, v_f, v_b, h, fluid_density, gravity, cubic_kernel);
+    learnSPH::acceleration::Acceleration acceleration(B, v_f, v_b, h, fluid_rest_density, gravity, cubic_kernel);
     learnSPH::timeIntegration::semiImplicitEuler semImpEuler(particle_radius, boundary_end, boundary_begin);
 
 
@@ -151,7 +157,8 @@ int main() {
             nsearch.point_set(point_set_id_fluid);
 
 	// Compute boundary masses
-	double boundary_particles_mass = boundary_mass / boundary_particles_positions.size();
+	const double boundary_particles_mass = boundary_mass / boundary_particles_positions.size();
+    const double boundary_particle_density = fluid_rest_density / particles_positions.size();
 	std::cout << "boundary_particles_mass: " << boundary_particles_mass << std::endl;
 
 	std::vector<double> boundary_particles_densities(boundary_particles_positions.size());
@@ -161,18 +168,12 @@ int main() {
     std::vector<double> boundary_particles_masses(boundary_particles_positions.size());
     learnSPH::densities::compute_boundary_masses(
             boundary_particles_masses, boundary_particles_positions,
-            point_set_id_boundary, ps_boundary, boundary_particles_densities, cubic_kernel);
-
-
-
-
-
-
+            point_set_id_boundary, ps_boundary, fluid_rest_density, cubic_kernel);
 
 	int total_vector = particles_positions.size() + boundary_particles_positions.size();
 	std::vector<Eigen::Vector3d> output_positions(total_vector);
 	std::vector<double> output_densities(total_vector);
-	std::vector<double> b_densities(boundary_particles_positions.size(), fluid_density);
+	std::vector<double> b_densities(boundary_particles_positions.size(), fluid_rest_density);
 	std::vector<Eigen::Vector3d> output_velocities(total_vector);
 	std::vector<Eigen::Vector3d> b_velocities(boundary_particles_positions.size(), Eigen::Vector3d(0.0, 0.0, 0.0));
 	
@@ -198,17 +199,17 @@ int main() {
 
         // Compute acceleration
         acceleration.pressure(particles_pressure, particles_densities,
-                                                    fluid_density);
+                                                    fluid_rest_density);
 	
         acceleration.accelerations(
                 particles_accelerations, particles_densities, particles_pressure,
                 point_set_id_fluid, point_set_id_boundary, ps_fluid, ps_boundary,
                 particles_positions, boundary_particles_positions, particles_velocities,
-                boundary_particles_masses, boundary_particles_densities, fluid_particle_mass);
+                boundary_particles_masses, boundary_particle_density, fluid_particle_mass);
 
         // Integrate
         semImpEuler.integrationStep(particles_positions, particles_velocities,
-                                    particles_accelerations, particles_densities, dt);
+                                    particles_accelerations, particles_densities, particles_pressure, dt);
         auto stop_integrate = std::chrono::high_resolution_clock::now();
 
         // Increment t
@@ -234,7 +235,7 @@ int main() {
 			// 	output_velocities.insert(output_velocities.end(), b_velocities.begin(), b_velocities.end());
 			// learnSPH::write_particles_to_vtk(filename, output_positions, output_densities, output_velocities);
 
-            learnSPH::write_particles_to_vtk(filename, particles_positions, particles_densities, particles_velocities);
+            learnSPH::write_particles_to_vtk(filename, particles_positions, particles_pressure, particles_velocities);
             t_next_frame += t_between_frames;
         }
     }

@@ -1,4 +1,5 @@
 #include "acceleration.h"
+#include <cstdio>
 #include <stdlib.h> // rand
 #include <omp.h>
 #include "kernel.h"
@@ -48,8 +49,8 @@ void learnSPH::acceleration::Acceleration::accelerations(
         std::vector<Eigen::Vector3d> &boundary_particles,
         std::vector<Eigen::Vector3d> &velocity,
         std::vector<double> boundary_mass,
-        std::vector<double> boundary_densities,
-        const double fluid_mass)
+        double boundary_density,
+        const double fluid_particle_mass)
 {
 
     Eigen::Vector3d ap, av, ae; // pressure, velocity and mass forces
@@ -79,10 +80,10 @@ void learnSPH::acceleration::Acceleration::accelerations(
             kernel_grad = kernel.kernel_gradient(dx);
             dx_norm = dx.norm();
 
-            ff_inter_pressure += fluid_mass *
+            ff_inter_pressure += fluid_particle_mass *
                     (p[i] * roh_square_i_inverse + p[pid] / (roh[pid] * roh[pid])) * kernel_grad;            
 
-            ff_inter_velocity += fluid_mass * 
+            ff_inter_velocity += fluid_particle_mass * 
                     (velocity[i] - velocity[pid]) * (dx).transpose() * kernel_grad / (roh[pid] * (dx_norm * dx_norm + h_square_cent));
         }
 
@@ -93,7 +94,13 @@ void learnSPH::acceleration::Acceleration::accelerations(
             dx = fluid_particles[i] - boundary_particles[pid];
             kernel_grad = kernel.kernel_gradient(dx);
             dx_norm = dx.norm();
-            vol_boundary = boundary_mass[pid] / boundary_densities[pid];
+            vol_boundary = boundary_mass[pid] / boundary_density;
+
+            if (j == fluid_neighbors.n_neighbors(ps_id_boundary, i)) {
+                std::cout << "vol_boundary " << vol_boundary;
+                fflush(stdout);
+            }
+            
 
             fs_inter_pressure += this->roh_0 * vol_boundary * p[i] * roh_square_i_inverse * kernel_grad;
 

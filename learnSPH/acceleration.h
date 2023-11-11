@@ -36,7 +36,7 @@ namespace learnSPH {
                         std::vector<Eigen::Vector3d> &boundary_particles,
                         std::vector<Eigen::Vector3d> &velocity,
                         std::vector<double> boundary_mass,
-                        std::vector<double> boundary_densities,
+                        double boundary_density,
                         const double fluid_mass);
     };
   } // namespace acceleration

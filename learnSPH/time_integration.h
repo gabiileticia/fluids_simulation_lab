@@ -21,6 +21,7 @@ public:
                        std::vector<Eigen::Vector3d> &velocity,
                        std::vector<Eigen::Vector3d> &accelerations,
                        std::vector<double> &densities,
+                       std::vector<double> &pressure,
                        double dt);
 };
 } // namespace timeIntegration

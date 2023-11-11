@@ -21,7 +21,7 @@ namespace learnSPH {
             std::vector<Eigen::Vector3d>& boundary_particles,
             unsigned int point_set_id,
             CompactNSearch::PointSet const& pointset,
-            std::vector<double> density,
+            double density,
             learnSPH::kernel::CubicSplineKernel &kernel);
         void compute_fluid_density(
             std::vector<double>& output,
