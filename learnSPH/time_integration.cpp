@@ -31,12 +31,11 @@ learnSPH::timeIntegration::semiImplicitEuler::semiImplicitEuler(double radius,
 
 void learnSPH::timeIntegration::semiImplicitEuler::integrationStep(
     std::vector<Eigen::Vector3d> &positions, std::vector<Eigen::Vector3d> &velocity,
-    std::vector<Eigen::Vector3d> &accelerations, std::vector<double> &densities,
-    std::vector<double> &pressure, std::vector<bool> &deleteFlag, double dt)
+    std::vector<Eigen::Vector3d> &accelerations, std::vector<bool> &deleteFlag, double dt, int &count_del)
 {
     v_max         = 0;
     bool copyFlag = false;
-    int count_del = 0;
+    count_del = 0;
 
     for (int i = 0; i < positions.size(); i++) {
         velocity[i]  = velocity[i] + dt * accelerations[i];

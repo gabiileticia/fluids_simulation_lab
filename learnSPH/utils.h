@@ -11,7 +11,8 @@ std::vector<Eigen::Vector3d> &velocity,
 std::vector<Eigen::Vector3d> &accelerations,
 std::vector<double> &densities,
 std::vector<double> &pressure,
-std::vector<bool> &deleteFlat);
+std::vector<bool> &deleteFlat,
+int &count_del);
 }
 }
 

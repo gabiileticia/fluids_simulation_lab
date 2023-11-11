@@ -30,7 +30,9 @@ set(SOURCE_FILES
 	densities.h
 	densities.cpp
 	geometry.h
-	geometry.cpp)
+	geometry.cpp
+	utils.h
+	utils.cpp)
 
     
 # Create a library version so it can be linked with other modules

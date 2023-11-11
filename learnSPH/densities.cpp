@@ -17,6 +17,8 @@ void learnSPH::densities::compute_boundary_densities(
     for (int i = 0; i < pointset.n_points(); ++i)
     {
         double kernel_sum = 0.0;
+
+        kernel_sum += mass_boundary * cubic_kernel.kernel_function(boundary_particles[i] - boundary_particles[i]);
     
         for (size_t j = 0; j < pointset.n_neighbors(point_set_id, i); ++j)
         {
@@ -64,6 +66,8 @@ void learnSPH::densities::compute_fluid_density(
     for (int i = 0; i < ps_fluid.n_points(); ++i)
     {
         double density_sum = 0.0;
+
+        density_sum += fluid_mass * cubic_kernel.kernel_function(particles[i] - particles[i]);
 
         // Get fluid neighbors of fluid point set.
         for (size_t j = 0; j < ps_fluid.n_neighbors(point_set_id_fluid, i); ++j)

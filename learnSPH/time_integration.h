@@ -20,9 +20,9 @@ public:
   void integrationStep(std::vector<Eigen::Vector3d> &positions,
                        std::vector<Eigen::Vector3d> &velocity,
                        std::vector<Eigen::Vector3d> &accelerations,
-                       std::vector<double> &densities,
-                       std::vector<double> &pressure,
-                       double dt);
+                       std::vector<bool> &deleteFlag,
+                       double dt, 
+                       int &count_del);
 };
 } // namespace timeIntegration
 } // namespace learnSPH

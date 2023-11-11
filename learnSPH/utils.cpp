@@ -6,7 +6,8 @@ void learnSPH::utils::deleteOutOfBounds(std::vector<Eigen::Vector3d> &positions,
                                         std::vector<Eigen::Vector3d> &accelerations,
                                         std::vector<double> &densities,
                                         std::vector<double> &pressure,
-                                        std::vector<bool> &deleteFlag)
+                                        std::vector<bool> &deleteFlag,
+                                        int &count_del)
 {
 
     std::cout << "Deleting " << count_del << " elements from particle vectors." << std::endl;
@@ -35,5 +36,4 @@ void learnSPH::utils::deleteOutOfBounds(std::vector<Eigen::Vector3d> &positions,
 
     std::cout << "Done. New number of particles is: " << positions.size() << std::endl;
     fflush(stdout);
-}
 }
