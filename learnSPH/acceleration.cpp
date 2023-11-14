@@ -96,12 +96,6 @@ void learnSPH::acceleration::Acceleration::accelerations(
             dx_norm = dx.norm();
             vol_boundary = boundary_mass[pid] / boundary_density;
 
-            if (j == fluid_neighbors.n_neighbors(ps_id_boundary, i)) {
-                std::cout << "vol_boundary " << vol_boundary;
-                fflush(stdout);
-            }
-            
-
             fs_inter_pressure += this->roh_0 * vol_boundary * p[i] * roh_square_i_inverse * kernel_grad;
 
             fs_inter_velocity +=  vol_boundary * velocity[i] * dx.transpose() * kernel_grad / (dx_norm * dx_norm + h_square_cent);

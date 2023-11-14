@@ -5,30 +5,6 @@
 #include "../learnSPH/kernel.h"
 
 
-void learnSPH::densities::compute_boundary_densities(
-    std::vector<double>& output,
-    std::vector<Eigen::Vector3d>& boundary_particles,
-    unsigned int point_set_id,
-    CompactNSearch::PointSet const& pointset,
-    const double mass_boundary,
-    learnSPH::kernel::CubicSplineKernel &cubic_kernel
-)
-{
-    for (int i = 0; i < pointset.n_points(); ++i)
-    {
-        double kernel_sum = 0.0;
-
-        kernel_sum += mass_boundary * cubic_kernel.kernel_function(boundary_particles[i] - boundary_particles[i]);
-    
-        for (size_t j = 0; j < pointset.n_neighbors(point_set_id, i); ++j)
-        {
-            const unsigned int pid = pointset.neighbor(point_set_id, i, j);
-            kernel_sum += mass_boundary * cubic_kernel.kernel_function(boundary_particles[i] - boundary_particles[pid]);
-        }
-        output[i] = kernel_sum;
-    }
-}
-
 void learnSPH::densities::compute_boundary_masses(
     std::vector<double>& output,
     std::vector<Eigen::Vector3d>& boundary_particles,
@@ -40,7 +16,8 @@ void learnSPH::densities::compute_boundary_masses(
     for (int i = 0; i < pointset.n_points(); ++i)
     {
         double kernel_sum = 0.0;
-    
+        kernel_sum += cubic_kernel.kernel_function(boundary_particles[i] - boundary_particles[i]);
+
         for (size_t j = 0; j < pointset.n_neighbors(point_set_id, i); ++j)
         {
             const unsigned int pid = pointset.neighbor(point_set_id, i, j);
