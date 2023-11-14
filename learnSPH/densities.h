@@ -9,13 +9,6 @@
 
 namespace learnSPH {
     namespace densities {
-        void compute_boundary_densities(
-            std::vector<double>& output,
-            std::vector<Eigen::Vector3d>& boundary_particles,
-            unsigned int point_set_id,
-            CompactNSearch::PointSet const& pointset,
-            const double mass_boundary,
-            learnSPH::kernel::CubicSplineKernel &cubic_kernel);
         void compute_boundary_masses(
             std::vector<double>& output,
             std::vector<Eigen::Vector3d>& boundary_particles,

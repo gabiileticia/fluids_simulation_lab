@@ -33,6 +33,8 @@ void learnSPH::utils::deleteOutOfBounds(std::vector<Eigen::Vector3d> &positions,
     densities.resize(counter);
     pressure.resize(counter);
     deleteFlag.resize(counter);
+    std::fill(deleteFlag.begin(), deleteFlag.end(), false);
+
 
     std::cout << "Done. New number of particles is: " << positions.size() << std::endl;
     fflush(stdout);
