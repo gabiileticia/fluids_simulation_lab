@@ -13,6 +13,7 @@ std::vector<double> &densities,
 std::vector<double> &pressure,
 std::vector<bool> &deleteFlat,
 int &count_del);
+void create_simulation_folder(const std::string assign_number, std::string &timestamp);;
 }
 }
 

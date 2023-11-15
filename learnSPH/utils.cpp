@@ -1,5 +1,9 @@
 #include "utils.h"
+#include <stdlib.h> // rand
 #include <iostream>
+#include <chrono>
+#include <sys/stat.h>
+
 
 void learnSPH::utils::deleteOutOfBounds(std::vector<Eigen::Vector3d> &positions,
                                         std::vector<Eigen::Vector3d> &velocity,
@@ -39,3 +43,22 @@ void learnSPH::utils::deleteOutOfBounds(std::vector<Eigen::Vector3d> &positions,
     std::cout << "Done. New number of particles is: " << positions.size() << std::endl;
     fflush(stdout);
 }
+
+
+void learnSPH::utils::create_simulation_folder(const std::string assign_number, std::string &timestamp)
+{
+    std::time_t result = std::time(nullptr);
+    std::stringstream strm;
+    strm << result;
+
+    timestamp = strm.str();
+
+    // Create folder
+    std::string stringpath = "./res/" + assign_number + "/" + timestamp + "/";
+    int status = mkdir(stringpath.c_str(),0777);
+
+    // Create file with setup
+
+
+}
+
