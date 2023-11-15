@@ -180,7 +180,7 @@ void learnSPH::simulations_setup::Simulations::our_simulation_scene(){
     this->fluid_end.resize(1);
     this->fluid_velocities.resize(1);
     this->fluid_begin[0] = Eigen::Vector3d(0.0, 0.2, 0.4);
-    this->fluid_end[0] = Eigen::Vector3d(0.15, 0.6, 0.7);
+    this->fluid_end[0] = Eigen::Vector3d(0.15, 0.6, 0.8);
     this->fluid_velocities[0] = Eigen::Vector3d(0.0, 0.0, 0.0);
 
     this->boundary_file.resize(2);

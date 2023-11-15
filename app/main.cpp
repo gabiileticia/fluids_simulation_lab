@@ -50,11 +50,7 @@ int main() {
     for (int i=0; i < sim_setup.fluid_begin.size(); ++i){
         fluid_volume += (sim_setup.fluid_end[i].x() - sim_setup.fluid_begin[i].x()) * (sim_setup.fluid_end[i].y() - sim_setup.fluid_begin[i].y()) * (sim_setup.fluid_end[i].z() - sim_setup.fluid_begin[i].z());
     }
-    std::cout << fluid_volume << std::endl;
     double fluid_mass = fluid_volume * sim_setup.fluid_rest_density;
-    std::cout << fluid_mass << std::endl;
-    std::cout << sim_setup.fluid_rest_density << std::endl;
-
 
     // instantiating some classes
     learnSPH::utils::create_simulation_folder(sim_setup.assignment, simulation_timestamp);
