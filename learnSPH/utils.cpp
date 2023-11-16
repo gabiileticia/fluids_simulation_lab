@@ -57,6 +57,7 @@ void learnSPH::utils::create_simulation_folder(const std::string assign_number, 
     timestamp = strm.str();
 
     // Create folder
+    // doesn't work
     std::string stringpath = "./res/" + assign_number + "/" + timestamp + "/";
     int status = mkdir(stringpath.c_str(),0777);
     if (status == -1){
