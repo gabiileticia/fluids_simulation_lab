@@ -1,11 +1,20 @@
 #include <Eigen/Dense>
+#include <string>
 #ifndef TYPES
 #define TYPES
 
-namespace learnSPH {
-namespace types {
-  
-}
-}
+namespace learnSPH
+{
+namespace types
+{
+struct boundary
+{
+    std::string filename;
+    bool inner;
+    Eigen::Vector3d min;
+    Eigen::Vector3d max;
+};
+} // namespace types
+} // namespace learnSPH
 
 #endif

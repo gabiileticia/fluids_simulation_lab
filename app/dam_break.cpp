@@ -14,6 +14,7 @@
 #include "../learnSPH/kernel.h"
 #include "../learnSPH/sampling.h"
 #include "../learnSPH/time_integration.h"
+#include "../learnSPH/types.h"
 #include "../learnSPH/utils.h"
 
 int main()
@@ -50,9 +51,11 @@ int main()
                                 (fluid_end.z() - fluid_begin.z());
     const double fluid_mass = fluid_volume * fluid_rest_density;
 
-    const std::string boundary_file = "./res/boundary.obj";
-    boundary_begin                  = {-.02, -.02, -.02};
-    boundary_end                    = {0.17, 0.8, 1.0};
+    std::vector<learnSPH::types::boundary> boundaries;
+    boundaries.resize(1);
+    boundaries[0].filename = "./res/boundary.obj";
+    boundaries[0].min      = {-.02, -.02, -.02};
+    boundaries[1].max      = {0.17, 0.8, 1.0};
 
     // simulation parameter
     dt_default       = 0.0005;
@@ -69,10 +72,10 @@ int main()
     kernel::CubicSplineKernel cubic_kernel(h);
     acceleration::Acceleration acceleration(B, v_f, v_b, h, fluid_rest_density, gravity,
                                             cubic_kernel);
-    timeIntegration::semiImplicitEuler semImpEuler(particle_radius, boundary_end, boundary_begin);
+    timeIntegration::semiImplicitEuler semImpEuler(particle_radius, boundaries);
 
     // Load simulation geometry
-    geometry::load_n_sample_boundary(boundary_particle_positions, boundary_file,
+    geometry::load_n_sample_boundary(boundary_particle_positions, boundaries,
                                      boundary_sampling_distance);
     sampling::fluid_box(particles_positions, fluid_begin, fluid_end, fluid_sampling_distance);
 
@@ -122,7 +125,7 @@ int main()
         std::cout << "fluid_end: " << fluid_end.transpose() << std::endl;
         std::cout << "fluid_volume: " << fluid_volume << std::endl;
         std::cout << "fluid_mass: " << fluid_mass << std::endl;
-        std::cout << "boundary_file: " << boundary_file << std::endl;
+        std::cout << "boundary_file: " << boundaries[0].filename << std::endl;
         std::cout << "boundary_begin: " << boundary_begin.transpose() << std::endl;
         std::cout << "boundary_end: " << boundary_end.transpose() << std::endl;
         std::cout << "dt_default: " << dt_default << std::endl;

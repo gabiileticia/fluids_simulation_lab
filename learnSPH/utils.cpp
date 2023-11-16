@@ -1,4 +1,7 @@
 #include "utils.h"
+#include <cerrno>
+#include <cstdlib>
+#include <cstring>
 #include <stdlib.h> // rand
 #include <iostream>
 #include <chrono>
@@ -56,7 +59,13 @@ void learnSPH::utils::create_simulation_folder(const std::string assign_number, 
     // Create folder
     std::string stringpath = "./res/" + assign_number + "/" + timestamp + "/";
     int status = mkdir(stringpath.c_str(),0777);
-
+    if (status == -1){
+        std::cerr << "Error: " << strerror(errno) << "\n";
+        exit(errno);
+    }
+    else 
+        return;
+    
     // Create file with setup
 
 

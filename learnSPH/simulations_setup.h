@@ -1,6 +1,8 @@
 #include <Eigen/Dense>
 #include <vector>
 
+#include "types.h"
+
 
 #ifndef SIMULATION
 #define SIMULATION
@@ -17,9 +19,8 @@ namespace learnSPH {
             std::vector<Eigen::Vector3d> fluid_end;
             std::vector<Eigen::Vector3d> fluid_velocities;
 
-            std::vector<std::string> boundary_file;
-            Eigen::Vector3d boundary_begin;
-            Eigen::Vector3d boundary_end;
+
+            std::vector<types::boundary> boundaries;
 
             double dt_default;
             double t_between_frames;
@@ -29,7 +30,7 @@ namespace learnSPH {
             Eigen::Vector3d gravity;
             std::string assignment;
 
-            Simulations(std::string teste);
+            Simulations(std::string test);
 
             void simple_cube();
             void simple_cube_with_fluid_viscosity();
