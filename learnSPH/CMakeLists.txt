@@ -32,7 +32,9 @@ set(SOURCE_FILES
 	geometry.h
 	geometry.cpp
 	utils.h
-	utils.cpp)
+	utils.cpp
+	simulations_setup.h
+	simulations_setup.cpp)
 
     
 # Create a library version so it can be linked with other modules
