@@ -1,9 +1,11 @@
 #include <algorithm>
+#include <chrono>
 #include <iostream>
 #include <ostream>
 #include <stdlib.h>
 #include <string>
 #include <vector>
+
 
 #include <Eigen/Dense>
 
@@ -18,9 +20,6 @@
 #include "../learnSPH/time_integration.h"
 #include "../learnSPH/utils.h"
 
-
-#include <chrono>
-
 int main()
 {
 
@@ -32,7 +31,7 @@ int main()
     std::string simulation_timestamp;
 
     // Setting up simulation
-    learnSPH::simulations_setup::Simulations sim_setup("dam_break");
+    learnSPH::simulations_setup::Simulations sim_setup;
     //     sim_setup.simple_cube();
     //     sim_setup.simple_cube_with_fluid_viscosity();
     //     sim_setup.cubes_colision();
@@ -40,7 +39,7 @@ int main()
     //     sim_setup.gravity_with_floor();
     //     sim_setup.gravity_with_floor_boundary_viscosity();
     //     sim_setup.dam_break();
-    sim_setup.our_simulation_scene();
+    sim_setup.simple_cube();
 
     double particle_diameter          = 2.0 * sim_setup.particle_radius;
     double fluid_sampling_distance    = particle_diameter;
@@ -59,21 +58,18 @@ int main()
     // instantiating some classes
     std::cout << sim_setup.assignment << ", " << simulation_timestamp << "\n";
     learnSPH::utils::create_simulation_folder(sim_setup.assignment, simulation_timestamp);
+
     learnSPH::kernel::CubicSplineKernel cubic_kernel(h);
     learnSPH::acceleration::Acceleration acceleration(sim_setup.B, sim_setup.v_f, sim_setup.v_b, h,
                                                       sim_setup.fluid_rest_density,
                                                       sim_setup.gravity, cubic_kernel);
-    learnSPH::timeIntegration::semiImplicitEuler semImpEuler(sim_setup.particle_radius);
-
-    if (sim_setup.boundaries.size() > 0) {
-        learnSPH::timeIntegration::semiImplicitEuler semImpEuler(
-            sim_setup.particle_radius, sim_setup.boundaries);
-    }
+    learnSPH::timeIntegration::semiImplicitEuler semImpEuler(sim_setup.particle_radius,
+                                                             sim_setup.boundaries);
 
     // Load simulation geometry
     std::vector<Eigen::Vector3d> boundary_particles_positions;
-    learnSPH::geometry::load_n_sample_boundary(boundary_particles_positions,
-                                               sim_setup.boundaries, boundary_sampling_distance);
+    learnSPH::geometry::load_n_sample_boundary(boundary_particles_positions, sim_setup.boundaries,
+                                               boundary_sampling_distance);
 
     std::cout << "Number of boundary particles" << std::endl;
     std::cout << boundary_particles_positions.size() << std::endl;
@@ -123,6 +119,9 @@ int main()
     int count_del = 0;
     std::vector<bool> deleteFlag(particles_positions.size());
 
+    int maxSteps    = 5 / sim_setup.t_between_frames;
+    int stepCounter = 0;
+
     // Simulation loop
     while (t_simulation < 5) {
 
@@ -167,6 +166,8 @@ int main()
 
         // Save output
         if (t_simulation >= t_next_frame) {
+            stepCounter++;
+
             const std::string filename = "./res/" + sim_setup.assignment + "/" +
                                          simulation_timestamp + "/sim_" +
                                          std::to_string((int)(t_simulation * 1000000)) + ".vtk";
@@ -174,6 +175,8 @@ int main()
             learnSPH::write_particles_to_vtk(filename, particles_positions, particles_densities,
                                              particles_velocities);
             t_next_frame += sim_setup.t_between_frames;
+
+            //learnSPH::utils::updateProgressBar(stepCounter, maxSteps);
         }
     }
     return 0;

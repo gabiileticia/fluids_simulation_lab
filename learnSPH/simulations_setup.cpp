@@ -1,7 +1,7 @@
 #include "simulations_setup.h"
 #include <iostream>
 
-learnSPH::simulations_setup::Simulations::Simulations(std::string test){}
+learnSPH::simulations_setup::Simulations::Simulations(){}
 
 
 void learnSPH::simulations_setup::Simulations::simple_cube(){

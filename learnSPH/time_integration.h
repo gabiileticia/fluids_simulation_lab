@@ -16,7 +16,6 @@ namespace learnSPH
               double v_max           = 1.0;
               bool boundary_checking = false;
               std::vector<types::boundary> boundaries;
-              semiImplicitEuler(double radius);
               semiImplicitEuler(double radius, std::vector<types::boundary> boundaries);
               void integrationStep(std::vector<Eigen::Vector3d> &positions,
                                   std::vector<Eigen::Vector3d> &velocity,

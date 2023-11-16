@@ -18,8 +18,6 @@ namespace learnSPH {
             std::vector<Eigen::Vector3d> fluid_begin;
             std::vector<Eigen::Vector3d> fluid_end;
             std::vector<Eigen::Vector3d> fluid_velocities;
-
-
             std::vector<types::boundary> boundaries;
 
             double dt_default;
@@ -30,7 +28,7 @@ namespace learnSPH {
             Eigen::Vector3d gravity;
             std::string assignment;
 
-            Simulations(std::string test);
+            Simulations();
 
             void simple_cube();
             void simple_cube_with_fluid_viscosity();

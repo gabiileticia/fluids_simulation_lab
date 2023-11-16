@@ -10,19 +10,17 @@
 
 #include "types.h"
 
-learnSPH::timeIntegration::semiImplicitEuler::semiImplicitEuler(double radius)
-{
-    this->radius            = radius;
-    this->v_max             = 0;
-    this->boundary_checking = false;
-}
 learnSPH::timeIntegration::semiImplicitEuler::semiImplicitEuler(
     double radius, std::vector<types::boundary> boundaries)
 {
-    this->radius            = radius;
-    this->v_max             = 0;
-    this->boundaries        = boundaries;
-    this->boundary_checking = true;
+    this->radius = radius;
+    this->v_max  = 0;
+    if (boundaries.size() > 0) {
+        this->boundaries        = boundaries;
+        this->boundary_checking = true;
+    } else {
+        this->boundary_checking = false;
+    }
 }
 
 void learnSPH::timeIntegration::semiImplicitEuler::integrationStep(
