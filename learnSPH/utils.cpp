@@ -2,10 +2,13 @@
 
 #include <cerrno>
 #include <chrono>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
+#include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <stdlib.h> // rand
 #include <sys/stat.h>
 
@@ -79,31 +82,44 @@ void learnSPH::utils::create_simulation_folder(const std::string assign_number,
     }
 }
 
-void learnSPH::utils::updateProgressBar(int &currentStep, int &maxSteps) {
+void learnSPH::utils::updateProgressBar(int currentStep, int maxSteps, const int barWidth) {
     static std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
 
-    const int barWidth = 50;
     float progress = static_cast<float>(currentStep) / maxSteps;
     int progressBarLength = static_cast<int>(progress * barWidth);
 
+    std::cout << "Frame: " << currentStep << "/" << maxSteps;
     std::cout << "[";
     for (int i = 0; i < barWidth; ++i) {
         if (i < progressBarLength) {
-            std::cout << "=";
+            std::cout << "#";
         } else {
             std::cout << " ";
         }
     }
-    std::cout << "] " << int(progress * 100.0) << "%\r";
-    std::cout.flush();
+    std::cout << "] " << int(progress * 100.0) << "% | ";
 
     // Calculate elapsed time
     std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
     std::chrono::duration<double> elapsedSeconds = currentTime - startTime;
     
     // Calculate remaining time
-    double remainingSeconds = elapsedSeconds.count() / progress - elapsedSeconds.count();
+    double remainingSeconds = (elapsedSeconds.count() / currentStep) * (maxSteps - currentStep);
 
-    std::cout << "Elapsed Time: " << elapsedSeconds.count() << " seconds";
-    std::cout << " | Remaining Time: " << remainingSeconds << " seconds    ";
+    int elapsedHours = static_cast<int>(elapsedSeconds.count()) / 3600;
+    int elapsedMins = static_cast<int>(elapsedSeconds.count()) / 60 % 60;
+    int elapsedSecs = static_cast<int>(elapsedSeconds.count()) % 60;
+
+    int remainingHours = static_cast<int>(remainingSeconds) / 3600;
+    int remainingMins = static_cast<int>(remainingSeconds) / 60 % 60;
+    int remainingSecs = static_cast<int>(remainingSeconds) % 60;
+
+    std::cout << "Elapsed Time: " << std::setfill('0') << std::setw(2) << elapsedHours << ":"
+              << std::setfill('0') << std::setw(2) << elapsedMins << ":"
+              << std::setfill('0') << std::setw(2) << elapsedSecs;
+    std::cout << " | Remaining Time: " << std::setfill('0') << std::setw(2) << remainingHours << ":"
+              << std::setfill('0') << std::setw(2) << remainingMins << ":"
+              << std::setfill('0') << std::setw(2) << remainingSecs << "\n";
+
+    std::cout.flush();
 }

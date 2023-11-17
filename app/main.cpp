@@ -39,7 +39,7 @@ int main()
     //     sim_setup.gravity_with_floor();
     //     sim_setup.gravity_with_floor_boundary_viscosity();
     //     sim_setup.dam_break();
-    sim_setup.simple_cube();
+    sim_setup.our_simulation_scene();
 
     double particle_diameter          = 2.0 * sim_setup.particle_radius;
     double fluid_sampling_distance    = particle_diameter;
@@ -176,7 +176,7 @@ int main()
                                              particles_velocities);
             t_next_frame += sim_setup.t_between_frames;
 
-            //learnSPH::utils::updateProgressBar(stepCounter, maxSteps);
+            learnSPH::utils::updateProgressBar(stepCounter, maxSteps, 100);
         }
     }
     return 0;

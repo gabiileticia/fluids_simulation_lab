@@ -15,7 +15,8 @@ void deleteOutOfBounds(std::vector<Eigen::Vector3d> &positions,
                        std::vector<double> &pressure, std::vector<bool> &deleteFlat,
                        int &count_del);
 void create_simulation_folder(const std::string assign_number, std::string &timestamp);
-void updateProgressBar(int &currentStep, int &maxSteps);;
+void updateProgressBar(int currentStep, int maxSteps, const int barWidth);
+;
 } // namespace utils
 } // namespace learnSPH
 
