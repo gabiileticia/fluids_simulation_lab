@@ -21,7 +21,20 @@ set(SOURCE_FILES
 	kernel.cpp
 	kernel.h
 	neighborhood_search.cpp
-	neighborhood_search.h)
+	neighborhood_search.h
+	time_integration.cpp
+	time_integration.h
+	types.h
+	acceleration.h
+	acceleration.cpp
+	densities.h
+	densities.cpp
+	geometry.h
+	geometry.cpp
+	utils.h
+	utils.cpp
+	simulations_setup.h
+	simulations_setup.cpp)
 
     
 # Create a library version so it can be linked with other modules

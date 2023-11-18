@@ -2,13 +2,27 @@
 #include <cassert>
 #include <Eigen/Dense>
 
+#ifndef CUBIC_SPLINE
+#define CUBIC_SPLINE
+
 namespace learnSPH
 {
 	namespace kernel
 	{
 		constexpr double PI = 3.14159265358979323846;
 		
-		double kernel_function(Eigen::Vector3d x, const double h);
-		Eigen::Vector3d kernel_gradient(Eigen::Vector3d x, const double h);
+		class CubicSplineKernel{
+			public:
+				static constexpr double alpha = 3.0 / (2.0 * learnSPH::kernel::PI);
+				double gama;
+				double rad_gamma;
+				double h;
+				double h_inverse;
+				CubicSplineKernel(double h);
+				double kernel_function(Eigen::Vector3d x);
+				Eigen::Vector3d kernel_gradient(Eigen::Vector3d x);
+		};
 	};
 };
+
+#endif
