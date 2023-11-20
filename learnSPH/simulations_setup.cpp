@@ -194,12 +194,12 @@ void learnSPH::simulations_setup::Simulations::our_simulation_scene(){
     this->boundaries[0].inner = false;
 
     this->boundaries[1].filename = "./res/inner_box.obj";
-    this->boundaries[1].min = Eigen::Vector3d(0.1, 0.3, 0.2);
-    this->boundaries[1].max = Eigen::Vector3d(0.5, 0.5, 0.3);
+    this->boundaries[1].min = Eigen::Vector3d(0.05, 0.3, 0.2);
+    this->boundaries[1].max = Eigen::Vector3d(0.1, 0.5, 0.3);
     this->boundaries[1].inner = true;
 
     this->dt_default = 0.00025;
-    this->t_between_frames = 0.0005;
+    this->t_between_frames = 0.006;
     this->B = 1000 * 1.02;
     this->v_f = 0.0025;
     this->v_b = 0.0;
