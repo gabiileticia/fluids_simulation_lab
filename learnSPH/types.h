@@ -14,6 +14,7 @@ struct boundary
     Eigen::Vector3d min;
     Eigen::Vector3d max;
 };
+typedef double (*ImplicitSurface)(Eigen::Vector3d position);
 } // namespace types
 } // namespace learnSPH
 
