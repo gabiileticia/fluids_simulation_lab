@@ -34,7 +34,10 @@ set(SOURCE_FILES
 	utils.h
 	utils.cpp
 	simulations_setup.h
-	simulations_setup.cpp)
+	simulations_setup.cpp
+	marching_cubes_lut.h
+	marching_cubes.h
+	marching_cubes.cpp)
 
     
 # Create a library version so it can be linked with other modules
