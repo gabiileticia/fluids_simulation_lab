@@ -2,8 +2,11 @@
 #define UTILS
 
 #include <Eigen/Dense>
+#include <array>
 #include <chrono>
 #include <vector>
+
+#include "types.h"
 
 namespace learnSPH
 {
@@ -16,7 +19,7 @@ void deleteOutOfBounds(std::vector<Eigen::Vector3d> &positions,
                        int &count_del);
 void create_simulation_folder(const std::string assign_number, std::string &timestamp);
 void updateProgressBar(int currentStep, int maxSteps, const int barWidth);
-;
+Eigen::Vector3d finiteDifference(learnSPH::types::ImplicitSurface foo, Eigen::Vector3d x1, Eigen::Vector3d x2, double tolerance);
 } // namespace utils
 } // namespace learnSPH
 
