@@ -36,13 +36,13 @@ learnSPH::surface::MarchingCubes::MarchingCubes(
 void learnSPH::surface::MarchingCubes::get_Isosurface()
 {
     uint vertexIdx, edgeIdx, edgeZIndex, intersecId, triangleId;
-    Eigen::Vector3d offset_cords;
+    Eigen::Vector3d intersection;
     std::array<bool, 8> levelSet;
     std::array<double, 8> vertex_signs;
     std::array<std::array<int, 3>, 5> triangulation;
     std::array<int, 2> vertexPair;
     std::array<Eigen::Vector3d, 8> vertices_coords;
-    double intersecPoint, alpha, offset;
+    double intersecPoint, alpha;
 
     intersecId = 0;
     triangleId = 0;
@@ -87,14 +87,10 @@ void learnSPH::surface::MarchingCubes::get_Isosurface()
                             // compute intersection point
                             alpha = vertex_signs[vertexPair[0]] /
                                     (vertex_signs[vertexPair[0]] - vertex_signs[vertexPair[1]]);
-                            offset = (1.0 - alpha) * vertex_signs[vertexPair[0]] +
-                                     alpha * vertex_signs[vertexPair[1]];
-                            // intersection point is added to first vertex of vertices pair to get
-                            // the real space vertex for intersection point
-                            offset_cords = vertices_coords[vertexPair[0]];
-                            offset_cords[CELL_EDGES_DIRECTION[triangle[l]]] += offset;
+                            intersection = (1.0 - alpha) * vertices_coords[vertexPair[0]] +
+                                     alpha * vertices_coords[vertexPair[1]];
                             // put in the vector
-                            this->intersections[intersecId] = offset_cords;
+                            this->intersections[intersecId] = intersection;
                             // add (key, value) pair to hashmap
                             this->edgeIntersection[edgeIdx] = intersecId;
                             this->triangles[triangleId][l]  = edgeIdx;
