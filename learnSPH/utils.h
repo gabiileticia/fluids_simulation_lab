@@ -20,7 +20,8 @@ void deleteOutOfBounds(std::vector<Eigen::Vector3d> &positions,
 void create_simulation_folder(const std::string assign_number, std::string &timestamp);
 void updateProgressBar(int currentStep, int maxSteps, const int barWidth);
 Eigen::Vector3d implicitVertexNormal(learnSPH::types::ImplicitSurface foo, Eigen::Vector3d vertex,
-                                     double epsilon, void* fooArgs);
+                                     double epsilon, void *fooArgs);
+uint cubeVertex2VertexIndex(uint cellIdx, uint vertexIndex, uint nx, uint ny, uint nz);
 } // namespace utils
 } // namespace learnSPH
 
