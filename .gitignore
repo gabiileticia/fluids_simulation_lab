@@ -18,6 +18,7 @@ _deps
 *Zone.Identifier
 *.vtk
 *.a
+*.blend
 
 ## From the course
 tests/learnSPH_tests
