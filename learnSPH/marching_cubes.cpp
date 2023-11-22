@@ -2,14 +2,13 @@
 #include <cstdlib>
 #include <iostream>
 
-
 #include "marching_cubes.h"
 #include "marching_cubes_lut.h"
 #include "utils.h"
 
-learnSPH::surface::MarchingCubes::MarchingCubes(double cellWidth, uint n_x, uint n_y, uint n_z,
-                                                Eigen::Vector3d origin,
-                                                learnSPH::types::ImplicitSurface implicitSurfaceFunction)
+learnSPH::surface::MarchingCubes::MarchingCubes(
+    double cellWidth, uint n_x, uint n_y, uint n_z, Eigen::Vector3d origin,
+    learnSPH::types::ImplicitSurface implicitSurfaceFunction, void *funcArgs, double epsilon)
 {
     this->origin = origin;
     this->n_cx   = n_x;
@@ -24,12 +23,15 @@ learnSPH::surface::MarchingCubes::MarchingCubes(double cellWidth, uint n_x, uint
     // Currently requires that realspace grid axis are divisible by the cellWidth \
             May lead to problems later.
     this->cellWidth = cellWidth;
+    this->epsilon   = epsilon;
 
     this->levelSet.resize(n_vx * n_vy * n_vz);
     this->gridVertices.rehash(n_vx * n_vy * n_vz);
-    this->triangles.rehash(n_ex * n_ey * n_ez);
+    this->triangles.resize(n_cx * n_cy * n_cz * 5);
+    this->intersections.resize(this->triangles.size() * 3);
 
     this->implicitSurfaceFunction = implicitSurfaceFunction;
+    this->funcArgs                = funcArgs;
 }
 
 void learnSPH::surface::MarchingCubes::get_Isosurface()
@@ -60,50 +62,76 @@ void learnSPH::surface::MarchingCubes::get_Isosurface()
                                           (CELL_VERTICES[l][1] + j) * cellWidth + origin.y(),
                                           (CELL_VERTICES[l][2] + k) * cellWidth + origin.z()};
                     // compute sign distance value with implicit function
-                    vertex_signs[l] = this->implicitSurfaceFunction(vertices_coords[l]);
+                    vertex_signs[l] =
+                        this->implicitSurfaceFunction(vertices_coords[l], this->funcArgs);
                     // get levelset by simply checking if vertex inside implicit surface
                     levelSet[l] = vertex_signs[l] < 0;
                 }
                 // get corresponding triangulation for current cell
                 triangulation = get_marching_cubes_cell_triangulation(levelSet);
                 // assign first triple of triangle and immediatly skip the rest if first value is -1
-                std::array<int, 3> triangle = triangulation[0];
-                while (triangle[0] >= 0) {
-                    // each entry in triangle corresponds to an edge in the cell
-                    for (int l = 0; l < 3; ++l) {
-                        // get vertex pair for first edge
-                        vertexPair = CELL_EDGES[triangle[l]];
-                        // compute absolute edge id
-                        edgeIdx = vertexIdx * 3 + CELL_EDGES_DIRECTION[triangle[l]];
-                        // compute intersection point
-                        alpha = vertex_signs[vertexPair[0]] /
-                                (vertex_signs[vertexPair[0]] - vertex_signs[vertexPair[1]]);
-                        offset = (1.0 - alpha) * vertex_signs[vertexPair[0]] +
-                                 alpha * vertex_signs[vertexPair[1]];
-                        // intersection point is added to first vertex of vertices pair to get the
-                        // real space vertex for intersection point
-                        offset_cords = vertices_coords[vertexPair[0]];
-                        offset_cords[CELL_EDGES_DIRECTION[triangle[l]]] += offset;
-                        // put in the vector
-                        this->intersections[intersecId] = offset_cords;
-                        // add (key, value) pair to hashmap
-                        this->edgeIntersection[edgeIdx] = intersecId;
-                        this->triangles[triangleId][l]  = edgeIdx;
-                        ++intersecId;
+                for (int m = 0; m < 5; ++m) {
+                    std::array<int, 3> triangle = triangulation[m];
+                    if (triangle[0] >= 0) {
+                        // each entry in triangle corresponds to an edge in the cell
+                        for (int l = 0; l < 3; ++l) {
+                            // get vertex pair for first edge
+                            vertexPair = CELL_EDGES[triangle[l]];
+                            // compute absolute edge id
+                            edgeIdx = vertexIdx * 3 + CELL_EDGES_DIRECTION[triangle[l]];
+                            // compute intersection point
+                            alpha = vertex_signs[vertexPair[0]] /
+                                    (vertex_signs[vertexPair[0]] - vertex_signs[vertexPair[1]]);
+                            offset = (1.0 - alpha) * vertex_signs[vertexPair[0]] +
+                                     alpha * vertex_signs[vertexPair[1]];
+                            // intersection point is added to first vertex of vertices pair to get
+                            // the real space vertex for intersection point
+                            offset_cords = vertices_coords[vertexPair[0]];
+                            offset_cords[CELL_EDGES_DIRECTION[triangle[l]]] += offset;
+                            // put in the vector
+                            this->intersections[intersecId] = offset_cords;
+                            // add (key, value) pair to hashmap
+                            this->edgeIntersection[edgeIdx] = intersecId;
+                            this->triangles[triangleId][l]  = edgeIdx;
+                            ++intersecId;
+                        }
+                        ++triangleId;
                     }
-                    ++triangleId;
                 }
             }
         }
     }
+    std::cout << "Finished retrieving ISOSurface!";
 }
 
-void learnSPH::surface::MarchingCubes::compute_normals(){
-    if (this->triangles.size() == 0){
-        std::cout << "No polygons to compute normals for!" << "\n";
+void learnSPH::surface::MarchingCubes::compute_normals()
+{
+    int a, b, c;
+    Eigen::Vector3d v_a, v_b, v_c;
+    if (this->triangles.size() == 0) {
+        std::cout << "No polygons to compute normals for!"
+                  << "\n";
         exit(-1);
     }
-    
+    this->intersectionNormals.resize(this->intersections.size());
 
+    for (int i = 0; i < this->triangles.size(); ++i) {
+        // get vertex indices
+        a = this->edgeIntersection[triangles[i][0]];
+        b = this->edgeIntersection[triangles[i][1]];
+        c = this->edgeIntersection[triangles[i][2]];
+        // get vertex values
+        v_a = this->intersections[a];
+        v_b = this->intersections[b];
+        v_c = this->intersections[c];
+
+        // compute normals with finite difference
+        using namespace learnSPH::utils;
+        this->intersectionNormals[a] =
+            implicitVertexNormal(this->implicitSurfaceFunction, v_a, this->epsilon, this->funcArgs);
+        this->intersectionNormals[b] =
+            implicitVertexNormal(this->implicitSurfaceFunction, v_b, this->epsilon, this->funcArgs);
+        this->intersectionNormals[c] =
+            implicitVertexNormal(this->implicitSurfaceFunction, v_c, this->epsilon, this->funcArgs);
+    }
 }
-
