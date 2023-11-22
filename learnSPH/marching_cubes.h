@@ -23,7 +23,6 @@ namespace learnSPH {
             std::vector<Eigen::Vector3d> intersectionNormals;
             std::unordered_map<uint, uint> edgeIntersection;
             std::vector<std::array<int, 3>> triangles;
-            std::unordered_map<uint, Eigen::Vector3d> gridVertices;
 
 
             learnSPH::types::ImplicitSurface implicitSurfaceFunction;
@@ -33,8 +32,6 @@ namespace learnSPH {
 
             void get_Isosurface();
             void compute_normals();
-
-            
         };  
     }
 }

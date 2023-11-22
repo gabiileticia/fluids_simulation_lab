@@ -26,7 +26,6 @@ learnSPH::surface::MarchingCubes::MarchingCubes(
     this->epsilon   = epsilon;
 
     this->levelSet.resize(n_vx * n_vy * n_vz);
-    this->gridVertices.rehash(n_vx * n_vy * n_vz);
     this->triangles.resize(n_cx * n_cy * n_cz * 5);
     this->intersections.resize(this->triangles.size() * 3);
 
@@ -65,7 +64,11 @@ void learnSPH::surface::MarchingCubes::get_Isosurface()
                     vertex_signs[l] =
                         this->implicitSurfaceFunction(vertices_coords[l], this->funcArgs);
                     // get levelset by simply checking if vertex inside implicit surface
-                    levelSet[l] = vertex_signs[l] < 0;
+                    levelSet[l] = vertex_signs[l] > 0;
+                    // if (levelSet[l] == false) {
+                    //     std::cout << "Found something!"
+                    //               << "\n";
+                    // }
                 }
                 // get corresponding triangulation for current cell
                 triangulation = get_marching_cubes_cell_triangulation(levelSet);
@@ -78,6 +81,8 @@ void learnSPH::surface::MarchingCubes::get_Isosurface()
                             // get vertex pair for first edge
                             vertexPair = CELL_EDGES[triangle[l]];
                             // compute absolute edge id
+                            vertexIdx = learnSPH::utils::cubeVertex2VertexIndex(
+                                vertexIdx, vertexPair[0], this->n_vx, this->n_vy, this->n_vz);
                             edgeIdx = vertexIdx * 3 + CELL_EDGES_DIRECTION[triangle[l]];
                             // compute intersection point
                             alpha = vertex_signs[vertexPair[0]] /
@@ -96,6 +101,8 @@ void learnSPH::surface::MarchingCubes::get_Isosurface()
                             ++intersecId;
                         }
                         ++triangleId;
+                    } else {
+                        break;
                     }
                 }
             }

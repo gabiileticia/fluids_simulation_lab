@@ -126,7 +126,9 @@ void learnSPH::utils::updateProgressBar(int currentStep, int maxSteps, const int
     std::cout.flush();
 }
 
-Eigen::Vector3d learnSPH::utils::implicitVertexNormal(learnSPH::types::ImplicitSurface foo, Eigen::Vector3d vertex, double epsilon, void* fooArgs)
+Eigen::Vector3d learnSPH::utils::implicitVertexNormal(learnSPH::types::ImplicitSurface foo,
+                                                      Eigen::Vector3d vertex, double epsilon,
+                                                      void *fooArgs)
 {
     // Unit vectors
     static Eigen::Vector3d ex = Eigen::Vector3d(1, 0, 0);
@@ -142,4 +144,29 @@ Eigen::Vector3d learnSPH::utils::implicitVertexNormal(learnSPH::types::ImplicitS
     fin_diff = fin_diff / (2.0 * epsilon);
 
     return fin_diff;
+}
+
+uint learnSPH::utils::cubeVertex2VertexIndex(uint cellIdx, uint vertexIndex, uint nx, uint ny,
+                                             uint nz)
+{
+    switch (vertexIndex) {
+    case 0:
+        return cellIdx;
+    case 1:
+        return cellIdx + 1;
+    case 2:
+        return cellIdx + 1 + nx;
+    case 3:
+        return cellIdx + nx;
+    case 4:
+        return cellIdx + nx * ny;
+    case 5:
+        return cellIdx + 1 + nx * ny;
+    case 6:
+        return cellIdx + 1 + ny + nx * ny;
+    case 7:
+        return cellIdx + nx * ny + nx;
+    default:
+        exit(-1);
+    }
 }
