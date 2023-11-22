@@ -126,22 +126,20 @@ void learnSPH::utils::updateProgressBar(int currentStep, int maxSteps, const int
     std::cout.flush();
 }
 
-Eigen::Vector3d learnSPH::utils::finiteDifference(learnSPH::types::ImplicitSurface foo,
-                                                  Eigen::Vector3d x1, Eigen::Vector3d x2,
-                                                  double tolerance)
+Eigen::Vector3d learnSPH::utils::implicitVertexNormal(learnSPH::types::ImplicitSurface foo, Eigen::Vector3d vertex, double epsilon, void* fooArgs)
 {
     // Unit vectors
-    Eigen::Vector3d ex = Eigen::Vector3d(1, 0, 0);
-    Eigen::Vector3d ey = Eigen::Vector3d(0, 1, 0);
-    Eigen::Vector3d ez = Eigen::Vector3d(0, 0, 1);
+    static Eigen::Vector3d ex = Eigen::Vector3d(1, 0, 0);
+    static Eigen::Vector3d ey = Eigen::Vector3d(0, 1, 0);
+    static Eigen::Vector3d ez = Eigen::Vector3d(0, 0, 1);
 
     Eigen::Vector3d fin_diff;
 
-    fin_diff[0] = foo(x1 - x2 + tolerance * ex) - foo(x1 - x2 - tolerance * ex);
-    fin_diff[1] = foo(x1 - x2 + tolerance * ey) - foo(x1 - x2 - tolerance * ey);
-    fin_diff[2] = foo(x1 - x2 + tolerance * ez) - foo(x1 - x2 - tolerance * ez);
+    fin_diff[0] = foo(vertex + epsilon * ex, fooArgs) - foo(vertex - epsilon * ex, fooArgs);
+    fin_diff[1] = foo(vertex + epsilon * ey, fooArgs) - foo(vertex - epsilon * ey, fooArgs);
+    fin_diff[2] = foo(vertex + epsilon * ez, fooArgs) - foo(vertex - epsilon * ez, fooArgs);
 
-    fin_diff = fin_diff / (2.0 * tolerance);
+    fin_diff = fin_diff / (2.0 * epsilon);
 
     return fin_diff;
 }
