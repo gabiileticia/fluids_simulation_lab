@@ -105,6 +105,8 @@ void learnSPH::surface::MarchingCubes::get_Isosurface()
             }
         }
     }
+    this->intersections.resize(intersecId);
+    this->triangles.resize(triangleId);
     std::cout << "Finished retrieving ISOSurface!";
 }
 
