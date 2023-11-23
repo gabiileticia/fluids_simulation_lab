@@ -141,9 +141,9 @@ Eigen::Vector3d learnSPH::utils::implicitVertexNormal(learnSPH::types::ImplicitS
     fin_diff[1] = foo(vertex + epsilon * ey, fooArgs) - foo(vertex - epsilon * ey, fooArgs);
     fin_diff[2] = foo(vertex + epsilon * ez, fooArgs) - foo(vertex - epsilon * ez, fooArgs);
 
-    fin_diff = fin_diff / (2.0 * epsilon);
+    fin_diff = fin_diff / 2.0 * epsilon;
 
-    return fin_diff;
+    return fin_diff.normalized();
 }
 
 uint learnSPH::utils::cubeVertex2VertexIndex(uint cellIdx, uint vertexIndex, uint nx, uint ny,

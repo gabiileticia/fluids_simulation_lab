@@ -8,7 +8,7 @@
 
 learnSPH::surface::MarchingCubes::MarchingCubes(
     double cellWidth, uint n_x, uint n_y, uint n_z, Eigen::Vector3d origin,
-    learnSPH::types::ImplicitSurface implicitSurfaceFunction, void *funcArgs, double epsilon)
+    learnSPH::types::ImplicitSurface implicitSurfaceFunction, void *funcArgs, double epsilon, bool implicitFlag)
 {
     this->origin = origin;
     this->n_cx   = n_x;
@@ -31,6 +31,7 @@ learnSPH::surface::MarchingCubes::MarchingCubes(
 
     this->implicitSurfaceFunction = implicitSurfaceFunction;
     this->funcArgs                = funcArgs;
+    this->implicitFlag = implicitFlag;
 }
 
 void learnSPH::surface::MarchingCubes::get_Isosurface()
@@ -64,11 +65,11 @@ void learnSPH::surface::MarchingCubes::get_Isosurface()
                     vertex_signs[l] =
                         this->implicitSurfaceFunction(vertices_coords[l], this->funcArgs);
                     // get levelset by simply checking if vertex inside implicit surface
-                    levelSet[l] = vertex_signs[l] < 0;
-                    // if (levelSet[l] == false) {
-                    //     std::cout << "Found something!"
-                    //               << "\n";
-                    // }
+                    if(implicitFlag)
+                        levelSet[l] = vertex_signs[l] > 0;
+                    else
+                        levelSet[l] = vertex_signs[l] < 0;
+                
                 }
                 // get corresponding triangulation for current cell
                 triangulation = get_marching_cubes_cell_triangulation(levelSet);
