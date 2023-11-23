@@ -32,6 +32,7 @@ namespace learnSPH {
 
             void get_Isosurface();
             void compute_normals();
+            void compute_normals_alternative();
         };  
     }
 }

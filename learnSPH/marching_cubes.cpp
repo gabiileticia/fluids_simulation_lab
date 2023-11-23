@@ -36,13 +36,13 @@ learnSPH::surface::MarchingCubes::MarchingCubes(
 void learnSPH::surface::MarchingCubes::get_Isosurface()
 {
     uint vertexIdx, edgeIdx, edgeZIndex, intersecId, triangleId;
-    Eigen::Vector3d offset_cords;
+    Eigen::Vector3d intersection;
     std::array<bool, 8> levelSet;
     std::array<double, 8> vertex_signs;
     std::array<std::array<int, 3>, 5> triangulation;
     std::array<int, 2> vertexPair;
     std::array<Eigen::Vector3d, 8> vertices_coords;
-    double intersecPoint, alpha, offset;
+    double intersecPoint, alpha;
 
     intersecId = 0;
     triangleId = 0;
@@ -64,7 +64,7 @@ void learnSPH::surface::MarchingCubes::get_Isosurface()
                     vertex_signs[l] =
                         this->implicitSurfaceFunction(vertices_coords[l], this->funcArgs);
                     // get levelset by simply checking if vertex inside implicit surface
-                    levelSet[l] = vertex_signs[l] > 0;
+                    levelSet[l] = vertex_signs[l] < 0;
                     // if (levelSet[l] == false) {
                     //     std::cout << "Found something!"
                     //               << "\n";
@@ -87,17 +87,13 @@ void learnSPH::surface::MarchingCubes::get_Isosurface()
                             // compute intersection point
                             alpha = vertex_signs[vertexPair[0]] /
                                     (vertex_signs[vertexPair[0]] - vertex_signs[vertexPair[1]]);
-                            offset = (1.0 - alpha) * vertex_signs[vertexPair[0]] +
-                                     alpha * vertex_signs[vertexPair[1]];
-                            // intersection point is added to first vertex of vertices pair to get
-                            // the real space vertex for intersection point
-                            offset_cords = vertices_coords[vertexPair[0]];
-                            offset_cords[CELL_EDGES_DIRECTION[triangle[l]]] += offset;
+                            intersection = (1.0 - alpha) * vertices_coords[vertexPair[0]] +
+                                           alpha * vertices_coords[vertexPair[1]];
                             // put in the vector
-                            this->intersections[intersecId] = offset_cords;
+                            this->intersections[intersecId] = intersection;
                             // add (key, value) pair to hashmap
                             this->edgeIntersection[edgeIdx] = intersecId;
-                            this->triangles[triangleId][l]  = edgeIdx;
+                            this->triangles[triangleId][l]  = intersecId;
                             ++intersecId;
                         }
                         ++triangleId;
@@ -140,5 +136,22 @@ void learnSPH::surface::MarchingCubes::compute_normals()
             implicitVertexNormal(this->implicitSurfaceFunction, v_b, this->epsilon, this->funcArgs);
         this->intersectionNormals[c] =
             implicitVertexNormal(this->implicitSurfaceFunction, v_c, this->epsilon, this->funcArgs);
+    }
+}
+
+void learnSPH::surface::MarchingCubes::compute_normals_alternative()
+{
+    Eigen::Vector3d vertex;
+    if (this->intersections.size() == 0) {
+        std::cout << "No mesh vertices to compute normals for!"
+                  << "\n";
+        exit(-1);
+    }
+
+    this->intersectionNormals.resize(this->intersections.size());
+
+    for (int i = 0; i < this->intersections.size(); ++i) {
+        this->intersectionNormals[i] = learnSPH::utils::implicitVertexNormal(
+            this->implicitSurfaceFunction, this->intersections[i], this->epsilon, this->funcArgs);
     }
 }
