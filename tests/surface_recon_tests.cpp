@@ -26,6 +26,7 @@ TEST_CASE("Tests for marching cubes class", "[mcubes]")
     // dimensions
     uint nx, ny, nz;
     Eigen::Vector3d min, max;
+    bool implicitFlag = true;
     Radii radii;
 
     radii.R   = 0.7;
@@ -41,7 +42,7 @@ TEST_CASE("Tests for marching cubes class", "[mcubes]")
     nz = (max.z() - min.z()) / cellWidth + 1;
 
     learnSPH::surface::MarchingCubes mcubes(cellWidth, nx, ny, nz, min, ImplicitTorus, &radii,
-                                            epsilon);
+                                            epsilon, implicitFlag);
 
     SECTION("Testing isosurface function"){
         mcubes.get_Isosurface();
