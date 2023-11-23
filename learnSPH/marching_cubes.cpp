@@ -64,7 +64,7 @@ void learnSPH::surface::MarchingCubes::get_Isosurface()
                     vertex_signs[l] =
                         this->implicitSurfaceFunction(vertices_coords[l], this->funcArgs);
                     // get levelset by simply checking if vertex inside implicit surface
-                    levelSet[l] = vertex_signs[l] > 0;
+                    levelSet[l] = vertex_signs[l] < 0;
                     // if (levelSet[l] == false) {
                     //     std::cout << "Found something!"
                     //               << "\n";
@@ -88,12 +88,12 @@ void learnSPH::surface::MarchingCubes::get_Isosurface()
                             alpha = vertex_signs[vertexPair[0]] /
                                     (vertex_signs[vertexPair[0]] - vertex_signs[vertexPair[1]]);
                             intersection = (1.0 - alpha) * vertices_coords[vertexPair[0]] +
-                                     alpha * vertices_coords[vertexPair[1]];
+                                           alpha * vertices_coords[vertexPair[1]];
                             // put in the vector
                             this->intersections[intersecId] = intersection;
                             // add (key, value) pair to hashmap
                             this->edgeIntersection[edgeIdx] = intersecId;
-                            this->triangles[triangleId][l]  = edgeIdx;
+                            this->triangles[triangleId][l]  = intersecId;
                             ++intersecId;
                         }
                         ++triangleId;
@@ -136,5 +136,22 @@ void learnSPH::surface::MarchingCubes::compute_normals()
             implicitVertexNormal(this->implicitSurfaceFunction, v_b, this->epsilon, this->funcArgs);
         this->intersectionNormals[c] =
             implicitVertexNormal(this->implicitSurfaceFunction, v_c, this->epsilon, this->funcArgs);
+    }
+}
+
+void learnSPH::surface::MarchingCubes::compute_normals_alternative()
+{
+    Eigen::Vector3d vertex;
+    if (this->intersections.size() == 0) {
+        std::cout << "No mesh vertices to compute normals for!"
+                  << "\n";
+        exit(-1);
+    }
+
+    this->intersectionNormals.resize(this->intersections.size());
+
+    for (int i = 0; i < this->intersections.size(); ++i) {
+        this->intersectionNormals[i] = learnSPH::utils::implicitVertexNormal(
+            this->implicitSurfaceFunction, this->intersections[i], this->epsilon, this->funcArgs);
     }
 }

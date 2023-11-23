@@ -48,12 +48,12 @@ TEST_CASE("Tests for marching cubes class", "[mcubes]")
     }
     SECTION("Testing Normals computation"){
         mcubes.get_Isosurface();
-        mcubes.compute_normals();
+        mcubes.compute_normals_alternative();
     }
 
     SECTION("Testing output of file"){
         mcubes.get_Isosurface();
-        mcubes.compute_normals();
+        mcubes.compute_normals_alternative();
         learnSPH::write_tri_mesh_to_vtk("torus.vtk", mcubes.intersections, mcubes.triangles, mcubes.intersectionNormals);
         std::cout << "All finished";
     }

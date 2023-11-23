@@ -163,7 +163,7 @@ uint learnSPH::utils::cubeVertex2VertexIndex(uint cellIdx, uint vertexIndex, uin
     case 5:
         return cellIdx + 1 + nx * ny;
     case 6:
-        return cellIdx + 1 + ny + nx * ny;
+        return cellIdx + 1 + nx + nx * ny;
     case 7:
         return cellIdx + nx * ny + nx;
     default:
