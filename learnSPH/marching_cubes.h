@@ -22,8 +22,8 @@ class MarchingCubes
     bool implicitFlag; // false for < 0 inside and > 0 outside, true: for vice versa
     Eigen::Vector3d origin;
 
-    std::vector<double> levelSet; // Stores the SD value for position with value btween -1 (inside
-                                  // surface) and 1 (outside surface)
+    // std::vector<double> levelSet; // Stores the SD value for position with value btween -1 (inside
+    //                               // surface) and 1 (outside surface)
     std::vector<Eigen::Vector3d> intersections;
     std::vector<Eigen::Vector3d> intersectionNormals;
     std::unordered_map<uint, uint> edgeIntersection;
@@ -32,13 +32,18 @@ class MarchingCubes
     learnSPH::types::ImplicitSurface implicitSurfaceFunction;
     void *funcArgs;
 
-    MarchingCubes(double cellWidth, uint n_x, uint n_y, uint n_z, Eigen::Vector3d origin,
-                  learnSPH::types::ImplicitSurface implicitSurfaceFunction, void *funcArgs,
-                  double epsilon, bool implicitFlag);
+    // MarchingCubes(double cellWidth, uint n_x, uint n_y, uint n_z, Eigen::Vector3d origin,
+    //               learnSPH::types::ImplicitSurface implicitSurfaceFunction, void *funcArgs,
+    //               double epsilon, bool implicitFlag);
 
-    void get_Isosurface();
+    MarchingCubes(
+    double cellWidth, uint n_x, uint n_y, uint n_z, Eigen::Vector3d origin, double epsilon, bool implicitFlag);
+
+    void get_isosurface(std::vector<double> &level_set);
     void compute_normals();
-    void compute_normals_alternative();
+    // void compute_normals_alternative();
+    void compute_normals_gl(std::vector<double> &level_set);
+
 };
 } // namespace surface
 } // namespace learnSPH

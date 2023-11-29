@@ -19,6 +19,8 @@
 #include "../learnSPH/simulations_setup.h"
 #include "../learnSPH/time_integration.h"
 #include "../learnSPH/utils.h"
+#include "../learnSPH/theta_functions.h"
+#include "../learnSPH/marching_cubes.h"
 
 int main()
 {
@@ -38,8 +40,8 @@ int main()
     //     sim_setup.just_gravity();
     //     sim_setup.gravity_with_floor();
     //     sim_setup.gravity_with_floor_boundary_viscosity();
-    //     sim_setup.dam_break();
-    sim_setup.our_simulation_scene();
+        sim_setup.dam_break();
+    // sim_setup.our_simulation_scene();
 
     double particle_diameter          = 2.0 * sim_setup.particle_radius;
     double fluid_sampling_distance    = particle_diameter;
@@ -55,6 +57,17 @@ int main()
     }
     double fluid_mass = fluid_volume * sim_setup.fluid_rest_density;
 
+    // Marching cubes setup
+    double c = 0.55;
+    double cell_width = 1.25 * sim_setup.particle_radius;
+    Eigen::Vector3d boundary_border = Eigen::Vector3d(0.2, 0.2, 0.2);
+    
+    uint nx = ((sim_setup.boundaries[0].max.x() + boundary_border.x()) - (sim_setup.boundaries[0].min.x() - boundary_border.x())) / cell_width + 1;
+    uint ny = ((sim_setup.boundaries[0].max.y() + boundary_border.y()) - (sim_setup.boundaries[0].min.y() - boundary_border.y())) / cell_width + 1;
+    uint nz = ((sim_setup.boundaries[0].max.z() + boundary_border.z()) - (sim_setup.boundaries[0].min.z() - boundary_border.z())) / cell_width + 1;
+
+    std::vector<double> level_set((nx + 1) * (ny + 1) * (nz + 1), -c);
+
     // instantiating some classes
     std::cout << sim_setup.assignment << ", " << simulation_timestamp << "\n";
     learnSPH::utils::create_simulation_folder(sim_setup.assignment, simulation_timestamp);
@@ -65,6 +78,9 @@ int main()
                                                       sim_setup.gravity, cubic_kernel);
     learnSPH::timeIntegration::semiImplicitEuler semImpEuler(sim_setup.particle_radius,
                                                              sim_setup.boundaries);
+
+    learnSPH::theta_functions::FluidThetaFunction fluid_theta(c, cell_width, beta, nx + 1, ny + 1, nz + 1);
+    learnSPH::surface::MarchingCubes mcubes(cell_width, nx, ny, nz, sim_setup.boundaries[0].min - boundary_border, 1e-6, true);
 
     // Load simulation geometry
     std::vector<Eigen::Vector3d> boundary_particles_positions;
@@ -139,6 +155,20 @@ int main()
             boundary_particles_masses, point_set_id_fluid, ps_fluid, point_set_id_boundary,
             ps_boundary, fluid_particle_mass, cubic_kernel);
 
+        if (t_simulation > 0.7){
+            fluid_theta.compute_fluid_reconstruction(level_set, particles_positions, particles_densities,
+                    sim_setup.boundaries[0].min - boundary_border, sim_setup.boundaries[0].max + boundary_border, cubic_kernel);
+            std::cout << "fluid theta" << std::endl;
+            mcubes.get_isosurface(level_set);
+            std::cout << "isosurface" << std::endl;
+            mcubes.compute_normals_gl(level_set);
+            std::cout << "normals" << std::endl;
+            learnSPH::write_tri_mesh_to_vtk("fluid.vtk", mcubes.intersections, mcubes.triangles, mcubes.intersectionNormals);
+            learnSPH::write_particles_to_vtk("particles.vtk", particles_positions, particles_densities,
+                                             particles_velocities);
+            t_simulation = 5;
+        }
+
         // Compute acceleration
         acceleration.pressure(particles_pressure, particles_densities,
                               sim_setup.fluid_rest_density);
@@ -164,20 +194,20 @@ int main()
         // Increment t
         t_simulation += dt;
 
-        // Save output
-        if (t_simulation >= t_next_frame) {
-            stepCounter++;
+        // // Save output
+        // if (t_simulation >= t_next_frame) {
+        //     stepCounter++;
 
-            const std::string filename = "./res/" + sim_setup.assignment + "/" +
-                                         simulation_timestamp + "/sim_" +
-                                         std::to_string((int)(t_simulation * 1000000)) + ".vtk";
+        //     const std::string filename = "./res/" + sim_setup.assignment + "/" +
+        //                                  simulation_timestamp + "/sim_" +
+        //                                  std::to_string((int)(t_simulation * 1000000)) + ".vtk";
 
-            learnSPH::write_particles_to_vtk(filename, particles_positions, particles_densities,
-                                             particles_velocities);
-            t_next_frame += sim_setup.t_between_frames;
+        //     learnSPH::write_particles_to_vtk(filename, particles_positions, particles_densities,
+        //                                      particles_velocities);
+        //     t_next_frame += sim_setup.t_between_frames;
 
-            learnSPH::utils::updateProgressBar(stepCounter, maxSteps, 100);
-        }
+        //     learnSPH::utils::updateProgressBar(stepCounter, maxSteps, 100);
+        // }
     }
     return 0;
 }
