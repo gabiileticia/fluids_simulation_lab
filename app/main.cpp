@@ -66,7 +66,7 @@ int main()
     uint ny = ((sim_setup.boundaries[0].max.y() + boundary_border.y()) - (sim_setup.boundaries[0].min.y() - boundary_border.y())) / cell_width + 1;
     uint nz = ((sim_setup.boundaries[0].max.z() + boundary_border.z()) - (sim_setup.boundaries[0].min.z() - boundary_border.z())) / cell_width + 1;
 
-    std::vector<double> level_set((nx + 1) * (ny + 1) * (nz + 1), -c);
+    
 
     // instantiating some classes
     std::cout << sim_setup.assignment << ", " << simulation_timestamp << "\n";
@@ -79,8 +79,7 @@ int main()
     learnSPH::timeIntegration::semiImplicitEuler semImpEuler(sim_setup.particle_radius,
                                                              sim_setup.boundaries);
 
-    learnSPH::theta_functions::FluidThetaFunction fluid_theta(c, cell_width, beta, nx + 1, ny + 1, nz + 1);
-    learnSPH::surface::MarchingCubes mcubes(cell_width, nx, ny, nz, sim_setup.boundaries[0].min - boundary_border, 1e-6, true);
+    
 
     // Load simulation geometry
     std::vector<Eigen::Vector3d> boundary_particles_positions;
@@ -155,7 +154,11 @@ int main()
             boundary_particles_masses, point_set_id_fluid, ps_fluid, point_set_id_boundary,
             ps_boundary, fluid_particle_mass, cubic_kernel);
 
-        if (t_simulation > 0.7){
+        if (t_simulation >= t_next_frame){
+            std::vector<double> level_set((nx + 1) * (ny + 1) * (nz + 1), -c);
+            learnSPH::theta_functions::FluidThetaFunction fluid_theta(c, cell_width, beta, nx + 1, ny + 1, nz + 1);
+            learnSPH::surface::MarchingCubes mcubes(cell_width, nx, ny, nz, sim_setup.boundaries[0].min - boundary_border, 1e-6, true);
+        
             fluid_theta.compute_fluid_reconstruction(level_set, particles_positions, particles_densities,
                     sim_setup.boundaries[0].min - boundary_border, sim_setup.boundaries[0].max + boundary_border, cubic_kernel);
             std::cout << "fluid theta" << std::endl;
@@ -163,10 +166,10 @@ int main()
             std::cout << "isosurface" << std::endl;
             mcubes.compute_normals_gl(level_set);
             std::cout << "normals" << std::endl;
-            learnSPH::write_tri_mesh_to_vtk("fluid.vtk", mcubes.intersections, mcubes.triangles, mcubes.intersectionNormals);
-            learnSPH::write_particles_to_vtk("particles.vtk", particles_positions, particles_densities,
-                                             particles_velocities);
-            t_simulation = 5;
+            const std::string filename = "./res/surface2/sim_" + std::to_string((int)(t_simulation * 1000000)) + ".vtk";
+
+            learnSPH::write_tri_mesh_to_vtk(filename, mcubes.intersections, mcubes.triangles, mcubes.intersectionNormals);
+            t_next_frame += 0.4;
         }
 
         // Compute acceleration

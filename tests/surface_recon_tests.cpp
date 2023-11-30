@@ -32,7 +32,7 @@ TEST_CASE("Tests for marching cubes class", "[mcubes]")
 
     radii.R   = 0.7;
     radii.r   = 0.2;
-    cellWidth = 0.03;
+    cellWidth = 0.04;
     epsilon   = 1e-6;
 
     min = {-1, -1, -0.3};
@@ -73,7 +73,9 @@ TEST_CASE("Tests for marching cubes class", "[mcubes]")
 
     SECTION("Testing output of file"){
         mcubes.get_isosurface(level_set);
+        std::cout << "iso" << std::endl;
         mcubes.compute_normals_gl(level_set);
+        std::cout << "normals" << std::endl;
         learnSPH::write_tri_mesh_to_vtk("torus.vtk", mcubes.intersections, mcubes.triangles, mcubes.intersectionNormals);
         std::cout << "All finished";
     }
