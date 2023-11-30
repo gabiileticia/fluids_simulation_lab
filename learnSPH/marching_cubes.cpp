@@ -133,9 +133,6 @@ void learnSPH::surface::MarchingCubes::get_isosurface(std::vector<double> &level
                         vertex_id_b = (i + directions[l].x()) * this->n_vy * this->n_vz + (j + directions[l].y()) * this->n_vz + (k + directions[l].z());
                         vertex_coord_b = Eigen::Vector3d((i + directions[l].x()) * cellWidth, (j + directions[l].y()) * cellWidth, (k + directions[l].z()) * cellWidth) + origin;
 
-                        // if (i==1 & j==1 & k==1){
-                        //     std::cout << vertex_id_a << ";" << vertex_id_b << std::endl;
-                        // }
                         if ((vertex_id_b > level_set.size() - 1) || vertex_id_b < 0){
                             continue;
                         }
@@ -149,8 +146,8 @@ void learnSPH::surface::MarchingCubes::get_isosurface(std::vector<double> &level
 
                             int flag = 0;
                             for(int g=0;g<intersecId;g++){
+                                // check if position is alreadz in the vector
                                 if((intersections[g] - intersection).norm() < 1e-6){
-                                    // std::cout << "ja tem " << edge_id << std::endl;
                                     flag = g;
                                     break;
                                 }
