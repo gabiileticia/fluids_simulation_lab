@@ -4,6 +4,7 @@
 #include <Eigen/Dense>
 #include <array>
 #include <chrono>
+#include <cstdint>
 #include <vector>
 
 #include "types.h"
@@ -21,7 +22,10 @@ void create_simulation_folder(const std::string assign_number, std::string &time
 void updateProgressBar(int currentStep, int maxSteps, const int barWidth);
 Eigen::Vector3d implicitVertexNormal(learnSPH::types::ImplicitSurface foo, Eigen::Vector3d vertex,
                                      double epsilon, void *fooArgs);
-uint cubeVertex2VertexIndex(uint cellIdx, uint vertexIndex, uint nx, uint ny, uint nz);
+int cubeVertex2VertexIndex(uint cellIdx, uint vertexIndex, std::vector<Eigen::Vector3d> &gridVertices, uint nx, uint ny, uint nz);
+int vertexSixNeighbors(uint vertexIndex, int neighbor, std::vector<Eigen::Vector3d> &gridVertices, uint nx, uint ny, uint nz);
+int64_t vertex8NeighborCells(uint cellIndex, int neighbor, uint nx, uint ny, uint nz);
+std::array<int, 4> celladjByEdge(int edge);
 } // namespace utils
 } // namespace learnSPH
 

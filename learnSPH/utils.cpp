@@ -12,6 +12,8 @@
 #include <sstream>
 #include <stdlib.h> // rand
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <vector>
 
 void learnSPH::utils::deleteOutOfBounds(std::vector<Eigen::Vector3d> &positions,
                                         std::vector<Eigen::Vector3d> &velocity,
@@ -126,46 +128,181 @@ void learnSPH::utils::updateProgressBar(int currentStep, int maxSteps, const int
     std::cout.flush();
 }
 
-Eigen::Vector3d learnSPH::utils::implicitVertexNormal(learnSPH::types::ImplicitSurface foo,
-                                                      Eigen::Vector3d vertex, double epsilon,
-                                                      void *fooArgs)
+/* Cube description:
+ *         7 ________ 6
+ *         /|       /|
+ *       /  |     /  |
+ *   4 /_______ /    |
+ *    |     |  |5    |
+ *    |    3|__|_____|2
+ *    |    /   |    /
+ *    |  /     |  /
+ *    |/_______|/
+ *   0          1
+ */
+
+int learnSPH::utils::cubeVertex2VertexIndex(uint cellIdx, uint vertexIndex,
+                                            std::vector<Eigen::Vector3d> &gridVertices, uint nx,
+                                            uint ny, uint nz)
 {
-    // Unit vectors
-    static Eigen::Vector3d ex = Eigen::Vector3d(1, 0, 0);
-    static Eigen::Vector3d ey = Eigen::Vector3d(0, 1, 0);
-    static Eigen::Vector3d ez = Eigen::Vector3d(0, 0, 1);
-
-    Eigen::Vector3d fin_diff;
-
-    fin_diff[0] = foo(vertex + epsilon * ex, fooArgs) - foo(vertex - epsilon * ex, fooArgs);
-    fin_diff[1] = foo(vertex + epsilon * ey, fooArgs) - foo(vertex - epsilon * ey, fooArgs);
-    fin_diff[2] = foo(vertex + epsilon * ez, fooArgs) - foo(vertex - epsilon * ez, fooArgs);
-
-    fin_diff = fin_diff / 2.0 * epsilon;
-
-    return fin_diff.normalized();
-}
-
-uint learnSPH::utils::cubeVertex2VertexIndex(uint cellIdx, uint vertexIndex, uint nx, uint ny,
-                                             uint nz)
-{
+    int retIdx;
     switch (vertexIndex) {
     case 0:
         return cellIdx;
     case 1:
-        return cellIdx + 1;
+        retIdx = cellIdx + ny * nz;
+        break;
     case 2:
-        return cellIdx + 1 + nx;
+        retIdx = cellIdx + ny * nz + nz;
+        break;
     case 3:
-        return cellIdx + nx;
+        retIdx = cellIdx + nz;
+        break;
     case 4:
-        return cellIdx + nx * ny;
+        retIdx = cellIdx + 1;
+        break;
     case 5:
-        return cellIdx + 1 + nx * ny;
+        retIdx = cellIdx + 1 + ny * nz;
+        break;
     case 6:
-        return cellIdx + 1 + nx + nx * ny;
+        retIdx = cellIdx + 1 + ny * nz + nz;
+        break;
     case 7:
-        return cellIdx + nx * ny + nx;
+        retIdx = cellIdx + 1 + nz;
+        break;
+    default:
+        std::cout << "vertex2VertexIdx: Mismatch of lookup index: " << vertexIndex << "\n";
+        exit(-1);
+    }
+    if (cellIdx > retIdx || retIdx > nx * ny * nz ||
+        gridVertices[cellIdx].y() > gridVertices[retIdx].y() ||
+        gridVertices[cellIdx].z() > gridVertices[retIdx].z())
+        return -1;
+    else
+        return retIdx;
+}
+
+/**
+ * Neighbor mapping from center vertex v:
+ *
+ *          5   1
+ *          |  /
+ *          | /
+ *          |/
+ * 2 ______ v ______ 0
+ *         /|
+ *        / |
+ *       /  |
+ *      3   4
+ */
+
+int learnSPH::utils::vertexSixNeighbors(uint vertexIndex, int neighbor,
+                                        std::vector<Eigen::Vector3d> &gridVertices, uint nx,
+                                        uint ny, uint nz)
+{
+    int retidx;
+    int max = nx * ny * nz;
+    switch (neighbor) {
+    case 0:
+        retidx = vertexIndex + ny * nz;
+        if (vertexIndex > retidx || retidx > max)
+            return -1;
+        else
+            return vertexIndex + ny * nz;
+    case 1:
+        retidx = vertexIndex + nz;
+        if (vertexIndex > retidx || retidx > max ||
+            gridVertices[vertexIndex].y() > gridVertices[retidx].y())
+            return -1;
+        else
+            return vertexIndex + nz;
+    case 2:
+        retidx = vertexIndex - ny * nz;
+        if (vertexIndex < retidx || retidx > max)
+            return -1;
+        else
+            return vertexIndex - ny * nz;
+    case 3:
+        retidx = vertexIndex - nz;
+        if (vertexIndex < retidx || retidx > max ||
+            gridVertices[vertexIndex].y() < gridVertices[retidx].y())
+            return -1;
+        else
+            return vertexIndex - nz;
+    case 4:
+        retidx = vertexIndex - 1;
+        if (vertexIndex < retidx || retidx > max ||
+            gridVertices[vertexIndex].z() < gridVertices[retidx].z())
+            return -1;
+        else
+            return vertexIndex - 1;
+    case 5:
+        retidx = vertexIndex + 1;
+        if (vertexIndex > retidx || retidx > max ||
+            gridVertices[vertexIndex].z() > gridVertices[retidx].z())
+            return -1;
+        else
+            return vertexIndex + 1;
+    default:
+        std::cout << "sixNeighbors: Mismatch of lookup index: " << vertexIndex << "\n";
+        exit(-1);
+    }
+}
+
+int64_t learnSPH::utils::vertex8NeighborCells(uint cellIndex, int neighbor, uint nx, uint ny,
+                                              uint nz)
+{
+    int64_t retidx;
+    switch (neighbor) {
+    case 0:
+        retidx = cellIndex - 1 - ny * nz - nz;
+        break;
+    case 1:
+        retidx = cellIndex - 1 - nz;
+        break;
+    case 2:
+        retidx = cellIndex - 1;
+        break;
+    case 3:
+        retidx = cellIndex - 1 - ny * nz;
+        break;
+    case 4:
+        retidx = cellIndex - ny * nz - nz;
+        break;
+    case 5:
+        retidx = cellIndex - nz;
+        break;
+    case 6:
+        retidx = cellIndex;
+        break;
+    case 7:
+        retidx = cellIndex - ny * nz;
+        break;
+    default:
+        exit(-1);
+    }
+
+    // if (cellIndex < retidx || retidx > nx * ny * nz)
+    //     return -1;
+    // else
+        return retidx;
+}
+
+std::array<int, 4> learnSPH::utils::celladjByEdge(int edge)
+{
+    switch (edge) {
+    case 0:
+        return {1, 2, 5, 6};
+    case 1:
+        return {2, 3, 6, 7};
+    case 2:
+        return {0, 3, 4, 7};
+    case 3:
+        return {0, 1, 4, 5};
+    case 4:
+        return {0, 1, 2, 3};
+    case 5:
+        return {4, 5, 6, 7};
     default:
         exit(-1);
     }
