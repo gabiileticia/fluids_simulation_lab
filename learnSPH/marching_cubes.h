@@ -3,10 +3,12 @@
 
 #include <Eigen/Dense>
 #include <array>
+#include <cstdint>
 #include <sys/types.h>
 #include <unordered_map>
 #include <vector>
 
+#include "theta_functions.h"
 #include "types.h"
 
 namespace learnSPH
@@ -19,26 +21,29 @@ class MarchingCubes
     uint n_x, n_z, n_y, n_vx, n_vy, n_vz, n_cx, n_cy, n_cz, n_ex, n_ey, n_ez;
     double cellWidth;
     double epsilon;
+    double c;
     bool implicitFlag; // false for < 0 inside and > 0 outside, true: for vice versa
     Eigen::Vector3d origin;
-
-    std::vector<double> levelSet; // Stores the SD value for position with value btween -1 (inside
-                                  // surface) and 1 (outside surface)
+    
     std::vector<Eigen::Vector3d> intersections;
     std::vector<Eigen::Vector3d> intersectionNormals;
     std::unordered_map<uint, uint> edgeIntersection;
     std::vector<std::array<int, 3>> triangles;
+    // for debuggin
+    std::vector<Eigen::Vector3d> debug;
 
-    learnSPH::types::ImplicitSurface implicitSurfaceFunction;
+    // slearnSPH::types::ImplicitSurface implicitSurfaceFunction;
+    learnSPH::theta_functions::FluidThetaFunction thetaFunction;
     void *funcArgs;
 
     MarchingCubes(double cellWidth, uint n_x, uint n_y, uint n_z, Eigen::Vector3d origin,
-                  learnSPH::types::ImplicitSurface implicitSurfaceFunction, void *funcArgs,
-                  double epsilon, bool implicitFlag);
+                  learnSPH::theta_functions::FluidThetaFunction &thetaFunction, double epsilon, bool implicitFlag, double c);
 
-    void get_Isosurface();
+    void get_Isosurface_sparse(std::unordered_map<uint64_t, double> &level_map);
+    void get_Isosurface(std::vector<double> &level_set);
+    void get_Isosurface_for_real_this_time(std::vector<double> &level_set);
+    void compute_normals(std::vector<Eigen::Vector3d> &positions, std::vector<double> &densities, Eigen::Vector3d bound_min);
     void compute_normals();
-    void compute_normals_alternative();
 };
 } // namespace surface
 } // namespace learnSPH

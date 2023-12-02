@@ -1,11 +1,13 @@
 #include <algorithm>
 #include <chrono>
+#include <cstdint>
 #include <iostream>
+#include <memory>
 #include <ostream>
 #include <stdlib.h>
 #include <string>
+#include <unordered_map>
 #include <vector>
-
 
 #include <Eigen/Dense>
 
@@ -15,8 +17,10 @@
 #include "../learnSPH/geometry.h"
 #include "../learnSPH/io.h"
 #include "../learnSPH/kernel.h"
+#include "../learnSPH/marching_cubes.h"
 #include "../learnSPH/sampling.h"
 #include "../learnSPH/simulations_setup.h"
+#include "../learnSPH/theta_functions.h"
 #include "../learnSPH/time_integration.h"
 #include "../learnSPH/utils.h"
 
@@ -38,8 +42,8 @@ int main()
     //     sim_setup.just_gravity();
     //     sim_setup.gravity_with_floor();
     //     sim_setup.gravity_with_floor_boundary_viscosity();
-    //     sim_setup.dam_break();
-    sim_setup.our_simulation_scene();
+    sim_setup.dam_break();
+    // sim_setup.our_simulation_scene();
 
     double particle_diameter          = 2.0 * sim_setup.particle_radius;
     double fluid_sampling_distance    = particle_diameter;
@@ -55,21 +59,22 @@ int main()
     }
     double fluid_mass = fluid_volume * sim_setup.fluid_rest_density;
 
+    using namespace learnSPH;
+
     // instantiating some classes
     std::cout << sim_setup.assignment << ", " << simulation_timestamp << "\n";
-    learnSPH::utils::create_simulation_folder(sim_setup.assignment, simulation_timestamp);
+    utils::create_simulation_folder(sim_setup.assignment, simulation_timestamp);
 
-    learnSPH::kernel::CubicSplineKernel cubic_kernel(h);
-    learnSPH::acceleration::Acceleration acceleration(sim_setup.B, sim_setup.v_f, sim_setup.v_b, h,
-                                                      sim_setup.fluid_rest_density,
-                                                      sim_setup.gravity, cubic_kernel);
-    learnSPH::timeIntegration::semiImplicitEuler semImpEuler(sim_setup.particle_radius,
-                                                             sim_setup.boundaries);
+    kernel::CubicSplineKernel cubic_kernel(h);
+    acceleration::Acceleration acceleration(sim_setup.B, sim_setup.v_f, sim_setup.v_b, h,
+                                            sim_setup.fluid_rest_density, sim_setup.gravity,
+                                            cubic_kernel);
+    timeIntegration::semiImplicitEuler semImpEuler(sim_setup.particle_radius, sim_setup.boundaries);
 
     // Load simulation geometry
     std::vector<Eigen::Vector3d> boundary_particles_positions;
-    learnSPH::geometry::load_n_sample_boundary(boundary_particles_positions, sim_setup.boundaries,
-                                               boundary_sampling_distance);
+    geometry::load_n_sample_boundary(boundary_particles_positions, sim_setup.boundaries,
+                                     boundary_sampling_distance);
 
     std::cout << "Number of boundary particles" << std::endl;
     std::cout << boundary_particles_positions.size() << std::endl;
@@ -78,9 +83,9 @@ int main()
     std::vector<Eigen::Vector3d> particles_positions;
     std::vector<Eigen::Vector3d> particles_velocities;
 
-    learnSPH::geometry::load_n_sample_fluids(particles_positions, particles_velocities,
-                                             sim_setup.fluid_begin, sim_setup.fluid_end,
-                                             fluid_sampling_distance, sim_setup.fluid_velocities);
+    geometry::load_n_sample_fluids(particles_positions, particles_velocities, sim_setup.fluid_begin,
+                                   sim_setup.fluid_end, fluid_sampling_distance,
+                                   sim_setup.fluid_velocities);
 
     std::cout << "Number of fluid particles" << std::endl;
     std::cout << particles_positions.size() << std::endl;
@@ -111,9 +116,29 @@ int main()
 
     // Compute boundary masses
     std::vector<double> boundary_particles_masses(boundary_particles_positions.size());
-    learnSPH::densities::compute_boundary_masses(
-        boundary_particles_masses, boundary_particles_positions, point_set_id_boundary, ps_boundary,
-        sim_setup.fluid_rest_density, cubic_kernel);
+    densities::compute_boundary_masses(boundary_particles_masses, boundary_particles_positions,
+                                       point_set_id_boundary, ps_boundary,
+                                       sim_setup.fluid_rest_density, cubic_kernel);
+
+    // setting up surface reconstruction
+    double c                = 0.55;
+    double cell_width       = 1.25 * sim_setup.particle_radius;
+    Eigen::Vector3d bborder = Eigen::Vector3d(5, 5, 5) * cell_width;
+
+    uint nx = ((sim_setup.boundaries[0].max.x() + bborder.x()) -
+               (sim_setup.boundaries[0].min.x() - bborder.x())) /
+                  cell_width +
+              1;
+    uint ny = ((sim_setup.boundaries[0].max.y() + bborder.y()) -
+               (sim_setup.boundaries[0].min.y() - bborder.y())) /
+                  cell_width +
+              1;
+    uint nz = ((sim_setup.boundaries[0].max.z() + bborder.z()) -
+               (sim_setup.boundaries[0].min.z() - bborder.z())) /
+                  cell_width +
+              1;
+
+    std::vector<double> level_set((nx + 1) * (ny + 1) * (nz + 1), -c);
 
     // keeping track of number of elements which will be deleted
     int count_del = 0;
@@ -134,10 +159,10 @@ int main()
         nsearch.find_neighbors();
 
         // Compute fluid particles densities
-        learnSPH::densities::compute_fluid_density(
-            particles_densities, particles_positions, boundary_particles_positions,
-            boundary_particles_masses, point_set_id_fluid, ps_fluid, point_set_id_boundary,
-            ps_boundary, fluid_particle_mass, cubic_kernel);
+        densities::compute_fluid_density(particles_densities, particles_positions,
+                                         boundary_particles_positions, boundary_particles_masses,
+                                         point_set_id_fluid, ps_fluid, point_set_id_boundary,
+                                         ps_boundary, fluid_particle_mass, cubic_kernel);
 
         // Compute acceleration
         acceleration.pressure(particles_pressure, particles_densities,
@@ -154,9 +179,9 @@ int main()
                                     particles_accelerations, deleteFlag, dt, count_del);
 
         if (count_del > 0 && sim_setup.boundaries.size() > 0) {
-            learnSPH::utils::deleteOutOfBounds(particles_positions, particles_velocities,
-                                               particles_accelerations, particles_densities,
-                                               particles_pressure, deleteFlag, count_del);
+            utils::deleteOutOfBounds(particles_positions, particles_velocities,
+                                     particles_accelerations, particles_densities,
+                                     particles_pressure, deleteFlag, count_del);
             nsearch.resize_point_set(point_set_id_fluid, particles_positions.front().data(),
                                      particles_positions.size());
         }
@@ -168,15 +193,46 @@ int main()
         if (t_simulation >= t_next_frame) {
             stepCounter++;
 
+            theta_functions::FluidThetaFunction fluidSDF(cubic_kernel, c, cell_width, beta, ny + 1,
+                                                         nz + 1);
+            surface::MarchingCubes mcubes(cell_width, nx, ny, nz,
+                                          sim_setup.boundaries[0].min - bborder, fluidSDF, 1e-6,
+                                          false, c);
+                                          
+            std::unordered_map<uint64_t, double> level_map;
+
             const std::string filename = "./res/" + sim_setup.assignment + "/" +
                                          simulation_timestamp + "/sim_" +
                                          std::to_string((int)(t_simulation * 1000000)) + ".vtk";
+            // std::cout << "num pos: " << particles_positions.size() << "\n";
+            // std::cout << "t_simulation: " << t_simulation << "\n t_nextframe: " << t_next_frame
+            // << "\n";
 
-            learnSPH::write_particles_to_vtk(filename, particles_positions, particles_densities,
-                                             particles_velocities);
+            fluidSDF.computeLevelMap(level_map, particles_positions, particles_densities,
+                                     sim_setup.boundaries[0].min - bborder);
+            // fluidSDF.computeLevelSet(level_set, particles_positions, particles_densities,
+            //   sim_setup.boundaries[0].min - bborder);
+            // mcubes.get_Isosurface(level_set);
+            mcubes.get_Isosurface_sparse(level_map);
+
+            mcubes.compute_normals(particles_positions, particles_densities,
+                                   sim_setup.boundaries[0].min - bborder);
+
+            write_tri_mesh_to_vtk(filename, mcubes.intersections, mcubes.triangles,
+                                  mcubes.intersectionNormals);
+
+            //write_particles_to_vtk(filename, mcubes.debug);
+
+            // write_particles_to_vtk(filename, particles_positions, particles_densities,
+            //                        particles_velocities);
             t_next_frame += sim_setup.t_between_frames;
 
-            learnSPH::utils::updateProgressBar(stepCounter, maxSteps, 100);
+            // level_set.clear();
+            // mcubes.intersections.clear();
+            // mcubes.triangles.clear();
+            // mcubes.intersectionNormals.clear();
+
+            utils::updateProgressBar(stepCounter, maxSteps, 75);
         }
     }
     return 0;
