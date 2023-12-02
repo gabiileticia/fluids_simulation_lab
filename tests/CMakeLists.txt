@@ -6,8 +6,7 @@ set(SOURCE_FILES
     test_main.cpp
 	sample_tests.cpp
     performance_tests.cpp
-    density_tests.cpp
-    surface_recon_tests.cpp)
+    density_tests.cpp)
     
 add_executable(learnSPH_tests ${SOURCE_FILES})
 add_dependencies(learnSPH_tests learnSPH)
