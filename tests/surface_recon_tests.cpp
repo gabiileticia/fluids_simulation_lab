@@ -74,7 +74,7 @@ TEST_CASE("Tests for marching cubes class", "[mcubes]")
     SECTION("Testing output of file"){
         mcubes.get_isosurface(level_set);
         std::cout << "iso" << std::endl;
-        mcubes.compute_normals_gl(level_set);
+        mcubes.compute_normals(level_set);
         std::cout << "normals" << std::endl;
         learnSPH::write_tri_mesh_to_vtk("torus.vtk", mcubes.intersections, mcubes.triangles, mcubes.intersectionNormals);
         std::cout << "All finished";

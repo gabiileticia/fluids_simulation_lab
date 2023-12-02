@@ -17,7 +17,8 @@ namespace learnSPH {
             double density,
             learnSPH::kernel::CubicSplineKernel &kernel);
         void compute_fluid_density(
-            std::vector<double>& output,
+            std::vector<double> &fluid_densities_for_surface_reco,
+            std::vector<double> &particles_densities,
             std::vector<Eigen::Vector3d>& particles,
             std::vector<Eigen::Vector3d>& boundary_particles,
             std::vector<double>& boundary_particles_masses,

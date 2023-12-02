@@ -18,12 +18,9 @@ void learnSPH::theta_functions::FluidThetaFunction::compute_fluid_reconstruction
 , std::vector<Eigen::Vector3d> positions, std::vector<double>  densities, Eigen::Vector3d bound_min
 , Eigen::Vector3d bound_max, learnSPH::kernel::CubicSplineKernel &kernel)
 {
-    // dimensions
     uint vertexIdx;
 
     for(int pos=0; pos < positions.size(); pos++){
-
-        uint zero = 0;
 
         uint lower_x_abb = std::ceil((positions[pos].x() - support_radius - bound_min.x())/cell_width);
         uint upper_x_abb = std::floor((positions[pos].x() + support_radius - bound_min.x())/cell_width);
@@ -40,9 +37,9 @@ void learnSPH::theta_functions::FluidThetaFunction::compute_fluid_reconstruction
                     
                     Eigen::Vector3d vertex_pos = Eigen::Vector3d(i*cell_width,j*cell_width,k*cell_width) + bound_min;
 
-                    if ((positions[pos] - vertex_pos).norm() < support_radius){
+                    if ((positions[pos] - vertex_pos).squaredNorm() < support_radius * support_radius){
                         vertexIdx = i * n_vy * n_vz + j * n_vz + k;
-                        level_set[vertexIdx] += (1/densities[i]) * kernel.kernel_function(positions[pos] - vertex_pos);
+                        level_set[vertexIdx] += (1/densities[pos]) * kernel.kernel_function(positions[pos] - vertex_pos);
                     }
                 }
             }

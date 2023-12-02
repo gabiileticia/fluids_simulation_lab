@@ -66,8 +66,6 @@ int main()
     uint ny = ((sim_setup.boundaries[0].max.y() + boundary_border.y()) - (sim_setup.boundaries[0].min.y() - boundary_border.y())) / cell_width + 1;
     uint nz = ((sim_setup.boundaries[0].max.z() + boundary_border.z()) - (sim_setup.boundaries[0].min.z() - boundary_border.z())) / cell_width + 1;
 
-    
-
     // instantiating some classes
     std::cout << sim_setup.assignment << ", " << simulation_timestamp << "\n";
     learnSPH::utils::create_simulation_folder(sim_setup.assignment, simulation_timestamp);
@@ -104,6 +102,7 @@ int main()
     std::cout << "fluid_particle_mass: " << fluid_particle_mass << std::endl;
 
     std::vector<double> particles_densities(particles_positions.size());
+    std::vector<double> fluid_densities_for_surface_reco(particles_positions.size());
     std::vector<Eigen::Vector3d> particles_accelerations(particles_positions.size());
     std::vector<double> particles_pressure(particles_positions.size());
 
@@ -149,28 +148,19 @@ int main()
         nsearch.find_neighbors();
 
         // Compute fluid particles densities
-        learnSPH::densities::compute_fluid_density(
+        learnSPH::densities::compute_fluid_density(fluid_densities_for_surface_reco,
             particles_densities, particles_positions, boundary_particles_positions,
             boundary_particles_masses, point_set_id_fluid, ps_fluid, point_set_id_boundary,
             ps_boundary, fluid_particle_mass, cubic_kernel);
 
-        if (t_simulation >= t_next_frame){
-            std::vector<double> level_set((nx + 1) * (ny + 1) * (nz + 1), -c);
-            learnSPH::theta_functions::FluidThetaFunction fluid_theta(c, cell_width, beta, nx + 1, ny + 1, nz + 1);
-            learnSPH::surface::MarchingCubes mcubes(cell_width, nx, ny, nz, sim_setup.boundaries[0].min - boundary_border, 1e-6, true);
-        
-            fluid_theta.compute_fluid_reconstruction(level_set, particles_positions, particles_densities,
-                    sim_setup.boundaries[0].min - boundary_border, sim_setup.boundaries[0].max + boundary_border, cubic_kernel);
-            std::cout << "fluid theta" << std::endl;
-            mcubes.get_isosurface(level_set);
-            std::cout << "isosurface" << std::endl;
-            mcubes.compute_normals_gl(level_set);
-            std::cout << "normals" << std::endl;
-            const std::string filename = "./res/surface2/sim_" + std::to_string((int)(t_simulation * 1000000)) + ".vtk";
-
-            learnSPH::write_tri_mesh_to_vtk(filename, mcubes.intersections, mcubes.triangles, mcubes.intersectionNormals);
-            t_next_frame += 0.4;
-        }
+        std::vector<double> level_set((nx + 1) * (ny + 1) * (nz + 1), -c);
+        learnSPH::theta_functions::FluidThetaFunction fluid_theta(c, cell_width, beta, nx + 1, ny + 1, nz + 1);
+        learnSPH::surface::MarchingCubes mcubes(cell_width, nx, ny, nz, sim_setup.boundaries[0].min - boundary_border, 1e-6, true);
+    
+        fluid_theta.compute_fluid_reconstruction(level_set, particles_positions, fluid_densities_for_surface_reco,
+                sim_setup.boundaries[0].min - boundary_border, sim_setup.boundaries[0].max + boundary_border, cubic_kernel);
+        mcubes.get_isosurface(level_set);
+        mcubes.compute_normals(level_set);
 
         // Compute acceleration
         acceleration.pressure(particles_pressure, particles_densities,
@@ -189,6 +179,7 @@ int main()
         if (count_del > 0 && sim_setup.boundaries.size() > 0) {
             learnSPH::utils::deleteOutOfBounds(particles_positions, particles_velocities,
                                                particles_accelerations, particles_densities,
+                                               fluid_densities_for_surface_reco,
                                                particles_pressure, deleteFlag, count_del);
             nsearch.resize_point_set(point_set_id_fluid, particles_positions.front().data(),
                                      particles_positions.size());
@@ -197,20 +188,24 @@ int main()
         // Increment t
         t_simulation += dt;
 
-        // // Save output
-        // if (t_simulation >= t_next_frame) {
-        //     stepCounter++;
+        // Save output
+        if (t_simulation >= t_next_frame) {
+            stepCounter++;
 
-        //     const std::string filename = "./res/" + sim_setup.assignment + "/" +
-        //                                  simulation_timestamp + "/sim_" +
-        //                                  std::to_string((int)(t_simulation * 1000000)) + ".vtk";
+            const std::string filename = "./res/surface2/sim_" + std::to_string((int)(t_simulation * 1000000)) + ".vtk";
 
-        //     learnSPH::write_particles_to_vtk(filename, particles_positions, particles_densities,
-        //                                      particles_velocities);
-        //     t_next_frame += sim_setup.t_between_frames;
+            learnSPH::write_tri_mesh_to_vtk(filename, mcubes.intersections, mcubes.triangles, mcubes.intersectionNormals);
 
-        //     learnSPH::utils::updateProgressBar(stepCounter, maxSteps, 100);
-        // }
+            // const std::string filename = "./res/" + sim_setup.assignment + "/" +
+            //                              simulation_timestamp + "/sim_" +
+            //                              std::to_string((int)(t_simulation * 1000000)) + ".vtk";
+
+            // learnSPH::write_particles_to_vtk(filename, particles_positions, particles_densities,
+            //                                  particles_velocities);
+            t_next_frame += sim_setup.t_between_frames;
+
+            learnSPH::utils::updateProgressBar(stepCounter, maxSteps, 100);
+        }
     }
     return 0;
 }
