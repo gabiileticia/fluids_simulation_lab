@@ -168,7 +168,7 @@ void learnSPH::simulations_setup::Simulations::dam_break()
 
 
     this->dt_default = 0.00025;
-    this->t_between_frames = 0.0005;
+    this->t_between_frames =  0.006;
     this->B = 1000 * 1.02;
     this->v_f = 0.0025;
     this->v_b = 0.0;
@@ -204,5 +204,5 @@ void learnSPH::simulations_setup::Simulations::our_simulation_scene(){
     this->v_f = 0.0025;
     this->v_b = 0.0;
     this->gravity = Eigen::Vector3d(0.0, 0.0, -9.81);
-    this->assignment = "assignment2/our_simulation";
+    this->assignment = "assignment3/our_simulation";
 }
