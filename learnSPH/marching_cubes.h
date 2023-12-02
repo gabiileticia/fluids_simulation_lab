@@ -24,10 +24,12 @@ class MarchingCubes
     double c;
     bool implicitFlag; // false for < 0 inside and > 0 outside, true: for vice versa
     Eigen::Vector3d origin;
-    
+
     std::vector<Eigen::Vector3d> intersections;
     std::vector<Eigen::Vector3d> intersectionNormals;
     std::unordered_map<uint, uint> edgeIntersection;
+    std::vector<std::array<int, 3UL>> triangles;
+    std::vector<std::array<int, 3>> triangles2;
     std::vector<std::array<int, 3>> triangles;
     // for debuggin
     std::vector<Eigen::Vector3d> debug;
@@ -36,8 +38,8 @@ class MarchingCubes
     learnSPH::theta_functions::FluidThetaFunction thetaFunction;
     void *funcArgs;
 
-    MarchingCubes(double cellWidth, uint n_x, uint n_y, uint n_z, Eigen::Vector3d origin,
-                  learnSPH::theta_functions::FluidThetaFunction &thetaFunction, double epsilon, bool implicitFlag, double c);
+    MarchingCubes(double cellWidth, uint n_x, uint n_y, uint n_z, 
+                  Eigen::Vector3d origin, double epsilon, bool implicitFlag);
 
     void get_Isosurface_sparse(std::unordered_map<uint64_t, double> &level_map);
     void get_Isosurface(std::vector<double> &level_set);

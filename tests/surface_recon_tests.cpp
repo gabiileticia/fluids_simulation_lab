@@ -14,6 +14,7 @@ TEST_CASE("Tests for marching cubes class", "[mcubes]")
     double cellWidth, epsilon, c;
     // dimensions
     uint nx, ny, nz;
+    uint vertexIdx;
     Eigen::Vector3d min, max;
     bool implicitFlag = false;
 
@@ -30,33 +31,41 @@ TEST_CASE("Tests for marching cubes class", "[mcubes]")
     ny = (max.y() - min.y()) / cellWidth + 1;
     nz = (max.z() - min.z()) / cellWidth + 1;
 
-    std::vector<double> level_set(nx * ny * nz);
-    std::unordered_map<uint64_t, double> levelMap(nx * ny * nz);
+    std::vector<double> level_set((nx + 1) * (ny + 1) * (nz + 1));
 
-    learnSPH::theta_functions::Torus torus(min, r, R, cellWidth, nx, ny, nz);
-    learnSPH::surface::MarchingCubes mcubes(cellWidth, nx, ny, nz, min, torus, epsilon,
-                                            implicitFlag, c);
+    for(int i=0; i<nx + 1; i++){
+        for(int j=0; j<ny + 1; j++){
+            for (int k=0; k<nz + 1;k++){
+                Eigen::Vector3d vertex_pos = Eigen::Vector3d(i*cellWidth,j*cellWidth,k*cellWidth) + min;
 
-    torus.computeLevelSet(level_set);
-    torus.computeLevelMap(levelMap);
-
-    SECTION("Testing isosurface function")
-    {
-        mcubes.get_Isosurface(level_set);
-        mcubes.get_Isosurface_sparse(levelMap);
-    }
-    SECTION("Testing Normals computation")
-    {
-        mcubes.get_Isosurface(level_set);
-        mcubes.compute_normals();
+                vertexIdx = i * (ny + 1) * (nz + 1) + j * (nz + 1) + k;
+                double circle = std::sqrt(vertex_pos.x() * vertex_pos.x() + vertex_pos.y() * vertex_pos.y()) - radii.R;
+                level_set[vertexIdx] = radii.r * radii.r - circle * circle - vertex_pos.z() * vertex_pos.z();
+                // if(level_set[vertexIdx] > 0){
+                //     std::cout << vertex_pos.transpose() << std::endl;
+                //     std::cout << level_set[vertexIdx]<< std::endl;
+                // }
+            }
+        }
     }
 
-    SECTION("Testing output of file")
-    {
-        mcubes.get_Isosurface_sparse(levelMap);
-        mcubes.compute_normals();
-        learnSPH::write_tri_mesh_to_vtk("torus.vtk", mcubes.intersections, mcubes.triangles,
-                                        mcubes.intersectionNormals);
+    learnSPH::surface::MarchingCubes mcubes(cellWidth, nx, ny, nz, min,
+                                            epsilon, implicitFlag);
+
+    // SECTION("Testing isosurface function"){
+    //     mcubes.get_isosurface(level_set);
+    // }
+    // SECTION("Testing Normals computation"){
+    //     mcubes.get_isosurface(level_set);
+    //     mcubes.compute_normals_gl(level_set);
+    // }
+
+    SECTION("Testing output of file"){
+        mcubes.get_isosurface(level_set);
+        std::cout << "iso" << std::endl;
+        mcubes.compute_normals(level_set);
+        std::cout << "normals" << std::endl;
+        learnSPH::write_tri_mesh_to_vtk("torus.vtk", mcubes.intersections, mcubes.triangles, mcubes.intersectionNormals);
         std::cout << "All finished";
     }
 }

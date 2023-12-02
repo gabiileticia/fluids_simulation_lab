@@ -15,96 +15,32 @@ learnSPH::theta_functions::FluidThetaFunction::FluidThetaFunction(
 {
 }
 
-void learnSPH::theta_functions::FluidThetaFunction::computeLevelMap(
-    std::unordered_map<uint64_t, double> &level_map, std::vector<Eigen::Vector3d> &positions,
-    std::vector<double> &densities, Eigen::Vector3d bound_min)
+void learnSPH::theta_functions::FluidThetaFunction::compute_fluid_reconstruction(std::vector<double> &level_set
+, std::vector<Eigen::Vector3d> positions, std::vector<double>  densities, Eigen::Vector3d bound_min
+, Eigen::Vector3d bound_max, learnSPH::kernel::CubicSplineKernel &kernel)
 {
-    uint vertexIdx;
-    uint maxIdx = 0;
-    uint hi, hj, hk;
-    int track_lower, track_higher;
-    Eigen::Vector3d track_pos;
-
-    for (int pos = 0; pos < positions.size(); pos++) {
-        int lower_x_abb =
-            std::abs(std::ceil((positions[pos].x() - support_radius - bound_min.x()) / cell_width));
-        int upper_x_abb =
-            std::abs(std::floor((positions[pos].x() + support_radius - bound_min.x()) / cell_width));
-
-        int lower_y_abb =
-            std::abs(std::ceil((positions[pos].y() - support_radius - bound_min.y()) / cell_width));
-        int upper_y_abb =
-            std::abs(std::floor((positions[pos].y() + support_radius - bound_min.y()) / cell_width));
-
-        int lower_z_abb =
-            std::abs(std::ceil((positions[pos].z() - support_radius - bound_min.z()) / cell_width));
-        int upper_z_abb =
-            std::abs(std::floor((positions[pos].z() + support_radius - bound_min.z()) / cell_width));
-
-        for (int i = lower_x_abb; i < upper_x_abb + 1; i++) {
-            for (int j = lower_y_abb; j < upper_y_abb + 1; j++) {
-                for (int k = lower_z_abb; k < upper_z_abb + 1; k++) {
-
-                    Eigen::Vector3d vertex_pos = {i * cell_width + bound_min.x(),
-                                                  j * cell_width + bound_min.y(),
-                                                  k * cell_width + bound_min.z()};
-
-                    if ((positions[pos] - vertex_pos).norm() < support_radius) {
-                        vertexIdx = i * n_vy * n_vz + j * n_vz + k;
-                        Eigen::Vector3d dx = positions[pos] - vertex_pos;
-                        double kx          = kernel.kernel_function(dx);
-                        level_map[vertexIdx] += (1 / densities[pos]) * kx;
-                    }
-                }
-            }
-        }
-    }
-    for(auto& idx : level_map){
-        level_map[idx.first] += -c;
-    }
-    // std::cout << "Max found index: " << maxIdx << "\n"
-    //           << "i: " << hi << "\nhj: " << hj << "\nhk" << hk << "\nbound_min: " << bound_min
-    //           << "\nlower i: " << track_lower << "\nupper i: " << track_higher
-    //           << "\nsupport radius: " << support_radius << "\ncell width: " << cell_width
-    //           << "\npos: (" << track_pos.x() << ", " << track_pos.y() << ", " << track_pos.z()
-    //           << ")\n";
-}
-
-void learnSPH::theta_functions::FluidThetaFunction::computeLevelSet(
-    std::vector<double> &level_set, std::vector<Eigen::Vector3d> &positions,
-    std::vector<double> &densities, Eigen::Vector3d bound_min)
-{
-    // dimensions
     uint vertexIdx;
 
     for (int pos = 0; pos < positions.size(); pos++) {
 
-        int lower_x_abb =
-            std::ceil((positions[pos].x() - support_radius - bound_min.x()) / cell_width);
-        int upper_x_abb =
-            std::floor((positions[pos].x() + support_radius - bound_min.x()) / cell_width);
+        int lower_x_abb = std::ceil((positions[pos].x() - support_radius - bound_min.x())/cell_width);
+        int upper_x_abb = std::floor((positions[pos].x() + support_radius - bound_min.x())/cell_width);
 
-        int lower_y_abb =
-            std::ceil((positions[pos].y() - support_radius - bound_min.y()) / cell_width);
-        int upper_y_abb =
-            std::floor((positions[pos].y() + support_radius - bound_min.y()) / cell_width);
+        int lower_y_abb = std::ceil((positions[pos].y() - support_radius - bound_min.y())/cell_width);
+        int upper_y_abb = std::floor((positions[pos].y() + support_radius - bound_min.y())/cell_width);
 
-        int lower_z_abb =
-            std::ceil((positions[pos].z() - support_radius - bound_min.z()) / cell_width);
-        int upper_z_abb =
-            std::floor((positions[pos].z() + support_radius - bound_min.z()) / cell_width);
+        int lower_z_abb = std::ceil((positions[pos].z() - support_radius - bound_min.z())/cell_width);
+        int upper_z_abb = std::floor((positions[pos].z() + support_radius - bound_min.z())/cell_width);
 
-        for (int i = lower_x_abb; i < upper_x_abb + 1; i++) {
-            for (int j = lower_y_abb; j < upper_y_abb + 1; j++) {
-                for (int k = lower_z_abb; k < upper_z_abb + 1; k++) {
+        for (int i=lower_x_abb; i < upper_x_abb + 1; i++){
+            for (int j=lower_y_abb; j < upper_y_abb + 1; j++){
+                for(int k=lower_z_abb; k < upper_z_abb + 1; k++){
+                    
+                    Eigen::Vector3d vertex_pos = Eigen::Vector3d(i*cell_width,j*cell_width,k*cell_width) + bound_min;
 
-                    Eigen::Vector3d vertex_pos =
-                        Eigen::Vector3d(i * cell_width, j * cell_width, k * cell_width) + bound_min;
-
-                    if ((positions[pos] - vertex_pos).norm() < support_radius) {
+                    if ((positions[pos] - vertex_pos).squaredNorm() < support_radius * support_radius){
                         vertexIdx = i * n_vy * n_vz + j * n_vz + k;
-                        level_set[vertexIdx] += (1 / densities[pos]) *
-                                                kernel.kernel_function(positions[pos] - vertex_pos);
+                        level_set[vertexIdx] += (1/densities[pos]) * kernel.kernel_function(positions[pos] - vertex_pos);
                     }
                 }
             }
