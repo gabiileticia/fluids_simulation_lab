@@ -28,24 +28,18 @@ class MarchingCubes
     std::vector<Eigen::Vector3d> intersections;
     std::vector<Eigen::Vector3d> intersectionNormals;
     std::unordered_map<uint, uint> edgeIntersection;
-    std::vector<std::array<int, 3UL>> triangles;
-    std::vector<std::array<int, 3>> triangles2;
     std::vector<std::array<int, 3>> triangles;
-    // for debuggin
+    // std::vector<std::array<int, 3>> triangles;
+    //  for debuggin
     std::vector<Eigen::Vector3d> debug;
 
-    // slearnSPH::types::ImplicitSurface implicitSurfaceFunction;
-    learnSPH::theta_functions::FluidThetaFunction thetaFunction;
-    void *funcArgs;
-
-    MarchingCubes(double cellWidth, uint n_x, uint n_y, uint n_z, 
-                  Eigen::Vector3d origin, double epsilon, bool implicitFlag);
+    MarchingCubes(double cellWidth, uint n_x, uint n_y, uint n_z, Eigen::Vector3d origin,
+                  double epsilon, bool implicitFlag);
 
     void get_Isosurface_sparse(std::unordered_map<uint64_t, double> &level_map);
     void get_Isosurface(std::vector<double> &level_set);
-    void get_Isosurface_for_real_this_time(std::vector<double> &level_set);
-    void compute_normals(std::vector<Eigen::Vector3d> &positions, std::vector<double> &densities, Eigen::Vector3d bound_min);
-    void compute_normals();
+    void compute_normals(std::vector<Eigen::Vector3d> &positions, std::vector<double> &densities,
+                         Eigen::Vector3d bound_min);
 };
 } // namespace surface
 } // namespace learnSPH
