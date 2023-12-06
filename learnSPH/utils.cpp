@@ -3,6 +3,7 @@
 #include <array>
 #include <cerrno>
 #include <chrono>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -144,151 +145,152 @@ void learnSPH::utils::updateProgressBar(int currentStep, int maxSteps, const int
  *   0          1
  */
 
-int learnSPH::utils::cubeVertex2VertexIndex(uint cellIdx, uint vertexIndex,
-                                            std::vector<Eigen::Vector3d> &gridVertices, uint nx,
-                                            uint ny, uint nz)
+int learnSPH::utils::cubeVertex2VertexIndex(uint cellIdx, uint vertexIndex, uint nx, uint ny,
+                                            uint nz)
 {
-    int retIdx;
+    uint i, j, k;
+    k = cellIdx % nz;
+    j = (cellIdx / nz) % ny;
+    i = cellIdx / (ny * nz);
+
     switch (vertexIndex) {
     case 0:
-        return cellIdx;
+        break;
     case 1:
-        retIdx = cellIdx + ny * nz;
+        i += 1;
         break;
     case 2:
-        retIdx = cellIdx + ny * nz + nz;
+        i += 1;
+        j += 1;
         break;
     case 3:
-        retIdx = cellIdx + nz;
+        j += 1;
         break;
     case 4:
-        retIdx = cellIdx + 1;
+        k += 1;
         break;
     case 5:
-        retIdx = cellIdx + 1 + ny * nz;
+        i += 1;
+        k += 1;
         break;
     case 6:
-        retIdx = cellIdx + 1 + ny * nz + nz;
+        i += 1;
+        j += 1;
+        k += 1;
         break;
     case 7:
-        retIdx = cellIdx + 1 + nz;
+        j += 1;
+        k += 1;
         break;
     default:
         std::cout << "vertex2VertexIdx: Mismatch of lookup index: " << vertexIndex << "\n";
         exit(-1);
     }
-    if (cellIdx > retIdx || retIdx > nx * ny * nz ||
-        gridVertices[cellIdx].y() > gridVertices[retIdx].y() ||
-        gridVertices[cellIdx].z() > gridVertices[retIdx].z())
+    if (0 <= i < nx && 0 <= j < ny && 0 <= k < nz) {
+        return i * ny * nz + j * nz + k;
+    } else {
         return -1;
-    else
-        return retIdx;
+    }
 }
 
 /**
  * Neighbor mapping from center vertex v:
  *
- *          5   1
+ *          2   1
  *          |  /
  *          | /
  *          |/
- * 2 ______ v ______ 0
+ * 3 ______ v ______ 0
  *         /|
  *        / |
  *       /  |
- *      3   4
+ *      4   5
  */
 
-int learnSPH::utils::vertexSixNeighbors(uint vertexIndex, int neighbor,
-                                        std::vector<Eigen::Vector3d> &gridVertices, uint nx,
-                                        uint ny, uint nz)
+int learnSPH::utils::vertexSixNeighbors(uint vertexIndex, int neighbor, uint nx, uint ny, uint nz)
 {
-    int retidx;
-    int max = nx * ny * nz;
+    uint i, j, k;
+    k = vertexIndex % nz;
+    j = (vertexIndex / nz) % ny;
+    i = vertexIndex / (ny * nz);
+
     switch (neighbor) {
     case 0:
-        retidx = vertexIndex + ny * nz;
-        if (vertexIndex > retidx || retidx > max)
-            return -1;
-        else
-            return vertexIndex + ny * nz;
+        i += 1;
+        break;
     case 1:
-        retidx = vertexIndex + nz;
-        if (vertexIndex > retidx || retidx > max ||
-            gridVertices[vertexIndex].y() > gridVertices[retidx].y())
-            return -1;
-        else
-            return vertexIndex + nz;
+        j += 1;
+        break;
     case 2:
-        retidx = vertexIndex - ny * nz;
-        if (vertexIndex < retidx || retidx > max)
-            return -1;
-        else
-            return vertexIndex - ny * nz;
+        k += 1;
+        break;
     case 3:
-        retidx = vertexIndex - nz;
-        if (vertexIndex < retidx || retidx > max ||
-            gridVertices[vertexIndex].y() < gridVertices[retidx].y())
-            return -1;
-        else
-            return vertexIndex - nz;
+        i -= 1;
+        break;
     case 4:
-        retidx = vertexIndex - 1;
-        if (vertexIndex < retidx || retidx > max ||
-            gridVertices[vertexIndex].z() < gridVertices[retidx].z())
-            return -1;
-        else
-            return vertexIndex - 1;
+        j -= 1;
+        break;
     case 5:
-        retidx = vertexIndex + 1;
-        if (vertexIndex > retidx || retidx > max ||
-            gridVertices[vertexIndex].z() > gridVertices[retidx].z())
-            return -1;
-        else
-            return vertexIndex + 1;
+        k -= 1;
+        break;
+
     default:
         std::cout << "sixNeighbors: Mismatch of lookup index: " << vertexIndex << "\n";
         exit(-1);
+    }
+    if (0 <= i < nx && 0 <= j < ny && 0 <= k < nz) {
+        return i * ny * nz + j * nz + k;
+    } else {
+        return -1;
     }
 }
 
 int64_t learnSPH::utils::vertex8NeighborCells(uint cellIndex, int neighbor, uint nx, uint ny,
                                               uint nz)
 {
-    int64_t retidx;
+    uint i, j, k;
+    k = cellIndex % nz;
+    j = (cellIndex / nz) % ny;
+    i = cellIndex / (ny * nz);
+
     switch (neighbor) {
     case 0:
-        retidx = cellIndex - 1 - ny * nz - nz;
+        i -= 1;
+        j -= 1;
+        k -= 1;
         break;
     case 1:
-        retidx = cellIndex - 1 - nz;
+        j -= 1;
+        k -= 1;
         break;
     case 2:
-        retidx = cellIndex - 1;
+        k -= 1;
         break;
     case 3:
-        retidx = cellIndex - 1 - ny * nz;
+        i -= 1;
+        k -= 1;
         break;
     case 4:
-        retidx = cellIndex - ny * nz - nz;
+        i -= 1;
+        j -= 1;
         break;
     case 5:
-        retidx = cellIndex - nz;
+        j -= 1;
         break;
     case 6:
-        retidx = cellIndex;
         break;
     case 7:
-        retidx = cellIndex - ny * nz;
+        i -= 1;
         break;
     default:
         exit(-1);
     }
 
-    // if (cellIndex < retidx || retidx > nx * ny * nz)
-    //     return -1;
-    // else
-        return retidx;
+    if (0 <= i < nx && 0 <= j < ny && 0 <= k < nz) {
+        return i * ny * nz + j * nz + k;
+    } else {
+        return -1;
+    }
 }
 
 std::array<int, 4> learnSPH::utils::celladjByEdge(int edge)
@@ -299,14 +301,24 @@ std::array<int, 4> learnSPH::utils::celladjByEdge(int edge)
     case 1:
         return {2, 3, 6, 7};
     case 2:
-        return {0, 3, 4, 7};
-    case 3:
-        return {0, 1, 4, 5};
-    case 4:
-        return {0, 1, 2, 3};
-    case 5:
         return {4, 5, 6, 7};
+    case 3:
+        return {0, 3, 4, 7};
+    case 4:
+        return {0, 1, 4, 5};
+    case 5:
+        return {0, 1, 2, 3};
     default:
         exit(-1);
     }
+}
+
+Eigen::Vector3d learnSPH::utils::index2coord(uint vertexIndex, double cellwidth, uint nx, uint ny,
+                                             uint nz, Eigen::Vector3d origin)
+{
+    int x                  = vertexIndex / (ny * nz);
+    int y                  = (vertexIndex / nz) % ny;
+    int z                  = vertexIndex % nz;
+    Eigen::Vector3d coords = Eigen::Vector3d(x * cellwidth, y * cellwidth, z * cellwidth) + origin;
+    return coords;
 }
