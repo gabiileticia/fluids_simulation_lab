@@ -168,12 +168,12 @@ void learnSPH::simulations_setup::Simulations::dam_break()
 
 
     this->dt_default = 0.00025;
-    this->t_between_frames =  0.006;
+    this->t_between_frames =  0.008;
     this->B = 1000 * 1.02;
     this->v_f = 0.0025;
     this->v_b = 0.0;
     this->gravity = Eigen::Vector3d(0.0, 0.0, -9.81);
-    this->assignment = "assignment2/dam_break";
+    this->assignment = "dam_break";
 }
 
 void learnSPH::simulations_setup::Simulations::our_simulation_scene(){
@@ -199,10 +199,10 @@ void learnSPH::simulations_setup::Simulations::our_simulation_scene(){
     this->boundaries[1].inner = true;
 
     this->dt_default = 0.00025;
-    this->t_between_frames = 0.006;
+    this->t_between_frames = 0.008;
     this->B = 1000 * 1.02;
     this->v_f = 0.0025;
     this->v_b = 0.0;
     this->gravity = Eigen::Vector3d(0.0, 0.0, -9.81);
-    this->assignment = "assignment3/our_simulation";
+    this->assignment = "our_simulation";
 }
