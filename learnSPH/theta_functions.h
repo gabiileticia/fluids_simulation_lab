@@ -11,18 +11,6 @@ namespace learnSPH
 {
 namespace theta_functions
 {
-class Torus
-{
-  public:
-    double r, R, cellWidth;
-    uint nx, ny, nz;
-    Eigen::Vector3d origin;
-    Torus(Eigen::Vector3d origin, double r, double R, double cellWidth, uint nx, uint ny, uint nz)
-        : R(R), r(r), cellWidth(cellWidth), nx(nx), ny(ny), nz(nz), origin(origin){};
-    void computeLevelSet(std::vector<double> &level_set);
-    void computeLevelMap(std::unordered_map<uint64_t, double> &level_map);
-    double singleSignedDistance(Eigen::Vector3d pos);
-};
 class FluidThetaFunction
 {
   public:
