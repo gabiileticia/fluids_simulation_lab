@@ -4,6 +4,7 @@
 #include <iostream>
 #include <memory>
 #include <ostream>
+#include <sstream>
 #include <stdlib.h>
 #include <string>
 #include <unordered_map>
@@ -26,6 +27,12 @@
 
 int main()
 {
+    bool filesetup               = true;
+    std::string sparse_logFile   = "Mcubes_sparse_log.txt";
+    std::string dense_logFile    = "Mcubes_dense_log.txt";
+    std::string setup_logFile    = "Mcubes_setup_log.txt";
+    std::string levelmap_logFile = "Mcubes_levelmap_log.txt";
+    std::string levelset_logFile = "Mcubes_levelset_log.txt";
 
     std::cout << "Welcome to the learnSPH framework!!" << std::endl;
 
@@ -139,9 +146,6 @@ int main()
     densities::compute_boundary_masses(boundary_particles_masses, boundary_particles_positions,
                                        point_set_id_boundary, ps_boundary,
                                        sim_setup.fluid_rest_density, cubic_kernel);
-
-    std::vector<double> level_set((nx + 1) * (ny + 1) * (nz + 1), -c);
-
     // keeping track of number of elements which will be deleted
     int count_del = 0;
     std::vector<bool> deleteFlag(particles_positions.size());
@@ -149,6 +153,9 @@ int main()
     int maxSteps    = 5 / sim_setup.t_between_frames;
     int stepCounter = 0;
 
+    std::cout << sim_setup.assignment << "\n";
+    sim_setup.assignment = "assignment3/" + sim_setup.assignment;
+    std::cout << sim_setup.assignment << "\n";
     // Simulation loop
     while (t_simulation < 5) {
 
@@ -199,25 +206,110 @@ int main()
             const std::string filename = "./res/" + sim_setup.assignment + "/" +
                                          simulation_timestamp + "/sim_" +
                                          std::to_string((int)(t_simulation * 1000000)) + ".vtk";
-                                         
+            const std::string fileprefix =
+                "./res/" + sim_setup.assignment + "/" + simulation_timestamp + "/";
+
+            //sparse_logFile = fileprefix + sparse_logFile;
+
+            // setup for mcubes - two separate objects so no sideeffects
+            // need to get rid of logging here eventually
+            auto start_setup = std::chrono::high_resolution_clock::now();
             std::unordered_map<uint64_t, double> level_map;
+            std::vector<double> level_set((nx + 1) * (ny + 1) * (nz + 1), -c);
             learnSPH::theta_functions::FluidThetaFunction fluidSDF(cubic_kernel, c, cell_width,
                                                                    beta, nx + 1, ny + 1, nz + 1);
-            learnSPH::surface::MarchingCubes mcubes(
+            learnSPH::surface::MarchingCubes mcubes_sparse(
                 cell_width, nx, ny, nz, sim_setup.boundaries[0].min - bborder, 1e-6, true);
 
+            learnSPH::surface::MarchingCubes mcubes_dense(
+                cell_width, nx, ny, nz, sim_setup.boundaries[0].min - bborder, 1e-6, true);
+            auto end_setup = std::chrono::high_resolution_clock::now();
+
+            // creating level set vector
+            auto start_levelset = std::chrono::high_resolution_clock::now();
+            fluidSDF.computeLevelSet(level_set, particles_positions,
+                                     fluid_densities_for_surface_reco,
+                                     sim_setup.boundaries[0].min - bborder);
+            auto end_levelset = std::chrono::high_resolution_clock::now();
+
+            // creating level set hash map
+            auto start_levelmap = std::chrono::high_resolution_clock::now();
             fluidSDF.computeLevelMap(level_map, particles_positions,
                                      fluid_densities_for_surface_reco,
                                      sim_setup.boundaries[0].min - bborder);
-            mcubes.get_Isosurface_sparse(level_map);
+            auto end_levelmap = std::chrono::high_resolution_clock::now();
 
-            mcubes.compute_normals(particles_positions, fluid_densities_for_surface_reco,
-                                   sim_setup.boundaries[0].min - bborder);
+            // computing isosurface dense
+            auto start_dense = std::chrono::high_resolution_clock::now();
+            mcubes_dense.get_Isosurface(level_set);
+            std::ostringstream dense_infix;
+            dense_infix << mcubes_dense.intersections.size() << ","
+                        << mcubes_dense.triangles.size();
+            auto end_dense = std::chrono::high_resolution_clock::now();
 
-            write_tri_mesh_to_vtk(filename, mcubes.intersections, mcubes.triangles,
-                                  mcubes.intersectionNormals);
+            // computing isosurface sparse
+            auto start_sparse = std::chrono::high_resolution_clock::now();
+            mcubes_sparse.get_Isosurface_sparse(level_map);
+            std::ostringstream sparse_infix;
+            sparse_infix << mcubes_sparse.intersections.size() << ","
+                         << mcubes_sparse.triangles.size();
+            auto end_sparse = std::chrono::high_resolution_clock::now();
 
-            // write_particles_to_vtk(filename, mcubes.debug);
+            // computing normals - logging maybe interesting but i don't expect differences here
+            mcubes_sparse.compute_normals(particles_positions, fluid_densities_for_surface_reco,
+                                          sim_setup.boundaries[0].min - bborder);
+            mcubes_dense.compute_normals(particles_positions, fluid_densities_for_surface_reco,
+                                         sim_setup.boundaries[0].min - bborder);
+
+            std::chrono::duration<double> duration_setup    = end_setup - start_setup;
+            std::chrono::duration<double> duration_dense    = end_dense - start_dense;
+            std::chrono::duration<double> duration_sparse   = end_sparse - start_sparse;
+            std::chrono::duration<double> duration_levelmap = end_levelmap - start_levelmap;
+            std::chrono::duration<double> duration_leveset  = end_levelset - start_levelset;
+
+            std::ostringstream msg_setup;
+            std::ostringstream msg_dense;
+            std::ostringstream msg_sparse;
+            std::ostringstream msg_levelmap;
+            std::ostringstream msg_levelset;
+
+            using namespace learnSPH::utils;
+
+            if (filesetup) {
+                std::string header =
+                    "#Particles,#Grid Vertices,#Mesh Vertices,#Mesh Triangles,Duration in s\n";
+                logMessage(header, fileprefix + sparse_logFile);
+                logMessage(header, fileprefix + dense_logFile);
+                logMessage(header, fileprefix + setup_logFile);
+                logMessage(header, fileprefix + levelmap_logFile);
+                logMessage(header, fileprefix + levelset_logFile);
+                filesetup = false;
+            }
+
+            // information same for every entry
+            std::ostringstream prefix;
+            prefix << particles_positions.size() << "," << level_set.size();
+            msg_sparse << prefix.str() << "," << sparse_infix.str() << ","
+                       << duration_sparse.count();
+            msg_dense << prefix.str() << "," << dense_infix.str() << "," << duration_dense.count();
+            msg_setup << prefix.str() << ","
+                      << ","
+                      << "," << duration_setup.count();
+            msg_levelmap << prefix.str() << ","
+                         << ","
+                         << "," << duration_levelmap.count();
+            msg_levelset << prefix.str() << ","
+                         << ","
+                         << "," << duration_leveset.count();
+
+            logMessage(msg_dense.str(), fileprefix + dense_logFile);
+            logMessage(msg_sparse.str(), fileprefix + sparse_logFile);
+            logMessage(msg_setup.str(), fileprefix + setup_logFile);
+            logMessage(msg_levelmap.str(), fileprefix + levelmap_logFile);
+            logMessage(msg_levelset.str(), fileprefix + levelset_logFile);
+
+            // write_tri_mesh_to_vtk(filename, mcubes.intersections, mcubes.triangles,
+            //                       mcubes.intersectionNormals);
 
             t_next_frame += sim_setup.t_between_frames;
 

@@ -28,6 +28,7 @@ int vertexSixNeighbors(uint vertexIndex, int neighbor, uint nx, uint ny, uint nz
 int64_t vertex8NeighborCells(uint cellIndex, int neighbor, uint nx, uint ny, uint nz);
 Eigen::Vector3d index2coord(uint vertexIndex, double cellwidth, uint nx , uint ny, uint nz, Eigen::Vector3d origin);
 std::array<int, 4> celladjByEdge(int edge);
+void logMessage(const std::string& message, const std::string& filename);
 } // namespace utils
 } // namespace learnSPH
 

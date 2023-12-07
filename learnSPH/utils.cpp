@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <iomanip>
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <stdlib.h> // rand
 #include <sys/stat.h>
@@ -321,4 +322,16 @@ Eigen::Vector3d learnSPH::utils::index2coord(uint vertexIndex, double cellwidth,
     int z                  = vertexIndex % nz;
     Eigen::Vector3d coords = Eigen::Vector3d(x * cellwidth, y * cellwidth, z * cellwidth) + origin;
     return coords;
+}
+
+void learnSPH::utils::logMessage(const std::string& message, const std::string& filename) {
+    std::ofstream logfile(filename);
+    logfile.open(filename, std::ios_base::app); // Open file in append mode
+
+    if (logfile.is_open()) {
+        logfile << message << std::endl; // Write message to the file
+        logfile.close(); // Close the file
+    } else {
+        std::cerr << "Error opening the file." << std::endl;
+    }
 }
