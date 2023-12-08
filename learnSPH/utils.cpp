@@ -17,7 +17,7 @@
 #include <sys/types.h>
 #include <vector>
 
-void learnSPH::utils::deleteOutOfBounds(std::vector<Eigen::Vector3d> &positions,
+int learnSPH::utils::deleteOutOfBounds(std::vector<Eigen::Vector3d> &positions,
                                         std::vector<Eigen::Vector3d> &velocity,
                                         std::vector<Eigen::Vector3d> &accelerations,
                                         std::vector<double> &densities,
@@ -26,7 +26,7 @@ void learnSPH::utils::deleteOutOfBounds(std::vector<Eigen::Vector3d> &positions,
                                         std::vector<bool> &deleteFlag, int &count_del)
 {
 
-    std::cout << "Deleting " << count_del << " elements from particle vectors." << std::endl;
+    //std::cout << "Deleting " << count_del << " elements from particle vectors." << std::endl;
     int counter = 0;
     for (int i = 0; i < positions.size(); i++) {
         // skip marked for deletion element and don't increase conter
@@ -53,8 +53,7 @@ void learnSPH::utils::deleteOutOfBounds(std::vector<Eigen::Vector3d> &positions,
     deleteFlag.resize(counter);
     std::fill(deleteFlag.begin(), deleteFlag.end(), false);
 
-    std::cout << "Done. New number of particles is: " << positions.size() << std::endl;
-    fflush(stdout);
+    return count_del;
 }
 
 void learnSPH::utils::create_simulation_folder(const std::string assign_number,
@@ -325,7 +324,7 @@ Eigen::Vector3d learnSPH::utils::index2coord(uint vertexIndex, double cellwidth,
 }
 
 void learnSPH::utils::logMessage(const std::string& message, const std::string& filename) {
-    std::ofstream logfile(filename);
+    std::ofstream logfile;
     logfile.open(filename, std::ios_base::app); // Open file in append mode
 
     if (logfile.is_open()) {

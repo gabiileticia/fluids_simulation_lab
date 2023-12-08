@@ -206,3 +206,29 @@ void learnSPH::simulations_setup::Simulations::our_simulation_scene(){
     this->gravity = Eigen::Vector3d(0.0, 0.0, -9.81);
     this->assignment = "our_simulation";
 }
+
+void learnSPH::simulations_setup::Simulations::mcubes_stress_test_scene(){
+    this->particle_radius = 0.005;
+    this->fluid_rest_density = 1000.0;
+
+    this->fluid_begin.resize(1);
+    this->fluid_end.resize(1);
+    this->fluid_velocities.resize(1);
+    this->fluid_begin[0] = Eigen::Vector3d(0.25,0.25,0.1);
+    this->fluid_end[0] = Eigen::Vector3d(0.75,0.75,0.6);
+    this->fluid_velocities[0] = Eigen::Vector3d(0,0,0);
+
+    this->boundaries.resize(1);
+    this->boundaries[0].filename = "./res/boundary_cube.obj";
+    this->boundaries[0].min = Eigen::Vector3d(-0.02,-0.02,-0.02);
+    this->boundaries[0].max = Eigen::Vector3d(1.,1.,1.);
+    this->boundaries[0].inner = false;
+
+    this->dt_default = 0.00025;
+    this->t_between_frames = 0.008;
+    this->B = 1000 * 1.02;
+    this->v_f = 0.0025;
+    this->v_b = 0.0;
+    this->gravity = Eigen::Vector3d(0.0,0.0,-9.81);
+    this->assignment = "mcubes_benchmark";
+}

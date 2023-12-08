@@ -24,6 +24,7 @@ _deps
 tests/learnSPH_tests
 app/learnSPH_app
 app/dam_break
+app/learnSPH_benchmarkMC
 
 ## VSCode related
 .vscode
@@ -33,3 +34,6 @@ app/dam_break
 
 ## ClangD 
 /.cache
+
+## Benchmark output
+Mcubes_*_log.txt

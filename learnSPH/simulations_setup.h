@@ -38,6 +38,7 @@ namespace learnSPH {
             void gravity_with_floor_boundary_viscosity();
             void dam_break();
             void our_simulation_scene();
+            void mcubes_stress_test_scene();
 
         };
     }
