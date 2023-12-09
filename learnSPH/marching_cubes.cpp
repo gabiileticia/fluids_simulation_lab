@@ -18,8 +18,7 @@
 #include "utils.h"
 
 learnSPH::surface::MarchingCubes::MarchingCubes(double cellWidth, uint n_x, uint n_y, uint n_z,
-                                                Eigen::Vector3d origin, double epsilon,
-                                                bool implicitFlag)
+                                                Eigen::Vector3d origin, double epsilon)
 {
     this->origin = origin;
     this->n_cx   = n_x;
@@ -38,8 +37,6 @@ learnSPH::surface::MarchingCubes::MarchingCubes(double cellWidth, uint n_x, uint
 
     this->triangles.resize(n_vx * n_vy * n_vz * 5);
     this->intersections.resize(this->triangles.size() * 3);
-
-    this->implicitFlag = implicitFlag;
 }
 
 void learnSPH::surface::MarchingCubes::get_Isosurface(std::vector<double> &level_set)
@@ -99,7 +96,6 @@ void learnSPH::surface::MarchingCubes::get_Isosurface(std::vector<double> &level
             }
         }
     }
-    this->intersections.resize(intersecId);
 
     for (int i = 0; i < this->n_cx; i++) {
         for (int j = 0; j < this->n_cy; j++) {
@@ -162,6 +158,7 @@ void learnSPH::surface::MarchingCubes::get_Isosurface_sparse(
             std::cout << level_map[idx.first] << "\n";
             exit(-1);
         }
+
         if (idx.second < 0) {
             for (int i = 0; i < 8; ++i) {
                 adjacentCells[i] = learnSPH::utils::vertex8NeighborCells(idx.first, i, this->n_vx,
@@ -186,7 +183,6 @@ void learnSPH::surface::MarchingCubes::get_Isosurface_sparse(
                                 vb = learnSPH::utils::index2coord(neighborIdx, cellWidth,
                                                                   this->n_vx, this->n_vy,
                                                                   this->n_vz, this->origin);
-
                             } else {
                                 edgeIdx = neighborIdx * 3 + i % 3;
                                 alpha   = level_map[neighborIdx] /
@@ -229,6 +225,7 @@ void learnSPH::surface::MarchingCubes::get_Isosurface_sparse(
                 vertexSigns[i] = level_map[vertexIds[i]] < 0;
             }
         }
+
         triangulation = get_marching_cubes_cell_triangulation(vertexSigns);
         for (int i = 0; i < 5; i++) {
             std::array<int, 3> triangle = triangulation[i];
@@ -248,9 +245,7 @@ void learnSPH::surface::MarchingCubes::get_Isosurface_sparse(
     this->triangles.resize(triangleId);
 }
 
-void learnSPH::surface::MarchingCubes::compute_normals(std::vector<Eigen::Vector3d> &positions,
-                                                       std::vector<double> &densities,
-                                                       Eigen::Vector3d bound_min)
+void learnSPH::surface::MarchingCubes::compute_normals()
 {
 
     if (this->intersections.size() == 0) {

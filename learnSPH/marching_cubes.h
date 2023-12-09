@@ -22,7 +22,6 @@ class MarchingCubes
     double cellWidth;
     double epsilon;
     double c;
-    bool implicitFlag; // false for < 0 inside and > 0 outside, true: for vice versa
     Eigen::Vector3d origin;
 
     std::vector<Eigen::Vector3d> intersections;
@@ -34,12 +33,11 @@ class MarchingCubes
     std::vector<Eigen::Vector3d> debug;
 
     MarchingCubes(double cellWidth, uint n_x, uint n_y, uint n_z, Eigen::Vector3d origin,
-                  double epsilon, bool implicitFlag);
+                  double epsilon);
 
     void get_Isosurface_sparse(std::unordered_map<uint64_t, double> &level_map);
     void get_Isosurface(std::vector<double> &level_set);
-    void compute_normals(std::vector<Eigen::Vector3d> &positions, std::vector<double> &densities,
-                         Eigen::Vector3d bound_min);
+    void compute_normals();
 };
 } // namespace surface
 } // namespace learnSPH

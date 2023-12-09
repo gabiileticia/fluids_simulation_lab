@@ -20,7 +20,7 @@ namespace learnSPH
               void integrationStep(std::vector<Eigen::Vector3d> &positions,
                                   std::vector<Eigen::Vector3d> &velocity,
                                   std::vector<Eigen::Vector3d> &accelerations, std::vector<bool> &deleteFlag,
-                                  double dt, int &count_del);
+                                  double dt, int &count_del, Eigen::Vector3d &min_fluid_reco, Eigen::Vector3d &max_fluid_reco);
           };
       } // namespace timeIntegration
 } // namespace learnSPH

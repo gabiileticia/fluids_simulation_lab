@@ -50,6 +50,7 @@ int main()
     double boundary_sampling_distance = 0.8 * particle_diameter;
     double h                          = 1.2 * particle_diameter;
     double beta                       = 2.0 * h;
+    double epsilon                    = 1e-6;
 
     double fluid_volume = 0.0;
     for (int i = 0; i < sim_setup.fluid_begin.size(); ++i) {
@@ -64,20 +65,10 @@ int main()
     // Marching cubes setup
     double c                = 0.55;
     double cell_width       = 1.25 * sim_setup.particle_radius;
-    Eigen::Vector3d bborder = Eigen::Vector3d(0.2, 0.2, 0.2);
+    Eigen::Vector3d bborder = Eigen::Vector3d(1.5 * beta, 1.5 * beta, 1.5 * beta);
 
-    uint nx = ((sim_setup.boundaries[0].max.x() + bborder.x()) -
-               (sim_setup.boundaries[0].min.x() - bborder.x())) /
-                  cell_width +
-              1;
-    uint ny = ((sim_setup.boundaries[0].max.y() + bborder.y()) -
-               (sim_setup.boundaries[0].min.y() - bborder.y())) /
-                  cell_width +
-              1;
-    uint nz = ((sim_setup.boundaries[0].max.z() + bborder.z()) -
-               (sim_setup.boundaries[0].min.z() - bborder.z())) /
-                  cell_width +
-              1;
+    Eigen::Vector3d min_fluid_reco;
+    Eigen::Vector3d max_fluid_reco;
 
     // instantiating some classes
     std::cout << sim_setup.assignment << ", " << simulation_timestamp << "\n";
@@ -175,7 +166,9 @@ int main()
 
         // Integrate
         semImpEuler.integrationStep(particles_positions, particles_velocities,
-                                    particles_accelerations, deleteFlag, dt, count_del);
+                                    particles_accelerations, deleteFlag, dt, count_del,
+                                    min_fluid_reco, max_fluid_reco);
+
 
         if (count_del > 0 && sim_setup.boundaries.size() > 0) {
             learnSPH::utils::deleteOutOfBounds(particles_positions, particles_velocities,
@@ -196,21 +189,30 @@ int main()
             const std::string filename = "./res/" + sim_setup.assignment + "/" +
                                          simulation_timestamp + "/sim_" +
                                          std::to_string((int)(t_simulation * 1000000)) + ".vtk";
+
+            uint nx = ((max_fluid_reco.x() + bborder.x()) - (min_fluid_reco.x() - bborder.x())) /cell_width + 1;
+            uint ny = ((max_fluid_reco.y() + bborder.y()) - (min_fluid_reco.y() - bborder.y())) /cell_width + 1;
+            uint nz = ((max_fluid_reco.z() + bborder.z()) - (min_fluid_reco.z() - bborder.z())) /cell_width + 1;
+
+            std::cout << nx << ";" << ny << ";" << nz << std::endl;
+
+            // std::vector<double> level_set((nx + 1) * (ny + 1) * (nz + 1), -c);
+
             // setup for mcubes - two separate objects so no sideeffects
             std::unordered_map<uint64_t, double> level_map;
             learnSPH::theta_functions::FluidThetaFunction fluidSDF(cubic_kernel, c, cell_width,
                                                                    beta, nx + 1, ny + 1, nz + 1);
             learnSPH::surface::MarchingCubes mcubes(
-                cell_width, nx, ny, nz, sim_setup.boundaries[0].min - bborder, 1e-6, true);
+                cell_width, nx, ny, nz, min_fluid_reco - bborder, epsilon);
             // creating level set hash map
             fluidSDF.computeLevelMap(level_map, particles_positions,
                                      fluid_densities_for_surface_reco,
-                                     sim_setup.boundaries[0].min - bborder);
+                                     min_fluid_reco - bborder);
             // computing isosurface sparse
+            // mcubes.get_Isosurface(level_set);
             mcubes.get_Isosurface_sparse(level_map);
             // computing normals - logging maybe interesting but i don't expect differences here
-            mcubes.compute_normals(particles_positions, fluid_densities_for_surface_reco,
-                                          sim_setup.boundaries[0].min - bborder);
+            mcubes.compute_normals();
             write_tri_mesh_to_vtk(filename, mcubes.intersections, mcubes.triangles,
                                   mcubes.intersectionNormals);
 

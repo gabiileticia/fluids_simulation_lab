@@ -26,11 +26,13 @@ learnSPH::timeIntegration::semiImplicitEuler::semiImplicitEuler(
 void learnSPH::timeIntegration::semiImplicitEuler::integrationStep(
     std::vector<Eigen::Vector3d> &positions, std::vector<Eigen::Vector3d> &velocity,
     std::vector<Eigen::Vector3d> &accelerations, std::vector<bool> &deleteFlag, double dt,
-    int &count_del)
+    int &count_del, Eigen::Vector3d &min_fluid_reco, Eigen::Vector3d &max_fluid_reco)
 {
     v_max         = 0;
     bool copyFlag = false;
     count_del     = 0;
+    max_fluid_reco = positions[0];
+    min_fluid_reco = positions[0];
 
     for (int i = 0; i < positions.size(); i++) {
         velocity[i]  = velocity[i] + dt * accelerations[i];
@@ -38,6 +40,19 @@ void learnSPH::timeIntegration::semiImplicitEuler::integrationStep(
 
         if (velocity[i].squaredNorm() > v_max)
             v_max = velocity[i].squaredNorm();
+
+        if(positions[i].x() > max_fluid_reco.x())
+            max_fluid_reco.x() = positions[i].x();
+        if(positions[i].y() > max_fluid_reco.y())
+            max_fluid_reco.y() = positions[i].y();
+        if(positions[i].z() > max_fluid_reco.z())
+            max_fluid_reco.z() = positions[i].z();
+        if(positions[i].x() < min_fluid_reco.x())
+            min_fluid_reco.x() = positions[i].x();
+        if(positions[i].y() < min_fluid_reco.y())
+            min_fluid_reco.y() = positions[i].y();
+        if(positions[i].z() < min_fluid_reco.z())
+            min_fluid_reco.z() = positions[i].z();
 
         // mark out of bound elements for deletion if activated
 
