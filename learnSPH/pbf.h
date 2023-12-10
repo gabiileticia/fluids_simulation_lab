@@ -16,8 +16,7 @@ namespace learnSPH {
             learnSPH::kernel::CubicSplineKernel &cubic_kernel,
             unsigned int point_set_id_fluid,
             CompactNSearch::PointSet const &ps_fluid,
-            unsigned int point_set_id_boundary,
-            CompactNSearch::PointSet const &ps_boundary
+            unsigned int point_set_id_boundary
         );
 
         void compute_c(std::vector<double> &c, 
@@ -42,7 +41,6 @@ namespace learnSPH {
             unsigned int point_set_id_fluid,
             CompactNSearch::PointSet const &ps_fluid,
             unsigned int point_set_id_boundary,
-            CompactNSearch::PointSet const &ps_boundary,
             std::vector<Eigen::Vector3d> &particles,
             std::vector<Eigen::Vector3d> &boundary_particles
         );

@@ -38,6 +38,19 @@ namespace learnSPH {
                         std::vector<double> boundary_mass,
                         double boundary_density,
                         const double fluid_mass);
+
+      void pbf_accelerations(
+                        std::vector<Eigen::Vector3d> &accelerations,
+                        std::vector<double> &roh, // density
+                        unsigned int ps_id_fluid,
+                        unsigned int ps_id_boundary,
+                        CompactNSearch::PointSet const &fluid_neighbors,
+                        std::vector<Eigen::Vector3d> &fluid_particles, 
+                        std::vector<Eigen::Vector3d> &boundary_particles,
+                        std::vector<Eigen::Vector3d> &velocity, 
+                        std::vector<double> boundary_mass,
+                        double boundary_density, 
+                        const double fluid_particle_mass);
     };
   } // namespace acceleration
 } // namespace learnSPH
