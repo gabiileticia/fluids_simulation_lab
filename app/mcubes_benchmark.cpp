@@ -277,8 +277,9 @@ int main()
 
             if (filesetup) {
                 std::string header =
-                    "#Particles,#Grid Vertices,#Mesh Vertices,#Mesh Triangles,Duration in s\n";
-                logMessage(header, fileprefix + sparse_logFile);
+                    "#Particles,#Grid Vertices,#Mesh Vertices,#Mesh Triangles,Duration in s";
+                std::string sparse_header = "#Level Map," + header;
+                logMessage(sparse_header, fileprefix + sparse_logFile);
                 logMessage(header, fileprefix + dense_logFile);
                 logMessage(header, fileprefix + setup_logFile);
                 logMessage(header, fileprefix + levelmap_logFile);
@@ -291,7 +292,7 @@ int main()
             //      leads to sparse being slower then dense version!
             std::ostringstream prefix;
             prefix << particles_positions.size() << "," << level_set.size();
-            msg_sparse << prefix.str() << "," << sparse_infix.str() << ","
+            msg_sparse << level_map.size() << ',' << prefix.str() << "," << sparse_infix.str() << ","
                        << duration_sparse.count();
             msg_dense << prefix.str() << "," << dense_infix.str() << "," << duration_dense.count();
             msg_setup << prefix.str() << ","
