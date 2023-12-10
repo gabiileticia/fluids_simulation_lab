@@ -160,7 +160,7 @@ int main()
 
         // Compute fluid particles densities
         learnSPH::densities::compute_fluid_density(
-            fluid_densities_for_surface_reco, particles_densities, particles_positions,
+            particles_densities, particles_positions,
             boundary_particles_positions, boundary_particles_masses, point_set_id_fluid, ps_fluid,
             point_set_id_boundary, ps_boundary, fluid_particle_mass, cubic_kernel);
 
@@ -182,7 +182,7 @@ int main()
         if (count_del > 0 && sim_setup.boundaries.size() > 0) {
             learnSPH::utils::deleteOutOfBounds(particles_positions, particles_velocities,
                                                particles_accelerations, particles_densities,
-                                               fluid_densities_for_surface_reco, particles_pressure,
+                                               particles_pressure,
                                                deleteFlag, count_del);
             nsearch.resize_point_set(point_set_id_fluid, particles_positions.front().data(),
                                      particles_positions.size());
@@ -208,6 +208,9 @@ int main()
             uint nx = ((max_fluid_reco.x() + bborder.x()) - (min_fluid_reco.x() - bborder.x())) /cell_width + 1;
             uint ny = ((max_fluid_reco.y() + bborder.y()) - (min_fluid_reco.y() - bborder.y())) /cell_width + 1;
             uint nz = ((max_fluid_reco.z() + bborder.z()) - (min_fluid_reco.z() - bborder.z())) /cell_width + 1;
+
+            learnSPH::densities::compute_fluid_density_surface_reco(fluid_densities_for_surface_reco, particles_positions,
+                    point_set_id_fluid, ps_fluid, cubic_kernel);
 
             // sparse_logFile = fileprefix + sparse_logFile;
 

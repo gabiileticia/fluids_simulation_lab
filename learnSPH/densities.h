@@ -15,9 +15,9 @@ namespace learnSPH {
             unsigned int point_set_id,
             CompactNSearch::PointSet const& pointset,
             double density,
-            learnSPH::kernel::CubicSplineKernel &kernel);
+            learnSPH::kernel::CubicSplineKernel &kernel
+        );
         void compute_fluid_density(
-            std::vector<double> &fluid_densities_for_surface_reco,
             std::vector<double> &particles_densities,
             std::vector<Eigen::Vector3d>& particles,
             std::vector<Eigen::Vector3d>& boundary_particles,
@@ -27,7 +27,13 @@ namespace learnSPH {
             unsigned int point_set_id_boundary,
             CompactNSearch::PointSet const& ps_boundary,
             const double fluid_mass,
-            learnSPH::kernel::CubicSplineKernel &kernel
-            );
+            learnSPH::kernel::CubicSplineKernel &cubic_kernel
+        );
+        void compute_fluid_density_surface_reco(std::vector<double> &fluid_densities_for_surface_reco,
+            std::vector<Eigen::Vector3d> &particles,
+            unsigned int point_set_id_fluid,
+            CompactNSearch::PointSet const &ps_fluid,
+            learnSPH::kernel::CubicSplineKernel &cubic_kernel
+        );
     }
 }

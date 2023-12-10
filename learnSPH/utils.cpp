@@ -21,7 +21,6 @@ int learnSPH::utils::deleteOutOfBounds(std::vector<Eigen::Vector3d> &positions,
                                         std::vector<Eigen::Vector3d> &velocity,
                                         std::vector<Eigen::Vector3d> &accelerations,
                                         std::vector<double> &densities,
-                                        std::vector<double> &fluid_reco_densities,
                                         std::vector<double> &pressure,
                                         std::vector<bool> &deleteFlag, int &count_del)
 {
@@ -39,7 +38,6 @@ int learnSPH::utils::deleteOutOfBounds(std::vector<Eigen::Vector3d> &positions,
             velocity[counter]             = velocity[i];
             accelerations[counter]        = accelerations[i];
             densities[counter]            = densities[i];
-            fluid_reco_densities[counter] = fluid_reco_densities[i];
             pressure[counter]             = pressure[i];
         }
         counter++;
@@ -48,7 +46,6 @@ int learnSPH::utils::deleteOutOfBounds(std::vector<Eigen::Vector3d> &positions,
     velocity.resize(counter);
     accelerations.resize(counter);
     densities.resize(counter);
-    fluid_reco_densities.resize(counter);
     pressure.resize(counter);
     deleteFlag.resize(counter);
     std::fill(deleteFlag.begin(), deleteFlag.end(), false);

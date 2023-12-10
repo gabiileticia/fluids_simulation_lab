@@ -151,7 +151,6 @@ void learnSPH::simulations_setup::Simulations::dam_break()
     this->particle_radius = 0.005;
     this->fluid_rest_density = 1000.0;
 
-
     this->fluid_begin.resize(1);
     this->fluid_end.resize(1);
     this->fluid_velocities.resize(1);
@@ -167,7 +166,7 @@ void learnSPH::simulations_setup::Simulations::dam_break()
     this->boundaries[0].inner = false;
 
 
-    this->dt_default = 0.00025;
+    this->dt_default = 0.001;
     this->t_between_frames =  0.008;
     this->B = 1000 * 1.02;
     this->v_f = 0.0025;
