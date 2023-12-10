@@ -25,7 +25,6 @@ namespace learnSPH {
             unsigned int point_set_id_fluid,
             CompactNSearch::PointSet const& ps_fluid,
             unsigned int point_set_id_boundary,
-            CompactNSearch::PointSet const& ps_boundary,
             const double fluid_mass,
             learnSPH::kernel::CubicSplineKernel &cubic_kernel
         );

@@ -64,7 +64,7 @@ int main()
     using namespace learnSPH;
 
     // Marching cubes setup
-    int surface_reco_method = 0; // 0:dense 1:sparse
+    int surface_reco_method = 1; // 0:dense 1:sparse
     double c                = 0.55;
     double cell_width       = 1.25 * sim_setup.particle_radius;
     Eigen::Vector3d bborder = Eigen::Vector3d(1.5 * beta, 1.5 * beta, 1.5 * beta);
@@ -81,7 +81,7 @@ int main()
     std::vector<double> pbf_c;
     std::vector<double> pbf_lambda;
     std::vector<Eigen::Vector3d> pbf_dx;
-    std::vector<Eigen::Vector3d> pbf_particles_positions;
+    std::vector<Eigen::Vector3d> last_particles_positions;
 
 
     // instantiating some classes
@@ -164,7 +164,7 @@ int main()
         learnSPH::densities::compute_fluid_density(
             particles_densities, particles_positions,
             boundary_particles_positions, boundary_particles_masses, point_set_id_fluid, ps_fluid,
-            point_set_id_boundary, ps_boundary, fluid_particle_mass, cubic_kernel);
+            point_set_id_boundary, fluid_particle_mass, cubic_kernel);
 
         // Compute acceleration
         if (pressure_solver_method == 0){
@@ -179,7 +179,8 @@ int main()
         } else if (pressure_solver_method == 1){
             acceleration.pbf_accelerations(particles_accelerations, particles_densities, point_set_id_fluid,
                 point_set_id_boundary, ps_fluid, particles_positions, boundary_particles_positions,
-                particles_velocities, boundary_particles_masses, sim_setup.fluid_rest_density, fluid_mass);
+                particles_velocities, boundary_particles_masses, sim_setup.fluid_rest_density, fluid_particle_mass);
+            last_particles_positions = particles_positions;
         }
 
         // Integrate
@@ -191,28 +192,27 @@ int main()
         nsearch.find_neighbors();
 
         if(pressure_solver_method ==1){
-            pbf_particles_positions = particles_positions;
             for(int i = 0 ; i < n_iteractions_pbf; i++){
-                learnSPH::densities::compute_fluid_density(particles_densities, pbf_particles_positions,
+                learnSPH::densities::compute_fluid_density(particles_densities, particles_positions,
                     boundary_particles_positions, boundary_particles_masses, point_set_id_fluid, ps_fluid,
-                    point_set_id_boundary, ps_boundary, fluid_particle_mass, cubic_kernel);
+                    point_set_id_boundary, fluid_particle_mass, cubic_kernel);
 
                 learnSPH::pbf::compute_c(pbf_c, particles_densities, sim_setup.fluid_rest_density);
 
-                learnSPH::pbf::compute_s(pbf_s, pbf_particles_positions, boundary_particles_positions, fluid_mass,
+                learnSPH::pbf::compute_s(pbf_s, particles_positions, boundary_particles_positions, fluid_particle_mass,
                     sim_setup.fluid_rest_density, boundary_particles_masses, sim_setup.fluid_rest_density,
                     cubic_kernel, point_set_id_fluid, ps_fluid, point_set_id_boundary);
 
                 learnSPH::pbf::compute_lambda(pbf_lambda, pbf_c, pbf_s, epsilon);
 
-                learnSPH::pbf::compute_dx(pbf_dx, sim_setup.fluid_rest_density, fluid_mass, pbf_lambda,
+                learnSPH::pbf::compute_dx(pbf_dx, sim_setup.fluid_rest_density, fluid_particle_mass, pbf_lambda,
                     cubic_kernel, boundary_particles_masses, point_set_id_fluid, ps_fluid, point_set_id_boundary,
-                    pbf_particles_positions, boundary_particles_positions);
+                    particles_positions, boundary_particles_positions);
 
-                learnSPH::pbf::update_pbf_positions(pbf_particles_positions, pbf_dx);
+                learnSPH::pbf::update_positions(particles_positions, pbf_dx);
             }
 
-            learnSPH::pbf::update_positions_and_velocities(particles_positions, pbf_particles_positions,
+            learnSPH::pbf::update_velocities(particles_positions, last_particles_positions,
                 particles_velocities, dt);
         }
 

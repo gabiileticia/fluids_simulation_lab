@@ -45,14 +45,14 @@ namespace learnSPH {
             std::vector<Eigen::Vector3d> &boundary_particles
         );
 
-        void update_pbf_positions(
+        void update_positions(
             std::vector<Eigen::Vector3d> &particles,
             std::vector<Eigen::Vector3d> &dx
         );
 
-        void update_positions_and_velocities(
+        void update_velocities(
             std::vector<Eigen::Vector3d> &particles,
-            std::vector<Eigen::Vector3d> &pbf_particles_positions,
+            std::vector<Eigen::Vector3d> &last_particles_positions,
             std::vector<Eigen::Vector3d> &particles_velocities,
             double dt
         );

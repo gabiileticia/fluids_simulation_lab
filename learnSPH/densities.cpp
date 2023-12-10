@@ -27,11 +27,13 @@ void learnSPH::densities::compute_boundary_masses(std::vector<double> &output,
 }
 
 void learnSPH::densities::compute_fluid_density(
-    std::vector<double> &particles_densities, std::vector<Eigen::Vector3d> &particles,
+    std::vector<double> &particles_densities,
+    std::vector<Eigen::Vector3d> &particles,
     std::vector<Eigen::Vector3d> &boundary_particles,
-    std::vector<double> &boundary_particles_masses, unsigned int point_set_id_fluid,
+    std::vector<double> &boundary_particles_masses,
+    unsigned int point_set_id_fluid,
     CompactNSearch::PointSet const &ps_fluid, unsigned int point_set_id_boundary,
-    CompactNSearch::PointSet const &ps_boundary, const double fluid_mass,
+    const double fluid_mass,
     learnSPH::kernel::CubicSplineKernel &cubic_kernel)
 {
     for (int i = 0; i < ps_fluid.n_points(); ++i) {

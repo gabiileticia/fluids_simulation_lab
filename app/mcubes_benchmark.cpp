@@ -162,7 +162,7 @@ int main()
         learnSPH::densities::compute_fluid_density(
             particles_densities, particles_positions,
             boundary_particles_positions, boundary_particles_masses, point_set_id_fluid, ps_fluid,
-            point_set_id_boundary, ps_boundary, fluid_particle_mass, cubic_kernel);
+            point_set_id_boundary, fluid_particle_mass, cubic_kernel);
 
         // Compute acceleration
         acceleration.pressure(particles_pressure, particles_densities,

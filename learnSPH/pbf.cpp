@@ -121,7 +121,7 @@ void learnSPH::pbf::compute_dx(
 }
 
 
-void learnSPH::pbf::update_pbf_positions(
+void learnSPH::pbf::update_positions(
             std::vector<Eigen::Vector3d> &particles,
             std::vector<Eigen::Vector3d> &dx)
 {
@@ -131,14 +131,13 @@ void learnSPH::pbf::update_pbf_positions(
 }
 
 
-void learnSPH::pbf::update_positions_and_velocities(
+void learnSPH::pbf::update_velocities(
             std::vector<Eigen::Vector3d> &particles,
-            std::vector<Eigen::Vector3d> &pbf_particles_positions,
+            std::vector<Eigen::Vector3d> &last_particles_positions,
             std::vector<Eigen::Vector3d> &particles_velocities,
             double dt)
 {
     for (int i = 0; i < particles.size(); i++){
-        particles_velocities[i] = (pbf_particles_positions[i] - particles[i]) / dt;
-        particles[i] = pbf_particles_positions[i];
+        particles_velocities[i] = (particles[i] - last_particles_positions[i]) / dt;
     }
 }
