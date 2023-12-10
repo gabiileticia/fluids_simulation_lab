@@ -18,10 +18,13 @@ _deps
 *Zone.Identifier
 *.vtk
 *.a
+*.blend
 
 ## From the course
 tests/learnSPH_tests
 app/learnSPH_app
+app/dam_break
+app/learnSPH_benchmarkMC
 
 ## VSCode related
 .vscode
@@ -31,3 +34,6 @@ app/learnSPH_app
 
 ## ClangD 
 /.cache
+
+## Benchmark output
+Mcubes_*_log.txt

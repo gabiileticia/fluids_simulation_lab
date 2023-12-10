@@ -1,7 +1,7 @@
 #include "simulations_setup.h"
 #include <iostream>
 
-learnSPH::simulations_setup::Simulations::Simulations(std::string teste){}
+learnSPH::simulations_setup::Simulations::Simulations(){}
 
 
 void learnSPH::simulations_setup::Simulations::simple_cube(){
@@ -104,10 +104,11 @@ void learnSPH::simulations_setup::Simulations::gravity_with_floor(){
     this->fluid_end[0] = Eigen::Vector3d(1.0, 1.0, 1.0);
     this->fluid_velocities[0] = Eigen::Vector3d(0.0, 0.0, 0.0);
 
-    this->boundary_file.resize(1);
-    this->boundary_file[0] = "./res/floor.obj";
-    this->boundary_begin = Eigen::Vector3d(-2, -2, -0.05);
-    this->boundary_end = Eigen::Vector3d(2, 2, 0.05);
+    this->boundaries.resize(1);
+    this->boundaries[0].filename = "./res/floor.obj";
+    this->boundaries[0].min = Eigen::Vector3d(-2, -2, -0.05);
+    this->boundaries[0].max = Eigen::Vector3d(2, 2, 0.05);
+    this->boundaries[0].inner = false;
 
     this->dt_default = 0.001;
     this->t_between_frames = 0.005;
@@ -130,10 +131,11 @@ void learnSPH::simulations_setup::Simulations::gravity_with_floor_boundary_visco
     this->fluid_end[0] = Eigen::Vector3d(1.0, 1.0, 1.0);
     this->fluid_velocities[0] = Eigen::Vector3d(0.0, 0.0, 0.0);
 
-    this->boundary_file.resize(1);
-    this->boundary_file[0] = "./res/floor.obj";
-    this->boundary_begin = Eigen::Vector3d(-2, -2, -0.05);
-    this->boundary_end = Eigen::Vector3d(2, 2, 0.05);
+    this->boundaries.resize(1);
+    this->boundaries[0].filename = "./res/floor.obj";
+    this->boundaries[0].min = Eigen::Vector3d(-2, -2, -0.05);
+    this->boundaries[0].max = Eigen::Vector3d(2, 2, 0.05);
+    this->boundaries[0].inner = false;
 
     this->dt_default = 0.001;
     this->t_between_frames = 0.005;
@@ -158,18 +160,20 @@ void learnSPH::simulations_setup::Simulations::dam_break()
     this->fluid_end[0] = Eigen::Vector3d(0.15, 0.25, 0.5);
     this->fluid_velocities[0] = Eigen::Vector3d(0.0, 0.0, 0.0);
 
-    this->boundary_file.resize(1);
-    this->boundary_file[0] = "./res/boundary.obj";
-    this->boundary_begin = Eigen::Vector3d(-0.02, -0.02, -0.02);
-    this->boundary_end = Eigen::Vector3d(0.17, 0.8, 1.0);
+    this->boundaries.resize(1);
+    this->boundaries[0].filename = "./res/boundary.obj";
+    this->boundaries[0].min = Eigen::Vector3d(-0.02, -0.02, -0.02);
+    this->boundaries[0].max = Eigen::Vector3d(0.17, 0.8, 1.0);
+    this->boundaries[0].inner = false;
+
 
     this->dt_default = 0.00025;
-    this->t_between_frames = 0.0005;
+    this->t_between_frames =  0.008;
     this->B = 1000 * 1.02;
     this->v_f = 0.0025;
     this->v_b = 0.0;
     this->gravity = Eigen::Vector3d(0.0, 0.0, -9.81);
-    this->assignment = "assignment2/dam_break";
+    this->assignment = "dam_break";
 }
 
 void learnSPH::simulations_setup::Simulations::our_simulation_scene(){
@@ -183,18 +187,48 @@ void learnSPH::simulations_setup::Simulations::our_simulation_scene(){
     this->fluid_end[0] = Eigen::Vector3d(0.15, 0.6, 0.8);
     this->fluid_velocities[0] = Eigen::Vector3d(0.0, 0.0, 0.0);
 
-    this->boundary_file.resize(2);
-    this->boundary_file[0] = "./res/boundary.obj";
-    this->boundary_file[1] = "./res/inner_box.obj";
-    this->boundary_begin = Eigen::Vector3d(-0.02, -0.02, -0.02);
-    this->boundary_end = Eigen::Vector3d(0.17, 0.8, 1.0);
+    this->boundaries.resize(2);
+    this->boundaries[0].filename = "./res/boundary.obj";
+    this->boundaries[0].min = Eigen::Vector3d(-0.02, -0.02, -0.02);
+    this->boundaries[0].max = Eigen::Vector3d(0.17, 0.8, 1.0);
+    this->boundaries[0].inner = false;
 
+    this->boundaries[1].filename = "./res/inner_box.obj";
+    this->boundaries[1].min = Eigen::Vector3d(0.05, 0.3, 0.2);
+    this->boundaries[1].max = Eigen::Vector3d(0.1, 0.5, 0.3);
+    this->boundaries[1].inner = true;
 
     this->dt_default = 0.00025;
-    this->t_between_frames = 0.0005;
+    this->t_between_frames = 0.008;
     this->B = 1000 * 1.02;
     this->v_f = 0.0025;
     this->v_b = 0.0;
     this->gravity = Eigen::Vector3d(0.0, 0.0, -9.81);
-    this->assignment = "assignment2/our_simulation";
+    this->assignment = "our_simulation";
+}
+
+void learnSPH::simulations_setup::Simulations::mcubes_stress_test_scene(){
+    this->particle_radius = 0.005;
+    this->fluid_rest_density = 1000.0;
+
+    this->fluid_begin.resize(1);
+    this->fluid_end.resize(1);
+    this->fluid_velocities.resize(1);
+    this->fluid_begin[0] = Eigen::Vector3d(0.25,0.25,0.1);
+    this->fluid_end[0] = Eigen::Vector3d(0.75,0.75,0.6);
+    this->fluid_velocities[0] = Eigen::Vector3d(0,0,0);
+
+    this->boundaries.resize(1);
+    this->boundaries[0].filename = "./res/boundary_cube.obj";
+    this->boundaries[0].min = Eigen::Vector3d(-0.02,-0.02,-0.02);
+    this->boundaries[0].max = Eigen::Vector3d(1.,1.,1.);
+    this->boundaries[0].inner = false;
+
+    this->dt_default = 0.00025;
+    this->t_between_frames = 0.008;
+    this->B = 1000 * 1.02;
+    this->v_f = 0.0025;
+    this->v_b = 0.0;
+    this->gravity = Eigen::Vector3d(0.0,0.0,-9.81);
+    this->assignment = "mcubes_benchmark";
 }
