@@ -29,6 +29,8 @@
 int main()
 {
     std::cout << "Welcome to the learnSPH framework!!" << std::endl;
+    std::string logFile   = "logFile.txt";
+    auto start = std::chrono::high_resolution_clock::now();
 
     double dt_cfl, dt;
     double t_next_frame = 0;
@@ -85,7 +87,6 @@ int main()
 
 
     // instantiating some classes
-    std::cout << sim_setup.assignment << ", " << simulation_timestamp << "\n";
     sim_setup.assignment = "assignment3/" + sim_setup.assignment;
     utils::create_simulation_folder(sim_setup.assignment, simulation_timestamp);
 
@@ -232,45 +233,63 @@ int main()
         if (t_simulation >= t_next_frame) {
             stepCounter++;
 
-            const std::string filename = "./res/" + sim_setup.assignment + "/" +
-                                         simulation_timestamp + "/sim_" +
+            // const std::string filename = "./res/" + sim_setup.assignment + "/" +
+            //                              simulation_timestamp + "/sim_" +
+            //                              std::to_string((int)(t_simulation * 1000000)) + ".vtk";
+            
+            const std::string filename_particles = "./res/" + sim_setup.assignment + "/" +
+                                         simulation_timestamp + "/sim_particles_" +
                                          std::to_string((int)(t_simulation * 1000000)) + ".vtk";
 
-            uint nx = ((max_fluid_reco.x() + bborder.x()) - (min_fluid_reco.x() - bborder.x())) /cell_width + 1;
-            uint ny = ((max_fluid_reco.y() + bborder.y()) - (min_fluid_reco.y() - bborder.y())) /cell_width + 1;
-            uint nz = ((max_fluid_reco.z() + bborder.z()) - (min_fluid_reco.z() - bborder.z())) /cell_width + 1;
 
-            learnSPH::densities::compute_fluid_density_surface_reco(fluid_densities_for_surface_reco, particles_positions,
-                    point_set_id_fluid, ps_fluid, cubic_kernel);
+            // uint nx = ((max_fluid_reco.x() + bborder.x()) - (min_fluid_reco.x() - bborder.x())) /cell_width + 1;
+            // uint ny = ((max_fluid_reco.y() + bborder.y()) - (min_fluid_reco.y() - bborder.y())) /cell_width + 1;
+            // uint nz = ((max_fluid_reco.z() + bborder.z()) - (min_fluid_reco.z() - bborder.z())) /cell_width + 1;
 
-            learnSPH::theta_functions::FluidThetaFunction fluidSDF(cubic_kernel, c, cell_width,
-                                                                   beta, nx + 1, ny + 1, nz + 1);
-            learnSPH::surface::MarchingCubes mcubes(
-                    cell_width, nx, ny, nz, min_fluid_reco - bborder, epsilon);
+            // learnSPH::densities::compute_fluid_density_surface_reco(fluid_densities_for_surface_reco, particles_positions,
+            //         point_set_id_fluid, ps_fluid, cubic_kernel);
 
-            if(surface_reco_method == 0){
-                std::vector<double> level_set((nx + 1) * (ny + 1) * (nz + 1), -c);
-                fluidSDF.computeLevelSet(level_set, particles_positions,
-                                     fluid_densities_for_surface_reco,
-                                     min_fluid_reco - bborder);
-                mcubes.get_Isosurface(level_set);            
-            }
-            else {
-                std::unordered_map<uint64_t, double> level_map;
-                fluidSDF.computeLevelMap(level_map, particles_positions,
-                                     fluid_densities_for_surface_reco,
-                                     min_fluid_reco - bborder);
-                mcubes.get_Isosurface_sparse(level_map);
-            }
+            // learnSPH::theta_functions::FluidThetaFunction fluidSDF(cubic_kernel, c, cell_width,
+            //                                                        beta, nx + 1, ny + 1, nz + 1);
+            // learnSPH::surface::MarchingCubes mcubes(
+            //         cell_width, nx, ny, nz, min_fluid_reco - bborder, epsilon);
 
-            mcubes.compute_normals();
-            write_tri_mesh_to_vtk(filename, mcubes.intersections, mcubes.triangles,
-                                  mcubes.intersectionNormals);
+            // if(surface_reco_method == 0){
+            //     std::vector<double> level_set((nx + 1) * (ny + 1) * (nz + 1), -c);
+            //     fluidSDF.computeLevelSet(level_set, particles_positions,
+            //                          fluid_densities_for_surface_reco,
+            //                          min_fluid_reco - bborder);
+            //     mcubes.get_Isosurface(level_set);            
+            // }
+            // else {
+            //     std::unordered_map<uint64_t, double> level_map;
+            //     fluidSDF.computeLevelMap(level_map, particles_positions,
+            //                          fluid_densities_for_surface_reco,
+            //                          min_fluid_reco - bborder);
+            //     mcubes.get_Isosurface_sparse(level_map);
+            // }
+
+            // mcubes.compute_normals();
+            // write_tri_mesh_to_vtk(filename, mcubes.intersections, mcubes.triangles,
+            //                       mcubes.intersectionNormals);
+
+            write_particles_to_vtk(filename_particles, particles_positions, particles_densities, particles_velocities);
 
             t_next_frame += sim_setup.t_between_frames;
 
             utils::updateProgressBar(stepCounter, maxSteps, 75);
         }
     }
+
+    const std::string fileprefix =
+                "./res/" + sim_setup.assignment + "/" + simulation_timestamp + "/";
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration  = end - start;
+    std::ostringstream msg;
+    msg << duration.count() << "," << n_iteractions_pbf << "," << sim_setup.dt_default;
+    std::string header = "Duration in s, PBF_Iterations, Max_time_step";
+    learnSPH::utils::logMessage(header, fileprefix + logFile);
+    learnSPH::utils::logMessage(msg.str(), fileprefix + logFile);
+
     return 0;
 }
