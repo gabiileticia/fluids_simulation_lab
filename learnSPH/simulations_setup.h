@@ -18,7 +18,8 @@ namespace learnSPH {
             std::vector<Eigen::Vector3d> fluid_begin;
             std::vector<Eigen::Vector3d> fluid_end;
             std::vector<Eigen::Vector3d> fluid_velocities;
-            std::vector<types::boundary> boundaries;
+            std::vector<types::object> objects;
+
 
             double dt_default;
             double t_between_frames;
@@ -27,6 +28,9 @@ namespace learnSPH {
             double v_b;
             Eigen::Vector3d gravity;
             std::string assignment;
+            bool simbound_active;
+            Eigen::Vector3d sim_boundary_min;
+            Eigen::Vector3d sim_boundary_max;
 
             Simulations();
 
@@ -39,6 +43,7 @@ namespace learnSPH {
             void dam_break();
             void our_simulation_scene();
             void mcubes_stress_test_scene();
+            void slope_ramp_wall_vessel();
 
         };
     }
