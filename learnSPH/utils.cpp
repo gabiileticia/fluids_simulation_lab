@@ -70,7 +70,7 @@ void learnSPH::utils::create_simulation_folder(const std::string assign_number,
 
     // Format the time into HH:MM:SS
     std::ostringstream oss;
-    oss << std::put_time(timeInfo, "%H_%M_%S");
+    oss << std::put_time(timeInfo, "%m-%d_%H-%M-%S");
     timestamp = oss.str();
 
     // Create folder
@@ -86,23 +86,25 @@ void learnSPH::utils::create_simulation_folder(const std::string assign_number,
     }
 }
 
-void learnSPH::utils::updateProgressBar(int currentStep, int maxSteps, const int barWidth)
+std::ostringstream learnSPH::utils::updateProgressBar(int currentStep, int maxSteps, const int barWidth)
 {
+    std::ostringstream output_msg;
+
     static std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
 
     float progress        = static_cast<float>(currentStep) / maxSteps;
     int progressBarLength = static_cast<int>(progress * barWidth);
 
-    std::cout << "Frame: " << currentStep << "/" << maxSteps;
-    std::cout << "[";
+    output_msg << "Frame: " << currentStep << "/" << maxSteps;
+    output_msg << "[";
     for (int i = 0; i < barWidth; ++i) {
         if (i < progressBarLength) {
-            std::cout << "#";
+            output_msg << "#";
         } else {
-            std::cout << " ";
+            output_msg << " ";
         }
     }
-    std::cout << "] " << int(progress * 100.0) << "% | ";
+    output_msg << "] " << int(progress * 100.0) << "% | ";
 
     // Calculate elapsed time
     std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
@@ -119,14 +121,14 @@ void learnSPH::utils::updateProgressBar(int currentStep, int maxSteps, const int
     int remainingMins  = static_cast<int>(remainingSeconds) / 60 % 60;
     int remainingSecs  = static_cast<int>(remainingSeconds) % 60;
 
-    std::cout << "Elapsed Time: " << std::setfill('0') << std::setw(2) << elapsedHours << ":"
+    output_msg << "Elapsed Time: " << std::setfill('0') << std::setw(2) << elapsedHours << ":"
               << std::setfill('0') << std::setw(2) << elapsedMins << ":" << std::setfill('0')
               << std::setw(2) << elapsedSecs;
-    std::cout << " | Remaining Time: " << std::setfill('0') << std::setw(2) << remainingHours << ":"
+    output_msg << " | Remaining Time: " << std::setfill('0') << std::setw(2) << remainingHours << ":"
               << std::setfill('0') << std::setw(2) << remainingMins << ":" << std::setfill('0')
-              << std::setw(2) << remainingSecs << "\n";
+              << std::setw(2) << remainingSecs;
 
-    std::cout.flush();
+    return output_msg;
 }
 
 /* Cube description:

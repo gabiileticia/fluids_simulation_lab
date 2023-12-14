@@ -5,6 +5,7 @@
 #include <array>
 #include <chrono>
 #include <cstdint>
+#include <sstream>
 #include <vector>
 
 #include "types.h"
@@ -22,7 +23,7 @@ namespace learnSPH
 
         void create_simulation_folder(const std::string assign_number, std::string &timestamp);
 
-        void updateProgressBar(int currentStep, int maxSteps, const int barWidth);
+        std::ostringstream updateProgressBar(int currentStep, int maxSteps, const int barWidth);
 
         Eigen::Vector3d implicitVertexNormal(learnSPH::types::ImplicitSurface foo, Eigen::Vector3d vertex,
                                             double epsilon, void *fooArgs);
