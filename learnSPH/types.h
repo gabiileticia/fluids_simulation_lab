@@ -7,10 +7,10 @@ namespace learnSPH
 {
 namespace types
 {
-struct boundary
+struct object
 {
     std::string filename;
-    bool inner;
+    bool noCheck; // activate only if its a rectangular volume
     Eigen::Vector3d min;
     Eigen::Vector3d max;
 };
