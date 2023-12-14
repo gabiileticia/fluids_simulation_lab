@@ -20,6 +20,10 @@ _deps
 *.a
 *.blend
 
+log.txt
+dam_break.sh
+slope_to_box.sh
+
 ## From the course
 tests/learnSPH_tests
 app/learnSPH_app
