@@ -10,13 +10,13 @@
 #include "../learnSPH/sampling.h"
 
 void learnSPH::geometry::load_n_sample_boundary(std::vector<Eigen::Vector3d> &output,
-                                                std::vector<types::boundary> boundaries,
+                                                std::vector<types::object> objects,
                                                 double boundary_sampling_distance)
 {
     std::vector<Eigen::Vector3d> aux_positions_vector;
-    for (int i = 0; i < boundaries.size(); ++i) {
+    for (int i = 0; i < objects.size(); ++i) {
         const std::vector<learnSPH::TriMesh> boundary_meshes =
-            learnSPH::read_tri_meshes_from_obj(boundaries[i].filename);
+            learnSPH::read_tri_meshes_from_obj(objects[i].filename);
         const learnSPH::TriMesh &boundary = boundary_meshes[0];
 
         learnSPH::sampling::triangle_mesh(output, boundary.vertices, boundary.triangles,
