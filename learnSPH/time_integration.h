@@ -1,5 +1,6 @@
 #include "types.h"
 #include <Eigen/Dense>
+#include <array>
 #include <vector>
 
 #ifndef TIME_INTEGRATION
@@ -15,8 +16,11 @@ namespace learnSPH
               double radius;
               double v_max           = 1.0;
               bool boundary_checking = false;
-              std::vector<types::boundary> boundaries;
-              semiImplicitEuler(double radius, std::vector<types::boundary> boundaries);
+              std::vector<types::object> boundaries;
+              Eigen::Vector3d simBoundary_min;
+              Eigen::Vector3d simBoundary_max;
+
+              semiImplicitEuler(double radius, std::vector<types::object> objects, std::vector<Eigen::Vector3d> simBoundary);
               void integrationStep(std::vector<Eigen::Vector3d> &positions,
                                   std::vector<Eigen::Vector3d> &velocity,
                                   std::vector<Eigen::Vector3d> &accelerations, std::vector<bool> &deleteFlag,
