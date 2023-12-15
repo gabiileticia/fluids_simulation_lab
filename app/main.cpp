@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
+#include <cstdlib>
 #include <iostream>
 #include <memory>
 #include <ostream>
@@ -26,26 +27,58 @@
 #include "../learnSPH/time_integration.h"
 #include "../learnSPH/utils.h"
 
-int main()
+int main(int argc, char **argv)
 {
+    
+    if (argc != 2) {
+        std::cout << "ERROR: The program accepts only one argument! received " << argc
+                  << " instead!";
+        exit(-1);
+    }
+    
+    int foo_select = std::stoi(argv[1]);
+
+    learnSPH::simulations_setup::Simulations sim_setup;
+
+    switch (foo_select) {
+    case 0:
+        sim_setup.simple_cube();
+        break;
+    case 1:
+        sim_setup.simple_cube_with_fluid_viscosity();
+        break;
+    case 2:
+        sim_setup.cubes_colision();
+        break;
+    case 3:
+        sim_setup.just_gravity();
+        break;
+    case 4:
+        sim_setup.gravity_with_floor();
+        break;
+    case 5:
+        sim_setup.gravity_with_floor_boundary_viscosity();
+        break;
+    case 6:
+        sim_setup.dam_break();
+        break;
+    case 7:
+        sim_setup.our_simulation_scene();
+        break;
+    case 8:
+        sim_setup.slope_ramp_wall_vessel();
+        break;
+    default:
+        std::cout << "Selected undefined function index. Closing program.";
+        exit(-1);
+    }
+
     std::cout << "Welcome to the learnSPH framework!!" << std::endl;
 
     double dt_cfl, dt;
     double t_next_frame = 0;
     double t_simulation = 0;
     std::string simulation_timestamp;
-
-    // Setting up simulation
-    learnSPH::simulations_setup::Simulations sim_setup;
-    //     sim_setup.simple_cube();
-    //     sim_setup.simple_cube_with_fluid_viscosity();
-    //     sim_setup.cubes_colision();
-    //     sim_setup.just_gravity();
-    //     sim_setup.gravity_with_floor();
-    //     sim_setup.gravity_with_floor_boundary_viscosity();
-    sim_setup.dam_break();
-    // sim_setup.our_simulation_scene();
-    // sim_setup.slope_ramp_wall_vessel();
 
     double particle_diameter          = 2.0 * sim_setup.particle_radius;
     double fluid_sampling_distance    = particle_diameter;

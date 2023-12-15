@@ -19,6 +19,7 @@ _deps
 *.vtk
 *.a
 *.blend
+*.out
 
 log.txt
 dam_break.sh
