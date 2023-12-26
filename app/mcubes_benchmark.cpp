@@ -50,7 +50,7 @@ int main()
     //     sim_setup.just_gravity();
     //     sim_setup.gravity_with_floor();
     //     sim_setup.gravity_with_floor_boundary_viscosity();
-     sim_setup.dam_break();
+    sim_setup.dam_break();
     //  sim_setup.our_simulation_scene();
     // sim_setup.mcubes_stress_test_scene();
 
@@ -73,7 +73,7 @@ int main()
 
     // Marching cubes setup
     double c                = 0.55;
-    double cell_width       = 1.25 * sim_setup.particle_radius; //1.25
+    double cell_width       = 1.25 * sim_setup.particle_radius; // 1.25
     Eigen::Vector3d bborder = Eigen::Vector3d(1.5 * beta, 1.5 * beta, 1.5 * beta);
 
     Eigen::Vector3d min_fluid_reco;
@@ -87,12 +87,13 @@ int main()
     learnSPH::acceleration::Acceleration acceleration(sim_setup.B, sim_setup.v_f, sim_setup.v_b, h,
                                                       sim_setup.fluid_rest_density,
                                                       sim_setup.gravity, cubic_kernel);
-    learnSPH::timeIntegration::semiImplicitEuler semImpEuler(sim_setup.particle_radius,
-                                                             sim_setup.boundaries);
+    learnSPH::timeIntegration::semiImplicitEuler semImpEuler(
+        sim_setup.particle_radius, sim_setup.objects,
+        {sim_setup.sim_boundary_min, sim_setup.sim_boundary_max});
 
     // Load simulation geometry
     std::vector<Eigen::Vector3d> boundary_particles_positions;
-    geometry::load_n_sample_boundary(boundary_particles_positions, sim_setup.boundaries,
+    geometry::load_n_sample_boundary(boundary_particles_positions, sim_setup.objects,
                                      boundary_sampling_distance);
 
     std::cout << "Number of boundary particles" << std::endl;
@@ -160,9 +161,9 @@ int main()
 
         // Compute fluid particles densities
         learnSPH::densities::compute_fluid_density(
-            fluid_densities_for_surface_reco, particles_densities, particles_positions,
-            boundary_particles_positions, boundary_particles_masses, point_set_id_fluid, ps_fluid,
-            point_set_id_boundary, ps_boundary, fluid_particle_mass, cubic_kernel);
+            particles_densities, particles_positions, boundary_particles_positions,
+            boundary_particles_masses, point_set_id_fluid, ps_fluid, point_set_id_boundary,
+            fluid_particle_mass, cubic_kernel);
 
         // Compute acceleration
         acceleration.pressure(particles_pressure, particles_densities,
@@ -179,11 +180,10 @@ int main()
                                     particles_accelerations, deleteFlag, dt, count_del,
                                     min_fluid_reco, max_fluid_reco);
 
-        if (count_del > 0 && sim_setup.boundaries.size() > 0) {
+        if (count_del > 0 && (sim_setup.objects.size() > 0 || sim_setup.simbound_active)) {
             learnSPH::utils::deleteOutOfBounds(particles_positions, particles_velocities,
                                                particles_accelerations, particles_densities,
-                                               fluid_densities_for_surface_reco, particles_pressure,
-                                               deleteFlag, count_del);
+                                               particles_pressure, deleteFlag, count_del);
             nsearch.resize_point_set(point_set_id_fluid, particles_positions.front().data(),
                                      particles_positions.size());
             count_del_it_sum += count_del;
@@ -205,9 +205,19 @@ int main()
             const std::string fileprefix =
                 "./res/" + sim_setup.assignment + "/" + simulation_timestamp + "/";
 
-            uint nx = ((max_fluid_reco.x() + bborder.x()) - (min_fluid_reco.x() - bborder.x())) /cell_width + 1;
-            uint ny = ((max_fluid_reco.y() + bborder.y()) - (min_fluid_reco.y() - bborder.y())) /cell_width + 1;
-            uint nz = ((max_fluid_reco.z() + bborder.z()) - (min_fluid_reco.z() - bborder.z())) /cell_width + 1;
+            uint nx = ((max_fluid_reco.x() + bborder.x()) - (min_fluid_reco.x() - bborder.x())) /
+                          cell_width +
+                      1;
+            uint ny = ((max_fluid_reco.y() + bborder.y()) - (min_fluid_reco.y() - bborder.y())) /
+                          cell_width +
+                      1;
+            uint nz = ((max_fluid_reco.z() + bborder.z()) - (min_fluid_reco.z() - bborder.z())) /
+                          cell_width +
+                      1;
+
+            learnSPH::densities::compute_fluid_density_surface_reco(
+                fluid_densities_for_surface_reco, particles_positions, point_set_id_fluid, ps_fluid,
+                cubic_kernel);
 
             // sparse_logFile = fileprefix + sparse_logFile;
 
@@ -218,26 +228,23 @@ int main()
             std::vector<double> level_set((nx + 1) * (ny + 1) * (nz + 1), -c);
             learnSPH::theta_functions::FluidThetaFunction fluidSDF(cubic_kernel, c, cell_width,
                                                                    beta, nx + 1, ny + 1, nz + 1);
-            learnSPH::surface::MarchingCubes mcubes_sparse(
-                cell_width, nx, ny, nz, min_fluid_reco - bborder, epsilon);
+            learnSPH::surface::MarchingCubes mcubes_sparse(cell_width, nx, ny, nz,
+                                                           min_fluid_reco - bborder, epsilon);
 
-
-            learnSPH::surface::MarchingCubes mcubes_dense(
-                cell_width, nx, ny, nz, min_fluid_reco - bborder, epsilon);
+            learnSPH::surface::MarchingCubes mcubes_dense(cell_width, nx, ny, nz,
+                                                          min_fluid_reco - bborder, epsilon);
             auto end_setup = std::chrono::high_resolution_clock::now();
 
             // // creating level set vector
             auto start_levelset = std::chrono::high_resolution_clock::now();
             fluidSDF.computeLevelSet(level_set, particles_positions,
-                                     fluid_densities_for_surface_reco,
-                                     min_fluid_reco - bborder);
+                                     fluid_densities_for_surface_reco, min_fluid_reco - bborder);
             auto end_levelset = std::chrono::high_resolution_clock::now();
 
             // creating level set hash map
             auto start_levelmap = std::chrono::high_resolution_clock::now();
             fluidSDF.computeLevelMap(level_map, particles_positions,
-                                     fluid_densities_for_surface_reco,
-                                     min_fluid_reco - bborder);
+                                     fluid_densities_for_surface_reco, min_fluid_reco - bborder);
             auto end_levelmap = std::chrono::high_resolution_clock::now();
 
             // computing isosurface dense
@@ -255,7 +262,6 @@ int main()
             sparse_infix << mcubes_sparse.intersections.size() << ","
                          << mcubes_sparse.triangles.size();
             auto end_sparse = std::chrono::high_resolution_clock::now();
-
 
             // computing normals - logging maybe interesting but i don't expect differences here
             mcubes_sparse.compute_normals();
@@ -292,8 +298,8 @@ int main()
             //      leads to sparse being slower then dense version!
             std::ostringstream prefix;
             prefix << particles_positions.size() << "," << level_set.size();
-            msg_sparse << level_map.size() << ',' << prefix.str() << "," << sparse_infix.str() << ","
-                       << duration_sparse.count();
+            msg_sparse << level_map.size() << ',' << prefix.str() << "," << sparse_infix.str()
+                       << "," << duration_sparse.count();
             msg_dense << prefix.str() << "," << dense_infix.str() << "," << duration_dense.count();
             msg_setup << prefix.str() << ","
                       << ","

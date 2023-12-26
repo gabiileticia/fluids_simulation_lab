@@ -39,7 +39,9 @@ set(SOURCE_FILES
 	marching_cubes.h
 	marching_cubes.cpp
 	theta_functions.h
-	theta_functions.cpp)
+	theta_functions.cpp
+	pbf.h
+	pbf.cpp)
 
     
 # Create a library version so it can be linked with other modules
