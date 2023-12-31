@@ -235,7 +235,7 @@ int main(int argc, char **argv)
     while (t_simulation < 5) {
         for (int i = 0; i < emitters.size(); i++) {
             if ((t_simulation - emitters[i].last_emit) * emitters[i].emit_velocity >
-                (particle_diameter * sim_setup.emitters[i].emission_freq + epsilon)) {
+                    (particle_diameter * sim_setup.emitters[i].emission_freq)) {
                 if (sim_setup.emitters[i].alternating) {
                     emitters[i].emit_particles_alternating(t_simulation, i);
                 } else {
@@ -294,7 +294,7 @@ int main(int argc, char **argv)
             // std::cout << "after begin, part pos " << particles_positions.size() << "\n";
 
             for (int i = 0; i < emit_mark.size(); ++i) {
-                double d = (emitters[emit_mark[i][2]].dir.dot(particles_positions[emit_mark[i][0]] -
+                double d = -(emitters[emit_mark[i][2]].dir.dot(particles_positions[emit_mark[i][0]] -
                                                               emitters[emit_mark[i][2]].origin)) /
                            emitters[emit_mark[i][2]].dir.norm();
                 if (d >= 3 * particle_diameter)
