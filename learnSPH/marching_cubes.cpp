@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
+#include <sstream>
 #include <sys/types.h>
 #include <system_error>
 #include <unordered_map>
@@ -34,8 +35,12 @@ learnSPH::surface::MarchingCubes::MarchingCubes(double cellWidth, uint n_x, uint
             May lead to problems later.
     this->cellWidth = cellWidth;
     this->epsilon   = epsilon;
+    
+    constexpr size_t size_of_double = sizeof(double);
+    constexpr size_t size_of_vector3d = sizeof(size_of_double * 3);
 
     this->triangles.resize(n_vx * n_vy * n_vz * 5);
+    // std::cout << "Requested intersection size " << this->triangles.size() * 3 * size_of_vector3d / 8 / 1024 / 1024 << "mb\n";
     this->intersections.resize(this->triangles.size() * 3);
 }
 
@@ -247,11 +252,9 @@ void learnSPH::surface::MarchingCubes::get_Isosurface_sparse(
 
 void learnSPH::surface::MarchingCubes::compute_normals()
 {
-
     if (this->intersections.size() == 0) {
-        std::cout << "No mesh vertices to compute normals for!"
-                  << "\n";
-        exit(-1);
+        std::cout << "Warning: No mesh vertices to compute normals for!\n";
+        return;
     }
 
     Eigen::Vector3d normal;
