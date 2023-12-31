@@ -29,13 +29,13 @@
 
 int main(int argc, char **argv)
 {
-    
+
     if (argc != 2) {
         std::cout << "ERROR: The program accepts only one argument! received " << argc
                   << " instead!";
         exit(-1);
     }
-    
+
     int foo_select = std::stoi(argv[1]);
 
     learnSPH::simulations_setup::Simulations sim_setup;
@@ -72,7 +72,6 @@ int main(int argc, char **argv)
         std::cout << "Selected undefined function index. Closing program.";
         exit(-1);
     }
-
     std::cout << "Welcome to the learnSPH framework!!" << std::endl;
 
     double dt_cfl, dt;
@@ -176,6 +175,17 @@ int main(int argc, char **argv)
     msg << particles_positions.size() << "\n";
 
     double fluid_particle_mass = fluid_mass / particles_positions.size();
+    double fluid_particle_mass_alt =
+        utils::particle_mass(sim_setup.fluid_rest_density, fluid_sampling_distance);
+    // remove later
+    if ((fluid_particle_mass - fluid_particle_mass_alt) < epsilon) {
+        std::cout << "same mass"
+                  << "\n";
+        exit(0);
+    } else {
+        std::cout << "not same mass: " << fluid_particle_mass - fluid_particle_mass_alt << " delta\n";
+        exit(-1);
+    }
     msg << "fluid particles mass: " << fluid_particle_mass << "\n";
 
     std::vector<double> particles_densities(particles_positions.size());
