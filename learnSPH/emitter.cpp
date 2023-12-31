@@ -1,4 +1,5 @@
 #include "emitter.h"
+#include "Eigen/src/Core/Matrix.h"
 #include "utils.h"
 #include <array>
 #include <vector>
@@ -29,9 +30,9 @@ learnSPH::emitter::Emitter::Emitter(
     translation_matrix.block<3, 1>(0, 3) = this->origin;
 
     // calculate final transformation matrix
-    transformation_matrix                   = Eigen::Matrix4d::Identity();
-    transformation_matrix.block<3, 3>(0, 0) = rotation_matrix;
-    transformation_matrix *= translation_matrix;
+    this->transformation_matrix                   = Eigen::Matrix4d::Identity();
+    this->transformation_matrix.block<3, 3>(0, 0) = rotation_matrix;
+    this->transformation_matrix *= translation_matrix;
 
     this->particle_diameter = this->particle_radius * 2;
     this->last_emit         = 0;
@@ -59,12 +60,11 @@ void learnSPH::emitter::Emitter::emit_particles(double t_sim, int idx)
         x = corner + this->particle_diameter * i;
         for (int j = 0; j < l; j++) {
             y = corner + this->particle_diameter * j;
-            if (((x * x + y * y) - (this->r)) < 0) {
-                new_particle                    = {x, y, 0, 1};
-                new_particle                    = transformation_matrix * new_particle;
+            // if (((x * x + y * y) - (this->r * this->r)) < 0) {
+                new_particle = this->transformation_matrix * Eigen::Vector4d({x, y, 0, 1});
                 new_particles[new_part_counter] = new_particle.head<3>();
                 new_part_counter++;
-            }
+            // }
         }
         y = 0;
     }
@@ -89,7 +89,7 @@ void learnSPH::emitter::Emitter::emit_particles(double t_sim, int idx)
 
     for (int i = 0; i < new_part_counter; i++) {
         this->particles_positions[new_batch[0] + i]  = new_particles[i];
-        this->particles_velocities[new_batch[0] + i] = this->dir * this->emit_velocity;
+        this->particles_velocities[new_batch[0] + i] = this->dir.normalized() * this->emit_velocity;
     }
 }
 
