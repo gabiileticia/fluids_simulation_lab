@@ -1,12 +1,14 @@
 #include "emitter.h"
 #include "Eigen/src/Core/Matrix.h"
+#include "Eigen/src/Geometry/AngleAxis.h"
 #include "utils.h"
 #include <array>
+#include <cmath>
 #include <vector>
 
 learnSPH::emitter::Emitter::Emitter(
     const Eigen::Vector3d dir, const Eigen::Vector3d origin, const double r,
-    const double particle_radius, const double emit_velocity,
+    const double particle_radius, const double emit_velocity, const int emit_counter,
     std::vector<std::array<int, 3>> &emit_mark, std::vector<Eigen::Vector3d> &particles_positions,
     std::vector<Eigen::Vector3d> &particles_accelerations,
     std::vector<Eigen::Vector3d> &particles_velocities, std::vector<double> &particles_densities,
@@ -18,56 +20,61 @@ learnSPH::emitter::Emitter::Emitter(
       particles_densities(particles_densities), particles_pressure(particles_pressure),
       deleteFlag(deleteFlag), point_set_id_fluid(point_set_id_fluid), nsearch(nsearch)
 {
-    // Calculate rotation matrix to align direction with positive z-axis
-    Eigen::Vector3d unit_z(0, 0, 1); // Positive z-axis
-    Eigen::Vector3d axis = this->dir.cross(unit_z);
-    float angle          = std::acos(this->dir.dot(unit_z) / (this->dir.norm() * unit_z.norm()));
-    Eigen::AngleAxisd rotation(angle, axis.normalized());
-    Eigen::Matrix3d rotation_matrix = rotation.toRotationMatrix();
+    this->dir.normalize();
+    Eigen::Vector3d unit_z = {0, 0, 1};
+    unit_z.normalize();
 
-    // calculation translation to new origin
-    Eigen::Matrix4d translation_matrix   = Eigen::Matrix4d::Identity();
-    translation_matrix.block<3, 1>(0, 3) = this->origin;
+    Eigen::Vector3d axis = unit_z.cross(this->dir);
+    double angle         = std::acos(unit_z.dot(this->dir));
+    axis.normalize();
 
-    // calculate final transformation matrix
-    this->transformation_matrix                   = Eigen::Matrix4d::Identity();
-    this->transformation_matrix.block<3, 3>(0, 0) = rotation_matrix;
-    this->transformation_matrix *= translation_matrix;
+    Eigen::AngleAxisd rotation(angle, axis);
+    rotation_matrix = rotation.toRotationMatrix();
 
     this->particle_diameter = this->particle_radius * 2;
     this->last_emit         = 0;
+    this->r_squared         = this->r * this->r;
+    if (emit_counter == 0) {
+        this->continous    = true;
+        this->emit_counter = 1;
+    } else {
+        this->continous    = false;
+        this->emit_counter = emit_counter;
+    }
 }
 
 void learnSPH::emitter::Emitter::emit_particles(double t_sim, int idx)
 {
     double corner;
     double x, y;
-    Eigen::Vector4d new_particle;
+    Eigen::Vector3d new_particle;
     std::array<int, 3> new_batch;
 
     this->last_emit = t_sim;
 
     int new_part_counter = 0;
-    int l                = (int)((2 * this->r) / this->particle_diameter);
+    int l                = (int)(this->r/ this->particle_diameter);
     std::vector<Eigen::Vector3d> new_particles;
-    new_particles.resize(l * l);
+    double new_r_squared = l * this->particle_radius * l * this->particle_radius;
+    new_particles.resize(l * l * 4);
 
     x      = 0;
     y      = 0;
     corner = -l * this->particle_diameter;
 
-    for (int i = 0; i < l; i++) {
+    for (int i = 0; i < 2*l; i++) {
         x = corner + this->particle_diameter * i;
-        for (int j = 0; j < l; j++) {
+        for (int j = 0; j < 2*l; j++) {
             y = corner + this->particle_diameter * j;
-            // if (((x * x + y * y) - (this->r * this->r)) < 0) {
-                new_particle = this->transformation_matrix * Eigen::Vector4d({x, y, 0, 1});
-                new_particles[new_part_counter] = new_particle.head<3>();
+            if (((x * x + y * y) - new_r_squared )< 0) {
+                new_particle = this->rotation_matrix * Eigen::Vector3d({x, y, 0}) + this->origin;
+                new_particles[new_part_counter] = new_particle;
                 new_part_counter++;
-            // }
+            }
         }
         y = 0;
     }
+    new_particles.resize(new_part_counter);
     // std::cout << "pos before " << this->particles_positions.size() << "\n";
     new_batch[0] = this->particles_positions.size();
     new_batch[1] = this->particles_positions.size() + new_part_counter;
@@ -90,7 +97,12 @@ void learnSPH::emitter::Emitter::emit_particles(double t_sim, int idx)
     for (int i = 0; i < new_part_counter; i++) {
         this->particles_positions[new_batch[0] + i]  = new_particles[i];
         this->particles_velocities[new_batch[0] + i] = this->dir.normalized() * this->emit_velocity;
+        //this->particles_accelerations[new_batch[0] + i] = this->dir.normalized() * this->emit_velocity / 2;
     }
+    if (!(this->continous))
+        this->emit_counter--;
 }
 
-void learnSPH::emitter::Emitter::emit_particles_alternating(double t_sim, int idx){};
+void learnSPH::emitter::Emitter::emit_particles_alternating(double t_sim, int idx){
+    
+};
