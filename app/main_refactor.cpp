@@ -109,7 +109,7 @@ int main(int argc, char **argv)
     std::ostringstream msg;
 
     // Marching cubes setup
-    int surface_reco_method = 1; // 0: dense; 1: sparse
+    int surface_reco_method = sim_setup.surface_reco_method; // 0: dense; 1: sparse
     double c                = 0.55;
     double cell_width       = 1.25 * sim_setup.particle_radius;
     Eigen::Vector3d bborder = Eigen::Vector3d({1.5 * beta, 1.5 * beta, 1.5 * beta});
@@ -123,8 +123,8 @@ int main(int argc, char **argv)
     std::vector<double> fluid_densities_for_surface_reco;
 
     // PBF setup
-    int pressure_solver_method = 1; // 0: wcsph, 1: pbf
-    int n_iterations_pbf       = 5;
+    int pressure_solver_method = sim_setup.pressure_solver_method; // 0: wcsph, 1: pbf
+    int n_iterations_pbf       = sim_setup.n_iterations_pbf;
     std::vector<double> pbf_s, pbf_c, pbf_lambda;
     std::vector<Eigen::Vector3d> pbf_dx, last_particles_positions;
 
@@ -211,10 +211,11 @@ int main(int argc, char **argv)
     if (sim_setup.emitters.size() > 0)
         for (int i = 0; i < sim_setup.emitters.size(); i++) {
             learnSPH::emitter::Emitter em(
-                sim_setup.emitters[0].dir, sim_setup.emitters[0].origin, sim_setup.emitters[0].r,
-                sim_setup.particle_radius, sim_setup.emitters[0].velocity, emit_mark,
-                particles_positions, particles_accelerations, particles_velocities,
-                particles_densities, particles_pressure, deleteFlag, point_set_id_fluid, nsearch);
+                sim_setup.emitters[i].dir, sim_setup.emitters[i].origin, sim_setup.emitters[i].r,
+                sim_setup.particle_radius, sim_setup.emitters[i].velocity,
+                sim_setup.emitters[i].emit_counter, emit_mark, particles_positions,
+                particles_accelerations, particles_velocities, particles_densities,
+                particles_pressure, deleteFlag, point_set_id_fluid, nsearch);
             emitters.push_back(em);
         }
 
@@ -235,7 +236,8 @@ int main(int argc, char **argv)
     while (t_simulation < 5) {
         for (int i = 0; i < emitters.size(); i++) {
             if ((t_simulation - emitters[i].last_emit) * emitters[i].emit_velocity >
-                    (particle_diameter * sim_setup.emitters[i].emission_freq)) {
+                    (particle_diameter * sim_setup.emitters[i].emission_freq) &&
+                emitters[i].emit_counter > 0) {
                 if (sim_setup.emitters[i].alternating) {
                     emitters[i].emit_particles_alternating(t_simulation, i);
                 } else {
@@ -279,9 +281,17 @@ int main(int argc, char **argv)
             // std::cout << "after pressure solver, part pos " << particles_positions.size() <<
             // "\n";
 
+            for (int i = 0; i < emit_mark.size(); ++i) {
+                double d = (emitters[emit_mark[i][2]].dir.dot(particles_positions[emit_mark[i][0]] -
+                                                              emitters[emit_mark[i][2]].origin)) /
+                           emitters[emit_mark[i][2]].dir.norm();
+                if (d > 3 * particle_diameter)
+                    emit_mark.erase(emit_mark.begin() + i);
+            }
+
             for (int i = 0; i < emit_mark.size(); i++) {
                 for (int j = emit_mark[i][0]; j < emit_mark[i][1]; j++) {
-                    particles_accelerations[j] = Eigen::Vector3d({0, 0, 0});
+                    particles_accelerations[j] = {0,0,0};
                 }
             }
             // std::cout << "after accel correction, part pos " << particles_positions.size() <<
@@ -293,13 +303,6 @@ int main(int argc, char **argv)
                                         min_fluid_reco, max_fluid_reco);
             // std::cout << "after begin, part pos " << particles_positions.size() << "\n";
 
-            for (int i = 0; i < emit_mark.size(); ++i) {
-                double d = -(emitters[emit_mark[i][2]].dir.dot(particles_positions[emit_mark[i][0]] -
-                                                              emitters[emit_mark[i][2]].origin)) /
-                           emitters[emit_mark[i][2]].dir.norm();
-                if (d >= 3 * particle_diameter)
-                    emit_mark.erase(emit_mark.begin() + i);
-            }
             // std::cout << "after unmark, part pos " << particles_positions.size() << "\n";
 
             // Find neighbors
@@ -326,9 +329,10 @@ int main(int argc, char **argv)
                         boundary_particles_positions);
                 }
                 learnSPH::pbf::update_positions(particles_positions, pbf_dx);
+                learnSPH::pbf::update_velocities(particles_positions, last_particles_positions,
+                                                 particles_velocities, dt);
             }
-            learnSPH::pbf::update_velocities(particles_positions, last_particles_positions,
-                                             particles_velocities, dt);
+
         } else {
             dt = sim_setup.t_between_frames;
         }
