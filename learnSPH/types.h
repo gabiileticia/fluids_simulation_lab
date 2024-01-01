@@ -23,6 +23,7 @@ struct emitter_data
     double velocity;
     bool alternating;
     double emission_freq;
+    int emit_counter;
 };
 } // namespace types
 } // namespace learnSPH
