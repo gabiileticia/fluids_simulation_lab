@@ -317,15 +317,19 @@ void learnSPH::simulations_setup::Simulations::simple_emitter_test(){
     this->fluid_velocities.resize(0);
 
     this->objects.resize(1);
-    this->objects[0].filename = "./res/scene_slope.obj";
+    this->objects[0].filename = "./res/vessel.obj";
     this->objects[0].noCheck = true;
 
     // simulation domain boundary
-    this->sim_boundary_min = Eigen::Vector3d(-2,-2,-2);
-    this->sim_boundary_max = Eigen::Vector3d(2, 2, 2);
+    this->sim_boundary_min = Eigen::Vector3d(-1,-1,-1);
+    this->sim_boundary_max = Eigen::Vector3d(1, 1, 1);
     this->simbound_active = true;
 
-    this->dt_default = 0.001;
+    this->surface_reco_method = 1;  // 0: dense; 1: sparse
+    this->pressure_solver_method = 0;   // 0: wcsph, 1: pbf
+    this->n_iterations_pbf = 10;
+
+    this->dt_default = 0.0005;
     this->t_between_frames = 0.008;
     this->B = 1000 * 1.02;
     this->v_f = 0.0025;
@@ -334,10 +338,11 @@ void learnSPH::simulations_setup::Simulations::simple_emitter_test(){
     this->assignment = "assignment5/simple_emitter_test";
 
     this->emitters.resize(1);
-    this->emitters[0].dir = {0,.5,0};
-    this->emitters[0].origin = {0,0,1.5};
-    this->emitters[0].r = 0.03;
+    this->emitters[0].dir = {0,1,0};
+    this->emitters[0].origin = {.5,0,.2};
+    this->emitters[0].r = 0.1;
     this->emitters[0].velocity = 1;
     this->emitters[0].alternating = false;
-    this->emitters[0].emission_freq = 1.0;
+    this->emitters[0].emission_freq = 1;
+    this->emitters[0].emit_counter = 1000;
 }

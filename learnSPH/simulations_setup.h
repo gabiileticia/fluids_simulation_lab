@@ -36,6 +36,9 @@ namespace learnSPH {
             Eigen::Vector3d sim_boundary_max;
 
             bool no_fluid = false;
+            int pressure_solver_method;
+            int n_iterations_pbf;
+            int surface_reco_method;
 
             Simulations();
 
