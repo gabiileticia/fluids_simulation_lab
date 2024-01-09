@@ -29,6 +29,7 @@
 #include "../learnSPH/theta_functions.h"
 #include "../learnSPH/time_integration.h"
 #include "../learnSPH/utils.h"
+#include "../learnSPH/surface_tension.h"
 
 #include "../learnSPH/simulations_setup.h"
 #include "Eigen/src/Core/Matrix.h"
@@ -77,6 +78,12 @@ int main(int argc, char **argv)
         break;
     case 10:
         sim_setup.simple_emitter_test();
+        break;
+    case 11:
+        sim_setup.water_droplet_no_gravity();
+        break;
+    case 12:
+        sim_setup.boundary_wetting();
         break;
     default:
         std::cout << "Selected undefined function index. Closing program.";
@@ -127,6 +134,10 @@ int main(int argc, char **argv)
     int n_iterations_pbf       = sim_setup.n_iterations_pbf;
     std::vector<double> pbf_s, pbf_c, pbf_lambda;
     std::vector<Eigen::Vector3d> pbf_dx, last_particles_positions;
+
+    // Surface Tension Setup
+    std::vector<Eigen::Vector3d> smoothed_color_field;
+    std::vector<Eigen::Vector3d> surface_tension_forces;
 
     msg << "Pressure solver: ";
     msg << ((pressure_solver_method == 0) ? "weakly compressible" : "positions based") << "\n";
@@ -233,7 +244,7 @@ int main(int argc, char **argv)
     std::cout << msg.str();
 
     // Simulation loop
-    while (t_simulation < 5) {
+    while (t_simulation < 30) {
         for (int i = 0; i < emitters.size(); i++) {
             if ((t_simulation - emitters[i].last_emit) * emitters[i].emit_velocity >
                     (particle_diameter * sim_setup.emitters[i].emission_freq) &&
@@ -294,16 +305,27 @@ int main(int argc, char **argv)
                     particles_accelerations[j] = {0,0,0};
                 }
             }
-            // std::cout << "after accel correction, part pos " << particles_positions.size() <<
-            // "\n";
+
+            if(sim_setup.surface_tension){
+                learnSPH::surface_tension::compute_smoothed_color_field(smoothed_color_field,
+                    beta,fluid_particle_mass,cubic_kernel,particles_densities,point_set_id_fluid,
+                    ps_fluid, particles_positions);
+
+                learnSPH::surface_tension::compute_forces(surface_tension_forces,sim_setup.cohesion_coefficient,
+                    sim_setup.adhesion_coefficient, fluid_particle_mass, sim_setup.fluid_rest_density, 
+                    smoothed_color_field, cubic_kernel, particles_positions, boundary_particles_positions,
+                    particles_densities, point_set_id_fluid, ps_fluid, point_set_id_boundary, 
+                    boundary_particles_masses);
+                
+                for (int j=0; j<particles_accelerations.size(); j++){
+                    particles_accelerations[j] += surface_tension_forces[j];
+                }
+            }
 
             // Integrate
             semImpEuler.integrationStep(particles_positions, particles_velocities,
                                         particles_accelerations, deleteFlag, dt, count_del,
                                         min_fluid_reco, max_fluid_reco);
-            // std::cout << "after begin, part pos " << particles_positions.size() << "\n";
-
-            // std::cout << "after unmark, part pos " << particles_positions.size() << "\n";
 
             // Find neighbors
             nsearch.find_neighbors();
@@ -345,7 +367,6 @@ int main(int argc, char **argv)
                                      particles_positions.size());
         }
 
-        // std::cout << "After oob deletion, part pos " << particles_positions.size() << "\n";
         // increment t
         t_simulation += dt;
 

@@ -39,6 +39,10 @@ namespace learnSPH {
             int pressure_solver_method;
             int n_iterations_pbf;
             int surface_reco_method;
+            bool surface_tension = false;
+
+            double cohesion_coefficient;
+            double adhesion_coefficient;
 
             Simulations();
 
@@ -55,6 +59,7 @@ namespace learnSPH {
             void empty_scene_test();
             void simple_emitter_test();
             void water_droplet_no_gravity();
+            void boundary_wetting();
 
         };
     }
