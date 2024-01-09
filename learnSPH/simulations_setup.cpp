@@ -281,3 +281,24 @@ void learnSPH::simulations_setup::Simulations::slope_ramp_wall_vessel(){
     this->gravity = Eigen::Vector3d(0.0, 0.0, -9.81);
     this->assignment = "assignment4/slope_wall_vessel";
 }
+
+void learnSPH::simulations_setup::Simulations::water_droplet_no_gravity(){
+    this->particle_radius = 0.005;
+    this->fluid_rest_density = 1000.0;
+
+    this->fluid_begin.resize(1);
+    this->fluid_end.resize(1);
+    this->fluid_velocities.resize(1);
+
+    this->fluid_begin[0] = Eigen::Vector3d(0.5, 0.5, 0.5);
+    this->fluid_end[0] = Eigen::Vector3d(0.6, 0.6, 0.6);
+    this->fluid_velocities[0] = Eigen::Vector3d(0.0, 0.0, 0.0);
+
+    this->dt_default = 0.0001;
+    this->t_between_frames = 0.08;
+    this->B = 1000 * 1.02;
+    this->v_f = 0.1;
+    this->v_b = 0;
+    this->gravity = Eigen::Vector3d(0.0, 0.0, 0.0);
+    this->assignment = "assignment5/water_droplet";
+}

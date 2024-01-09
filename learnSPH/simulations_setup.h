@@ -44,6 +44,7 @@ namespace learnSPH {
             void our_simulation_scene();
             void mcubes_stress_test_scene();
             void slope_ramp_wall_vessel();
+            void water_droplet_no_gravity();
 
         };
     }

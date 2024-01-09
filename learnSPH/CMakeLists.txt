@@ -41,7 +41,9 @@ set(SOURCE_FILES
 	theta_functions.h
 	theta_functions.cpp
 	pbf.h
-	pbf.cpp)
+	pbf.cpp
+	surface_tension.h
+	surface_tension.cpp)
 
     
 # Create a library version so it can be linked with other modules
