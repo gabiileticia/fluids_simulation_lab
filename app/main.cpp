@@ -26,6 +26,7 @@
 #include "../learnSPH/theta_functions.h"
 #include "../learnSPH/time_integration.h"
 #include "../learnSPH/utils.h"
+#include "../learnSPH/surface_tension.h"
 
 int main(int argc, char **argv)
 {
@@ -67,6 +68,9 @@ int main(int argc, char **argv)
         break;
     case 8:
         sim_setup.slope_ramp_wall_vessel();
+        break;
+    case 9:
+        sim_setup.water_droplet_no_gravity();
         break;
     default:
         std::cout << "Selected undefined function index. Closing program.";
@@ -114,13 +118,20 @@ int main(int argc, char **argv)
     std::vector<double> fluid_densities_for_surface_reco;
 
     // PBF setup
-    int pressure_solver_method = 1; // 0:wcsph 1:pbf
+    int pressure_solver_method = 0; // 0:wcsph 1:pbf
     int n_iteractions_pbf      = 5;
     std::vector<double> pbf_s;
     std::vector<double> pbf_c;
     std::vector<double> pbf_lambda;
     std::vector<Eigen::Vector3d> pbf_dx;
     std::vector<Eigen::Vector3d> last_particles_positions;
+
+    // Surface Tension Setup
+    int surface_tension = 1; //0: no surface tension, 1: with surface tension
+    std::vector<Eigen::Vector3d> smoothed_color_field;
+    std::vector<Eigen::Vector3d> surface_tension_forces;
+    double gama = 0.05;
+    double adhesion_coefficient = 0.01;
 
     msg << "Pressure solver: ";
     msg << ((pressure_solver_method == 0) ? "weakly compressible" : "positions based") << "\n";
@@ -146,7 +157,7 @@ int main(int argc, char **argv)
     const std::string log_file =
         "./res/" + sim_setup.assignment + "/" + simulation_timestamp + "/log.txt";
 
-    kernel::CubicSplineKernel cubic_kernel(h);
+    kernel::CubicSplineKernel cubic_kernel(h,beta);
     acceleration::Acceleration acceleration(sim_setup.B, sim_setup.v_f, sim_setup.v_b, h,
                                             sim_setup.fluid_rest_density, sim_setup.gravity,
                                             cubic_kernel);
@@ -216,7 +227,7 @@ int main(int argc, char **argv)
 
     nsearch.find_neighbors();
     // Simulation loop
-    while (t_simulation < 5) {
+    while (t_simulation < 30) {
 
         // Compute dt
         dt_cfl =
@@ -239,6 +250,7 @@ int main(int argc, char **argv)
                 point_set_id_fluid, point_set_id_boundary, ps_fluid, ps_boundary,
                 particles_positions, boundary_particles_positions, particles_velocities,
                 boundary_particles_masses, sim_setup.fluid_rest_density, fluid_particle_mass);
+
         } else if (pressure_solver_method == 1) {
             acceleration.pbf_accelerations(particles_accelerations, particles_densities,
                                            point_set_id_fluid, point_set_id_boundary, ps_fluid,
@@ -246,6 +258,22 @@ int main(int argc, char **argv)
                                            particles_velocities, boundary_particles_masses,
                                            sim_setup.fluid_rest_density, fluid_particle_mass);
             last_particles_positions = particles_positions;
+        }
+
+        if(surface_tension == 1){
+            learnSPH::surface_tension::compute_smoothed_color_field(smoothed_color_field,
+                beta,fluid_particle_mass,cubic_kernel,particles_densities,point_set_id_fluid,
+                ps_fluid, particles_positions);
+
+            learnSPH::surface_tension::compute_forces(surface_tension_forces,gama,
+                adhesion_coefficient, fluid_particle_mass, sim_setup.fluid_rest_density, 
+                smoothed_color_field, cubic_kernel, particles_positions, boundary_particles_positions,
+                particles_densities, point_set_id_fluid, ps_fluid, point_set_id_boundary, 
+                boundary_particles_masses);
+            
+            for (int j=0; j<particles_accelerations.size(); j++){
+                particles_accelerations[j] += surface_tension_forces[j];
+            }
         }
 
         // Integrate
