@@ -7,10 +7,17 @@ set(SOURCE_FILES
 
 set(BENCHMARK_FILES
     mcubes_benchmark.cpp)
+
+set(REFACTOR
+    main_refactor.cpp)
     
 add_executable(learnSPH_app ${SOURCE_FILES})
 add_dependencies(learnSPH_app learnSPH)
 target_link_libraries(learnSPH_app learnSPH)
+
+add_executable(learnSPH_app_refac ${REFACTOR})
+add_dependencies(learnSPH_app_refac learnSPH)
+target_link_libraries(learnSPH_app_refac learnSPH)
 
 add_executable(learnSPH_benchmarkMC ${BENCHMARK_FILES})
 add_dependencies(learnSPH_benchmarkMC learnSPH)

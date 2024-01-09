@@ -333,3 +333,33 @@ void learnSPH::utils::logMessage(const std::string& message, const std::string& 
         std::cerr << "Error opening the file." << std::endl;
     }
 }
+
+double learnSPH::utils::particle_mass(const double fluid_rest_density, const double sampling_distance)
+{
+    int num_particles = 0;
+    double fluid_mass = 1.0 * fluid_rest_density;
+	// Center the sampling
+    // sample 1 cubic meter cube    
+	Eigen::Vector3d b = Eigen::Vector3d(0,0,0) + 0.5*sampling_distance*Eigen::Vector3d::Ones();
+	Eigen::Vector3d t = Eigen::Vector3d(1,1,1) - 0.5*sampling_distance*Eigen::Vector3d::Ones();
+    // count the actual side lenght so the sampling distance fits perfect
+	for (int i = 0; i < 3; i++) {
+		const double l = t[i] - b[i];
+		const int n = (int)(l/sampling_distance) + 1;
+		const double sampled = n*sampling_distance;
+		const double remainder = l - sampled;
+		b[i] += 0.5 * remainder;
+		t[i] -= 0.5 * remainder;
+	}
+
+	// Sample
+	const double eps = 1e-10;
+	for (double x = b[0]; x < t[0] + eps; x += sampling_distance) {
+		for (double y = b[1]; y < t[1] + eps; y += sampling_distance) {
+			for (double z = b[2]; z < t[2] + eps; z += sampling_distance) {
+				num_particles += 1;
+			}
+		}
+	}
+    return fluid_mass / num_particles;
+}

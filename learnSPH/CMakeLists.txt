@@ -42,6 +42,8 @@ set(SOURCE_FILES
 	theta_functions.cpp
 	pbf.h
 	pbf.cpp
+	emitter.h
+	emitter.cpp
 	surface_tension.h
 	surface_tension.cpp)
 

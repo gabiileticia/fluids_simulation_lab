@@ -4,6 +4,7 @@
 #include <Eigen/Dense>
 #include <array>
 #include <cstdint>
+#include <sstream>
 #include <sys/types.h>
 #include <unordered_map>
 #include <vector>

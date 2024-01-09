@@ -1,4 +1,4 @@
-#include <Eigen/Dense>
+#include "../extern/Eigen/Eigen/Dense"
 #include <string>
 #ifndef TYPES
 #define TYPES
@@ -14,7 +14,17 @@ struct object
     Eigen::Vector3d min;
     Eigen::Vector3d max;
 };
-typedef double (*ImplicitSurface)(Eigen::Vector3d position, void* args);
+typedef double (*ImplicitSurface)(Eigen::Vector3d position, void *args);
+struct emitter_data
+{
+    Eigen::Vector3d dir;
+    Eigen::Vector3d origin;
+    double r;
+    double velocity;
+    bool alternating;
+    double emission_freq;
+    int emit_counter;
+};
 } // namespace types
 } // namespace learnSPH
 

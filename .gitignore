@@ -30,6 +30,7 @@ tests/learnSPH_tests
 app/learnSPH_app
 app/dam_break
 app/learnSPH_benchmarkMC
+app/learnSPH_app_refac
 
 ## VSCode related
 .vscode
