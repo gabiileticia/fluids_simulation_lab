@@ -218,7 +218,7 @@ TEST_CASE( "Tests for our kernel function", "[kernel]" )
 
     SECTION("Testing the branches of the kernel function") {
 
-        learnSPH::kernel::CubicSplineKernel cubicSpline(2.0);
+        learnSPH::kernel::CubicSplineKernel cubicSpline(2.0, 2*2.0);
 
         REQUIRE(kernel.branch01_00(cubicSpline, EPSILON));
         REQUIRE(kernel.branch01_05(cubicSpline, EPSILON));
@@ -232,7 +232,7 @@ TEST_CASE( "Tests for our kernel function", "[kernel]" )
         double beta = 2.0;
 
         double h = std::abs(dis(gen)) * 5;
-        learnSPH::kernel::CubicSplineKernel cubicSpline2(h);
+        learnSPH::kernel::CubicSplineKernel cubicSpline2(h, 2*h);
 
         for(int i = 0 ; i < 1000; i++)
         {
@@ -257,7 +257,7 @@ TEST_CASE( "Tests for our kernel function", "[kernel]" )
             Eigen::Vector3d xi = Eigen::Vector3d(dis(gen), dis(gen), dis(gen));
             Eigen::Vector3d xj = Eigen::Vector3d(dis(gen), dis(gen), dis(gen));
 
-            learnSPH::kernel::CubicSplineKernel cubicSpline(h);
+            learnSPH::kernel::CubicSplineKernel cubicSpline(h, 2*h);
 
             REQUIRE(gradient.gradient_zero_distance(cubicSpline, xi, EPSILON));
             // Doesn't work with class cubicSpline
