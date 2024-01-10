@@ -59,7 +59,11 @@ namespace learnSPH {
             void empty_scene_test();
             void simple_emitter_test();
             void water_droplet_no_gravity();
-            void boundary_wetting();
+            void boundary_wetting_cohesion_and_adhesion();
+            void boundary_wetting_no_surface_tension();
+            void boundary_wetting_only_adhesion();
+            void boundary_wetting_only_cohesion();
+            void drop_of_water();
 
         };
     }
