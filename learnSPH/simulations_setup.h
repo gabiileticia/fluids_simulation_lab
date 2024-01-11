@@ -64,6 +64,7 @@ namespace learnSPH {
             void boundary_wetting_only_adhesion();
             void boundary_wetting_only_cohesion();
             void drop_of_water();
+            void fountain();
 
         };
     }

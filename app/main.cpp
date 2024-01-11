@@ -82,8 +82,11 @@ int main(int argc, char **argv)
     case 11:
         sim_setup.water_droplet_no_gravity();
         break;
-    case 12:
-        sim_setup.boundary_wetting();
+    // case 12:
+    //     sim_setup.boundary_wetting();
+    //     break;
+    case 13:
+        sim_setup.fountain();
         break;
     default:
         std::cout << "Selected undefined function index. Closing program.";

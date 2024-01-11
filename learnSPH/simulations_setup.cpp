@@ -347,6 +347,44 @@ void learnSPH::simulations_setup::Simulations::simple_emitter_test(){
     this->emitters[0].emit_counter = 1000;
 }
 
+void learnSPH::simulations_setup::Simulations::fountain(){
+    this->particle_radius = 0.005;
+    this->fluid_rest_density = 1000.0;
+
+    this->fluid_begin.resize(0);
+    this->fluid_end.resize(0);
+    this->fluid_velocities.resize(0);
+
+    this->objects.resize(0);
+    this->objects[0].filename = "./res/vessel.obj";
+    this->objects[0].noCheck = true;
+
+    // simulation domain boundary
+    this->sim_boundary_min = Eigen::Vector3d(-1,-1,-1);
+    this->sim_boundary_max = Eigen::Vector3d(1, 1, 1);
+    this->simbound_active = true;
+
+    this->surface_reco_method = 1;  // 0: dense; 1: sparse
+    this->pressure_solver_method = 0;   // 0: wcsph, 1: pbf
+    this->n_iterations_pbf = 10;
+
+    this->dt_default = 0.0005;
+    this->t_between_frames = 0.008;
+    this->B = 1000 * 1.02;
+    this->v_f = 0.0025;
+    this->v_b = 0.0;
+    this->gravity = Eigen::Vector3d(0.0, 0.0, -9.81);
+    this->assignment = "assignment5/simple_emitter_test";
+
+    this->emitters.resize(1);
+    this->emitters[0].dir = {0,1,0};
+    this->emitters[0].origin = {.5,0,.2};
+    this->emitters[0].r = 0.1;
+    this->emitters[0].velocity = 1;
+    this->emitters[0].alternating = false;
+    this->emitters[0].emission_freq = 1;
+    this->emitters[0].emit_counter = 1000;
+}
 
 void learnSPH::simulations_setup::Simulations::water_droplet_no_gravity(){
     this->particle_radius = 0.005;
@@ -630,3 +668,4 @@ void learnSPH::simulations_setup::Simulations::drop_of_water(){
     this->cohesion_coefficient = 0.05; //0.05;
     this->adhesion_coefficient = 0.01; //0.01;
 }
+
