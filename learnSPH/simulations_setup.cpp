@@ -355,12 +355,12 @@ void learnSPH::simulations_setup::Simulations::fountain(){
     this->fluid_end.resize(0);
     this->fluid_velocities.resize(0);
 
-    this->objects.resize(0);
+    this->objects.resize(1);
     this->objects[0].filename = "./res/vessel.obj";
     this->objects[0].noCheck = true;
 
     // simulation domain boundary
-    this->sim_boundary_min = Eigen::Vector3d(-1,-1,-1);
+    this->sim_boundary_min = Eigen::Vector3d(-0.1,-0.1,-0.1);
     this->sim_boundary_max = Eigen::Vector3d(1, 1, 1);
     this->simbound_active = true;
 
@@ -368,20 +368,20 @@ void learnSPH::simulations_setup::Simulations::fountain(){
     this->pressure_solver_method = 0;   // 0: wcsph, 1: pbf
     this->n_iterations_pbf = 10;
 
-    this->dt_default = 0.0005;
+    this->dt_default = 0.00025;
     this->t_between_frames = 0.008;
     this->B = 1000 * 1.02;
     this->v_f = 0.0025;
-    this->v_b = 0.0;
+    this->v_b = 0;
     this->gravity = Eigen::Vector3d(0.0, 0.0, -9.81);
-    this->assignment = "assignment5/simple_emitter_test";
+    this->assignment = "assignment5/fountain";
 
     this->emitters.resize(1);
-    this->emitters[0].dir = {0,1,0};
-    this->emitters[0].origin = {.5,0,.2};
-    this->emitters[0].r = 0.1;
-    this->emitters[0].velocity = 1;
-    this->emitters[0].alternating = false;
+    this->emitters[0].dir = {0,0,1};
+    this->emitters[0].origin = {.5,.5,.125};
+    this->emitters[0].r = 0.05;
+    this->emitters[0].velocity = 2.5;
+    this->emitters[0].alternating = true;
     this->emitters[0].emission_freq = 1;
     this->emitters[0].emit_counter = 1000;
 }

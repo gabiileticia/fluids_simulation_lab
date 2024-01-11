@@ -221,12 +221,14 @@ int main(int argc, char **argv)
     std::vector<std::array<int, 3>> emit_mark;
     std::vector<bool> deleteFlag(particles_positions.size());
 
+    double gap = 5e-4;
+
     // setting up emitters if defined in simsetup
     if (sim_setup.emitters.size() > 0)
         for (int i = 0; i < sim_setup.emitters.size(); i++) {
             learnSPH::emitter::Emitter em(
                 sim_setup.emitters[i].dir, sim_setup.emitters[i].origin, sim_setup.emitters[i].r,
-                sim_setup.particle_radius, sim_setup.emitters[i].velocity,
+                sim_setup.particle_radius + gap, sim_setup.emitters[i].velocity,
                 sim_setup.emitters[i].emit_counter, emit_mark, particles_positions,
                 particles_accelerations, particles_velocities, particles_densities,
                 particles_pressure, deleteFlag, point_set_id_fluid, nsearch);
@@ -246,17 +248,19 @@ int main(int argc, char **argv)
     learnSPH::utils::logMessage(msg.str(), log_file);
     std::cout << msg.str();
 
+    double hcp_z = (sim_setup.particle_radius + gap) * (2 * std::sqrt(6)) / 3;
+
     // Simulation loop
     while (t_simulation < 30) {
         for (int i = 0; i < emitters.size(); i++) {
             if ((t_simulation - emitters[i].last_emit) * emitters[i].emit_velocity >
-                    (particle_diameter * sim_setup.emitters[i].emission_freq) &&
+                    (hcp_z * sim_setup.emitters[i].emission_freq) &&
                 emitters[i].emit_counter > 0) {
-                if (sim_setup.emitters[i].alternating) {
-                    emitters[i].emit_particles_alternating(t_simulation, i);
-                } else {
-                    emitters[i].emit_particles(t_simulation, i);
-                }
+                emitters[i].emit_particles_alternating(t_simulation, i);
+                // deprecated
+                // } else {
+                //     emitters[i].emit_particles(t_simulation, i);
+                // }
                 nsearch.find_neighbors();
             }
         }
