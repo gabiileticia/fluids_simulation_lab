@@ -326,10 +326,10 @@ void learnSPH::simulations_setup::Simulations::simple_emitter_test(){
     this->simbound_active = true;
 
     this->surface_reco_method = 1;  // 0: dense; 1: sparse
-    this->pressure_solver_method = 0;   // 0: wcsph, 1: pbf
-    this->n_iterations_pbf = 10;
+    this->pressure_solver_method = 1;   // 0: wcsph, 1: pbf
+    this->n_iterations_pbf = 5;
 
-    this->dt_default = 0.0005;
+    this->dt_default = 0.005;
     this->t_between_frames = 0.008;
     this->B = 1000 * 1.02;
     this->v_f = 0.0025;
@@ -339,7 +339,7 @@ void learnSPH::simulations_setup::Simulations::simple_emitter_test(){
 
     this->emitters.resize(1);
     this->emitters[0].dir = {0,1,0};
-    this->emitters[0].origin = {.5,0,.2};
+    this->emitters[0].origin = {.5,0,.3};
     this->emitters[0].r = 0.1;
     this->emitters[0].velocity = 1;
     this->emitters[0].alternating = false;

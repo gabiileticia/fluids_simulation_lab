@@ -31,7 +31,6 @@
 #include "../learnSPH/time_integration.h"
 #include "../learnSPH/utils.h"
 
-
 #include "../learnSPH/simulations_setup.h"
 #include "Eigen/src/Core/Matrix.h"
 
@@ -137,7 +136,7 @@ int main(int argc, char **argv)
     int pressure_solver_method = sim_setup.pressure_solver_method; // 0: wcsph, 1: pbf
     int n_iterations_pbf       = sim_setup.n_iterations_pbf;
     std::vector<double> pbf_s, pbf_c, pbf_lambda;
-    std::vector<Eigen::Vector3d> pbf_dx, last_particles_positions;
+    std::vector<Eigen::Vector3d> pbf_dx, last_particles_positions, emit_particle_pos_backup;
 
     // Surface Tension Setup
     std::vector<Eigen::Vector3d> smoothed_color_field;
@@ -222,14 +221,12 @@ int main(int argc, char **argv)
     std::vector<std::array<int, 3>> emit_mark;
     std::vector<bool> deleteFlag(particles_positions.size());
 
-    double gap = 0.0;
-
     // setting up emitters if defined in simsetup
     if (sim_setup.emitters.size() > 0)
         for (int i = 0; i < sim_setup.emitters.size(); i++) {
             learnSPH::emitter::Emitter em(
                 sim_setup.emitters[i].dir, sim_setup.emitters[i].origin, sim_setup.emitters[i].r,
-                sim_setup.particle_radius + gap, sim_setup.emitters[i].velocity,
+                sim_setup.particle_radius, sim_setup.emitters[i].velocity,
                 sim_setup.emitters[i].emit_counter, emit_mark, particles_positions,
                 particles_accelerations, particles_velocities, particles_densities,
                 particles_pressure, deleteFlag, point_set_id_fluid, nsearch);
@@ -249,7 +246,7 @@ int main(int argc, char **argv)
     learnSPH::utils::logMessage(msg.str(), log_file);
     std::cout << msg.str();
 
-    double hcp_z = (sim_setup.particle_radius + gap) * (2 * std::sqrt(6)) / 3;
+    double hcp_z = sim_setup.particle_radius * (2 * std::sqrt(6)) / 3;
 
     // Simulation loop
     while (t_simulation < 5) {
@@ -335,11 +332,14 @@ int main(int argc, char **argv)
             semImpEuler.integrationStep(particles_positions, particles_velocities,
                                         particles_accelerations, deleteFlag, dt, count_del,
                                         min_fluid_reco, max_fluid_reco);
+            
+            emit_particle_pos_backup = particles_positions;
 
             // Find neighbors
             nsearch.find_neighbors();
 
             if (pressure_solver_method == 1) {
+
                 for (int i = 0; i < n_iterations_pbf; i++) {
                     learnSPH::densities::compute_fluid_density(
                         particles_densities, particles_positions, boundary_particles_positions,
@@ -362,6 +362,13 @@ int main(int argc, char **argv)
                 learnSPH::pbf::update_positions(particles_positions, pbf_dx);
                 learnSPH::pbf::update_velocities(particles_positions, last_particles_positions,
                                                  particles_velocities, dt);
+
+                for (int i = 0; i < emit_mark.size(); i++) {
+                    for (int j = emit_mark[i][0]; j < emit_mark[i][1]; j++) {
+                        particles_accelerations[j] = {0, 0, 0};
+                        particles_positions[j] = emit_particle_pos_backup[j];
+                    }
+                }
             }
 
         } else {
