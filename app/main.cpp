@@ -83,7 +83,19 @@ int main(int argc, char **argv)
         sim_setup.water_droplet_no_gravity();
         break;
     case 12:
-        sim_setup.boundary_wetting();
+        sim_setup.boundary_wetting_no_surface_tension();
+        break;
+    case 13:
+        sim_setup.boundary_wetting_only_adhesion();
+        break;
+    case 14:
+        sim_setup.boundary_wetting_only_cohesion();
+        break;
+    case 15:
+        sim_setup.boundary_wetting_cohesion_and_adhesion();
+        break;
+    case 16:
+        sim_setup.galton_board();
         break;
     default:
         std::cout << "Selected undefined function index. Closing program.";
@@ -244,7 +256,7 @@ int main(int argc, char **argv)
     std::cout << msg.str();
 
     // Simulation loop
-    while (t_simulation < 30) {
+    while (t_simulation < 60) {
         for (int i = 0; i < emitters.size(); i++) {
             if ((t_simulation - emitters[i].last_emit) * emitters[i].emit_velocity >
                     (particle_diameter * sim_setup.emitters[i].emission_freq) &&
