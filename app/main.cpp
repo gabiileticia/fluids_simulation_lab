@@ -26,10 +26,11 @@
 #include "../learnSPH/pbf.h"
 #include "../learnSPH/sampling.h"
 #include "../learnSPH/simulations_setup.h"
+#include "../learnSPH/surface_tension.h"
 #include "../learnSPH/theta_functions.h"
 #include "../learnSPH/time_integration.h"
 #include "../learnSPH/utils.h"
-#include "../learnSPH/surface_tension.h"
+
 
 #include "../learnSPH/simulations_setup.h"
 #include "Eigen/src/Core/Matrix.h"
@@ -221,7 +222,7 @@ int main(int argc, char **argv)
     std::vector<std::array<int, 3>> emit_mark;
     std::vector<bool> deleteFlag(particles_positions.size());
 
-    double gap = 5e-4;
+    double gap = 0.0;
 
     // setting up emitters if defined in simsetup
     if (sim_setup.emitters.size() > 0)
@@ -251,7 +252,7 @@ int main(int argc, char **argv)
     double hcp_z = (sim_setup.particle_radius + gap) * (2 * std::sqrt(6)) / 3;
 
     // Simulation loop
-    while (t_simulation < 30) {
+    while (t_simulation < 5) {
         for (int i = 0; i < emitters.size(); i++) {
             if ((t_simulation - emitters[i].last_emit) * emitters[i].emit_velocity >
                     (hcp_z * sim_setup.emitters[i].emission_freq) &&
@@ -309,22 +310,23 @@ int main(int argc, char **argv)
 
             for (int i = 0; i < emit_mark.size(); i++) {
                 for (int j = emit_mark[i][0]; j < emit_mark[i][1]; j++) {
-                    particles_accelerations[j] = {0,0,0};
+                    particles_accelerations[j] = {0, 0, 0};
                 }
             }
 
-            if(sim_setup.surface_tension){
-                learnSPH::surface_tension::compute_smoothed_color_field(smoothed_color_field,
-                    beta,fluid_particle_mass,cubic_kernel,particles_densities,point_set_id_fluid,
-                    ps_fluid, particles_positions);
+            if (sim_setup.surface_tension) {
+                learnSPH::surface_tension::compute_smoothed_color_field(
+                    smoothed_color_field, beta, fluid_particle_mass, cubic_kernel,
+                    particles_densities, point_set_id_fluid, ps_fluid, particles_positions);
 
-                learnSPH::surface_tension::compute_forces(surface_tension_forces,sim_setup.cohesion_coefficient,
-                    sim_setup.adhesion_coefficient, fluid_particle_mass, sim_setup.fluid_rest_density, 
-                    smoothed_color_field, cubic_kernel, particles_positions, boundary_particles_positions,
-                    particles_densities, point_set_id_fluid, ps_fluid, point_set_id_boundary, 
-                    boundary_particles_masses);
-                
-                for (int j=0; j<particles_accelerations.size(); j++){
+                learnSPH::surface_tension::compute_forces(
+                    surface_tension_forces, sim_setup.cohesion_coefficient,
+                    sim_setup.adhesion_coefficient, fluid_particle_mass,
+                    sim_setup.fluid_rest_density, smoothed_color_field, cubic_kernel,
+                    particles_positions, boundary_particles_positions, particles_densities,
+                    point_set_id_fluid, ps_fluid, point_set_id_boundary, boundary_particles_masses);
+
+                for (int j = 0; j < particles_accelerations.size(); j++) {
                     particles_accelerations[j] += surface_tension_forces[j];
                 }
             }

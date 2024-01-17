@@ -379,11 +379,11 @@ void learnSPH::simulations_setup::Simulations::fountain(){
     this->emitters.resize(1);
     this->emitters[0].dir = {0,0,1};
     this->emitters[0].origin = {.5,.5,.125};
-    this->emitters[0].r = 0.05;
+    this->emitters[0].r = 0.1;
     this->emitters[0].velocity = 2.5;
     this->emitters[0].alternating = true;
     this->emitters[0].emission_freq = 1;
-    this->emitters[0].emit_counter = 1000;
+    this->emitters[0].emit_counter = 2000;
 }
 
 void learnSPH::simulations_setup::Simulations::water_droplet_no_gravity(){
