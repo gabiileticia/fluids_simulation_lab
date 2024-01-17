@@ -30,6 +30,7 @@ learnSPH::emitter::Emitter::Emitter(
 
     Eigen::AngleAxisd rotation(angle, axis);
     rotation_matrix = rotation.toRotationMatrix();
+    this->alt_pattern = false;
 
     this->particle_diameter = this->particle_radius * 2;
     this->last_emit         = 0;
@@ -66,10 +67,9 @@ void learnSPH::emitter::Emitter::emit_particles(double t_sim, int idx)
     corner = -l * this->particle_diameter;
 
     for (int i = 0; i < 2*l; i++) {
-        
+        x = corner + this->particle_diameter * i;
         for (int j = 0; j < 2*l; j++) {
-            x = corner + this->particle_radius * (2*i + ((j+1)%2));
-            y = corner + this->particle_radius * (sqrt3 * (j + onethird));
+            y = corner + this->particle_diameter * j;
             if (((x * x + y * y) - new_r_squared )< 0) {
                 new_particle = this->rotation_matrix * Eigen::Vector3d({x, y, 0}) + this->origin;
                 new_particles[new_part_counter] = new_particle;
