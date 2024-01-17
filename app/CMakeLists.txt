@@ -7,7 +7,7 @@ set(SOURCE_FILES
 
 set(BENCHMARK_FILES
     mcubes_benchmark.cpp)
-    
+
 add_executable(learnSPH_app ${SOURCE_FILES})
 add_dependencies(learnSPH_app learnSPH)
 target_link_libraries(learnSPH_app learnSPH)
