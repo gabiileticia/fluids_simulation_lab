@@ -246,22 +246,12 @@ int main(int argc, char **argv)
     learnSPH::utils::logMessage(msg.str(), log_file);
     std::cout << msg.str();
 
-    double hcp_z = sim_setup.particle_radius * (2 * std::sqrt(6)) / 3;
+    double gap = 0;
+
+    double hcp_z = (sim_setup.particle_radius + gap) * (2 * std::sqrt(6)) / 3;
 
     // Simulation loop
     while (t_simulation < 5) {
-        for (int i = 0; i < emitters.size(); i++) {
-            if ((t_simulation - emitters[i].last_emit) * emitters[i].emit_velocity >
-                    (hcp_z * sim_setup.emitters[i].emission_freq) &&
-                emitters[i].emit_counter > 0) {
-                emitters[i].emit_particles_alternating(t_simulation, i);
-                // deprecated
-                // } else {
-                //     emitters[i].emit_particles(t_simulation, i);
-                // }
-                nsearch.find_neighbors();
-            }
-        }
 
         if (particles_positions.size() > 0) {
             // std::cout << "loop begin, part pos " << particles_positions.size() << "\n";
@@ -301,7 +291,7 @@ int main(int argc, char **argv)
                 double d = (emitters[emit_mark[i][2]].dir.dot(particles_positions[emit_mark[i][0]] -
                                                               emitters[emit_mark[i][2]].origin)) /
                            emitters[emit_mark[i][2]].dir.norm();
-                if (d > 3 * particle_diameter)
+                if (d > 3 * (hcp_z + gap))
                     emit_mark.erase(emit_mark.begin() + i);
             }
 
@@ -332,7 +322,7 @@ int main(int argc, char **argv)
             semImpEuler.integrationStep(particles_positions, particles_velocities,
                                         particles_accelerations, deleteFlag, dt, count_del,
                                         min_fluid_reco, max_fluid_reco);
-            
+
             emit_particle_pos_backup = particles_positions;
 
             // Find neighbors
@@ -366,7 +356,7 @@ int main(int argc, char **argv)
                 for (int i = 0; i < emit_mark.size(); i++) {
                     for (int j = emit_mark[i][0]; j < emit_mark[i][1]; j++) {
                         particles_accelerations[j] = {0, 0, 0};
-                        particles_positions[j] = emit_particle_pos_backup[j];
+                        particles_positions[j]     = emit_particle_pos_backup[j];
                     }
                 }
             }
@@ -381,6 +371,50 @@ int main(int argc, char **argv)
                                                particles_pressure, deleteFlag, count_del);
             nsearch.resize_point_set(point_set_id_fluid, particles_positions.front().data(),
                                      particles_positions.size());
+        }
+        // emit new particles if emitter is free of particles
+        for (int i = 0; i < emitters.size(); i++) {
+            double min_emit_dist = hcp_z * sim_setup.emitters[i].emission_freq;
+            // distance traveled from emit origin for last emitted particles
+            double d = 0;
+            if (emit_mark.size() > 0)
+                d = (emitters[emit_mark.back()[2]].dir.dot(
+                        particles_positions[emit_mark.back()[0]] -
+                        emitters[emit_mark.back()[2]].origin)) /
+                    emitters[emit_mark.back()[2]].dir.norm();
+            else
+                d = hcp_z * 2;
+
+            std::ostringstream emitcreatelog;
+            emitcreatelog << "distance d: " << d << "\n";
+            emitcreatelog << "Min distance needed for emit: " << min_emit_dist << "\n";
+            emitcreatelog << "velocity: " << emitters[i].emit_velocity << "\n";
+            emitcreatelog << "diff: " << d - min_emit_dist << "\n";
+            emitcreatelog << "t_sim: " << t_simulation << "\n";
+            emitcreatelog << "last emit: " << emitters[i].last_emit << "\n";
+            if (particles_positions.size() > 0) {
+                emitcreatelog << "emit part pos: (" << particles_positions[emit_mark[0][0]].x()
+                              << ", " << particles_positions[emit_mark[0][0]].y() << ", "
+                              << particles_positions[emit_mark[0][0]].z() << ")\n";
+            }
+
+            learnSPH::utils::logMessage(emitcreatelog.str(), log_file);
+
+            if ((d > min_emit_dist) && emitters[i].emit_counter > 0) {
+                int num_parts = particles_positions.size();
+                emitters[i].emit_particles_alternating(t_simulation, i);
+                std::ostringstream part_emit;
+                part_emit << "Particles emitted: " << particles_positions.size() - num_parts
+                          << "\n";
+                part_emit << "num Partciles: " << particles_positions.size() << "\n";
+                part_emit << "t_sim: " << t_simulation << "\n";
+                part_emit << "emit part pos: (" << particles_positions[emit_mark[0][0]].x() << ", "
+                          << particles_positions[emit_mark[0][0]].y() << ", "
+                          << particles_positions[emit_mark[0][0]].z() << ")\n";
+                learnSPH::utils::logMessage(part_emit.str(), log_file);
+
+                nsearch.find_neighbors();
+            }
         }
 
         // increment t
