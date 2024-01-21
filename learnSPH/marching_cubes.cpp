@@ -42,6 +42,7 @@ learnSPH::surface::MarchingCubes::MarchingCubes(double cellWidth, uint n_x, uint
     this->triangles.resize(n_vx * n_vy * n_vz * 5);
     // std::cout << "Requested intersection size " << this->triangles.size() * 3 * size_of_vector3d / 8 / 1024 / 1024 << "mb\n";
     this->intersections.resize(this->triangles.size() * 3);
+    // std::cout << "finish aloc mcubes " << "\n";
 }
 
 void learnSPH::surface::MarchingCubes::get_Isosurface(std::vector<double> &level_set)
