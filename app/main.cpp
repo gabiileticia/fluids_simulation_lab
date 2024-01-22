@@ -246,7 +246,7 @@ int main(int argc, char **argv)
     learnSPH::utils::logMessage(msg.str(), log_file);
     std::cout << msg.str();
 
-    double hcp_z = sim_setup.particle_radius * (2 * std::sqrt(6)) / 3;
+    double hcp_z = particle_diameter * std::sqrt(6) / 3;
 
     // Simulation loop
     while (t_simulation < 5) {
