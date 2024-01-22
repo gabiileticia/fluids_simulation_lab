@@ -1,7 +1,7 @@
 #ifndef UTILS
 #define UTILS
 
-#include <Eigen/Dense>
+
 #include <array>
 #include <chrono>
 #include <cstdint>
@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "types.h"
+#include "../extern/Eigen/Eigen/Dense"
 
 namespace learnSPH
 {
@@ -39,6 +40,7 @@ namespace learnSPH
         std::array<int, 4> celladjByEdge(int edge);
 
         void logMessage(const std::string& message, const std::string& filename);
+        double particle_mass(const double fluid_rest_density, const double sampling_distance);
     } // namespace utils
 } // namespace learnSPH
 

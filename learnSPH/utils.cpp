@@ -1,8 +1,10 @@
 #include "utils.h"
+#include "kernel.h"
 
 #include <array>
 #include <cerrno>
 #include <chrono>
+#include <cmath>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -332,4 +334,17 @@ void learnSPH::utils::logMessage(const std::string& message, const std::string& 
     } else {
         std::cerr << "Error opening the file." << std::endl;
     }
+}
+
+double learnSPH::utils::particle_mass(const double fluid_rest_density, const double sampling_distance)
+{   
+    double pack_density, particle_volume, fluid_mass, sample_volume;
+
+    // sample volume is 1 cubic meter
+    sample_volume = 1.0;
+    pack_density = learnSPH::kernel::PI * std::sqrt(2) / 6;
+    particle_volume = (1.0/6.0)* learnSPH::kernel::PI * sampling_distance*sampling_distance*sampling_distance;
+    fluid_mass = 1.0 * fluid_rest_density;
+
+    return fluid_mass / (sample_volume * pack_density / particle_volume);
 }

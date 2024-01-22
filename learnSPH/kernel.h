@@ -18,9 +18,12 @@ namespace learnSPH
 				double rad_gamma;
 				double h;
 				double h_inverse;
-				CubicSplineKernel(double h);
+				double c;
+				CubicSplineKernel(double h, double beta);
 				double kernel_function(Eigen::Vector3d x);
 				Eigen::Vector3d kernel_gradient(Eigen::Vector3d x);
+				double cohesion_kernel_function(double r);
+				double adhesion_kernel_function(double r);
 		};
 	};
 };

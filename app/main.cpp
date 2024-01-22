@@ -23,6 +23,7 @@
 #include "../learnSPH/pbf.h"
 #include "../learnSPH/sampling.h"
 #include "../learnSPH/simulations_setup.h"
+#include "../learnSPH/surface_tension.h"
 #include "../learnSPH/theta_functions.h"
 #include "../learnSPH/time_integration.h"
 #include "../learnSPH/utils.h"
@@ -68,6 +69,33 @@ int main(int argc, char **argv)
     case 8:
         sim_setup.slope_ramp_wall_vessel();
         break;
+    case 9:
+        sim_setup.empty_scene_test();
+        break;
+    case 10:
+        sim_setup.simple_emitter_test();
+        break;
+    case 11:
+        sim_setup.water_droplet_no_gravity();
+        break;
+    case 12:
+        sim_setup.boundary_wetting_no_surface_tension();
+        break;
+    case 13:
+        sim_setup.boundary_wetting_only_adhesion();
+        break;
+    case 14:
+        sim_setup.boundary_wetting_only_cohesion();
+        break;
+    case 15:
+        sim_setup.boundary_wetting_cohesion_and_adhesion();
+        break;
+    case 16:
+        sim_setup.galton_board();
+        break;
+    case 17:
+        sim_setup.fountain();
+        break;
     default:
         std::cout << "Selected undefined function index. Closing program.";
         exit(-1);
@@ -87,13 +115,8 @@ int main(int argc, char **argv)
     double beta                       = 2.0 * h;
     double epsilon                    = 1e-6;
 
-    double fluid_volume = 0.0;
-    for (int i = 0; i < sim_setup.fluid_begin.size(); ++i) {
-        fluid_volume += (sim_setup.fluid_end[i].x() - sim_setup.fluid_begin[i].x()) *
-                        (sim_setup.fluid_end[i].y() - sim_setup.fluid_begin[i].y()) *
-                        (sim_setup.fluid_end[i].z() - sim_setup.fluid_begin[i].z());
-    }
-    double fluid_mass = fluid_volume * sim_setup.fluid_rest_density;
+    double fluid_particle_mass =
+        learnSPH::utils::particle_mass(sim_setup.fluid_rest_density, fluid_sampling_distance);
 
     using namespace learnSPH;
 
@@ -121,6 +144,11 @@ int main(int argc, char **argv)
     std::vector<double> pbf_lambda;
     std::vector<Eigen::Vector3d> pbf_dx;
     std::vector<Eigen::Vector3d> last_particles_positions;
+    std::vector<Eigen::Vector3d> emit_particle_pos_backup;
+
+    // Surface Tension Setup
+    std::vector<Eigen::Vector3d> smoothed_color_field;
+    std::vector<Eigen::Vector3d> surface_tension_forces;
 
     msg << "Pressure solver: ";
     msg << ((pressure_solver_method == 0) ? "weakly compressible" : "positions based") << "\n";
@@ -146,7 +174,7 @@ int main(int argc, char **argv)
     const std::string log_file =
         "./res/" + sim_setup.assignment + "/" + simulation_timestamp + "/log.txt";
 
-    kernel::CubicSplineKernel cubic_kernel(h);
+    kernel::CubicSplineKernel cubic_kernel(h, beta);
     acceleration::Acceleration acceleration(sim_setup.B, sim_setup.v_f, sim_setup.v_b, h,
                                             sim_setup.fluid_rest_density, sim_setup.gravity,
                                             cubic_kernel);
@@ -175,7 +203,6 @@ int main(int argc, char **argv)
         << "\n";
     msg << particles_positions.size() << "\n";
 
-    double fluid_particle_mass = fluid_mass / particles_positions.size();
     msg << "fluid particles mass: " << fluid_particle_mass << "\n";
 
     std::vector<double> particles_densities(particles_positions.size());
@@ -199,6 +226,22 @@ int main(int argc, char **argv)
     CompactNSearch::PointSet const &ps_boundary = nsearch.point_set(point_set_id_boundary);
     CompactNSearch::PointSet const &ps_fluid    = nsearch.point_set(point_set_id_fluid);
 
+    std::vector<learnSPH::emitter::Emitter> emitters;
+    std::vector<std::array<int, 3>> emit_mark;
+    std::vector<bool> deleteFlag(particles_positions.size());
+
+    // setting up emitters if defined in simsetup
+    if (sim_setup.emitters.size() > 0)
+        for (int i = 0; i < sim_setup.emitters.size(); i++) {
+            learnSPH::emitter::Emitter em(
+                sim_setup.emitters[i].dir, sim_setup.emitters[i].origin, sim_setup.emitters[i].r,
+                sim_setup.particle_radius, sim_setup.emitters[i].velocity,
+                sim_setup.emitters[i].emit_counter, emit_mark, particles_positions,
+                particles_accelerations, particles_velocities, particles_densities,
+                particles_pressure, deleteFlag, point_set_id_fluid, nsearch);
+            emitters.push_back(em);
+        }
+
     // Compute boundary masses
     std::vector<double> boundary_particles_masses(boundary_particles_positions.size());
     densities::compute_boundary_masses(boundary_particles_masses, boundary_particles_positions,
@@ -206,7 +249,6 @@ int main(int argc, char **argv)
                                        sim_setup.fluid_rest_density, cubic_kernel);
     // keeping track of number of elements which will be deleted
     int count_del = 0;
-    std::vector<bool> deleteFlag(particles_positions.size());
 
     int maxSteps    = 5 / sim_setup.t_between_frames;
     int stepCounter = 0;
@@ -214,76 +256,141 @@ int main(int argc, char **argv)
     utils::logMessage(msg.str(), log_file);
     std::cout << msg.str();
 
-    nsearch.find_neighbors();
+    double hcp_z = sim_setup.particle_radius * (2 * std::sqrt(6)) / 3;
+
     // Simulation loop
     while (t_simulation < 5) {
 
-        // Compute dt
-        dt_cfl =
-            0.5 * sim_setup.particle_radius * (1 / std::min(100.0, std::sqrt(semImpEuler.v_max)));
-        dt = std::min(dt_cfl, sim_setup.dt_default);
-
-        // Compute fluid particles densities
-        learnSPH::densities::compute_fluid_density(
-            particles_densities, particles_positions, boundary_particles_positions,
-            boundary_particles_masses, point_set_id_fluid, ps_fluid, point_set_id_boundary,
-            fluid_particle_mass, cubic_kernel);
-
-        // Compute acceleration
-        if (pressure_solver_method == 0) {
-            acceleration.pressure(particles_pressure, particles_densities,
-                                  sim_setup.fluid_rest_density);
-
-            acceleration.accelerations(
-                particles_accelerations, particles_densities, particles_pressure,
-                point_set_id_fluid, point_set_id_boundary, ps_fluid, ps_boundary,
-                particles_positions, boundary_particles_positions, particles_velocities,
-                boundary_particles_masses, sim_setup.fluid_rest_density, fluid_particle_mass);
-        } else if (pressure_solver_method == 1) {
-            acceleration.pbf_accelerations(particles_accelerations, particles_densities,
-                                           point_set_id_fluid, point_set_id_boundary, ps_fluid,
-                                           particles_positions, boundary_particles_positions,
-                                           particles_velocities, boundary_particles_masses,
-                                           sim_setup.fluid_rest_density, fluid_particle_mass);
-            last_particles_positions = particles_positions;
+        for (int i = 0; i < emitters.size(); i++) {
+            if ((t_simulation - emitters[i].last_emit) * emitters[i].emit_velocity >
+                    (hcp_z * sim_setup.emitters[i].emission_freq) &&
+                emitters[i].emit_counter > 0) {
+                emitters[i].emit_particles_alternating(t_simulation, i);
+                // deprecated
+                // } else {
+                //     emitters[i].emit_particles(t_simulation, i);
+                // }
+                nsearch.find_neighbors();
+            }
         }
 
-        // Integrate
-        semImpEuler.integrationStep(particles_positions, particles_velocities,
-                                    particles_accelerations, deleteFlag, dt, count_del,
-                                    min_fluid_reco, max_fluid_reco);
+        if (particles_positions.size() > 0) {
 
-        // Find neighbors
-        nsearch.find_neighbors();
+            // Compute dt
+            dt_cfl =
+                0.5 * sim_setup.particle_radius * (1 / std::min(100.0, std::sqrt(semImpEuler.v_max)));
+            dt = std::min(dt_cfl, sim_setup.dt_default);
 
-        if (pressure_solver_method == 1) {
-            for (int i = 0; i < n_iteractions_pbf; i++) {
-                learnSPH::densities::compute_fluid_density(
-                    particles_densities, particles_positions, boundary_particles_positions,
-                    boundary_particles_masses, point_set_id_fluid, ps_fluid, point_set_id_boundary,
-                    fluid_particle_mass, cubic_kernel);
+            // Compute fluid particles densities
+            learnSPH::densities::compute_fluid_density(
+                particles_densities, particles_positions, boundary_particles_positions,
+                boundary_particles_masses, point_set_id_fluid, ps_fluid, point_set_id_boundary,
+                fluid_particle_mass, cubic_kernel);
 
-                learnSPH::pbf::compute_c(pbf_c, particles_densities, sim_setup.fluid_rest_density);
+            // Compute acceleration
+            if (pressure_solver_method == 0) {
+                acceleration.pressure(particles_pressure, particles_densities,
+                                    sim_setup.fluid_rest_density);
 
-                learnSPH::pbf::compute_s(pbf_s, particles_positions, boundary_particles_positions,
-                                         fluid_particle_mass, sim_setup.fluid_rest_density,
-                                         boundary_particles_masses, sim_setup.fluid_rest_density,
-                                         cubic_kernel, point_set_id_fluid, ps_fluid,
-                                         point_set_id_boundary);
-
-                learnSPH::pbf::compute_lambda(pbf_lambda, pbf_c, pbf_s, epsilon);
-
-                learnSPH::pbf::compute_dx(pbf_dx, sim_setup.fluid_rest_density, fluid_particle_mass,
-                                          pbf_lambda, cubic_kernel, boundary_particles_masses,
-                                          point_set_id_fluid, ps_fluid, point_set_id_boundary,
-                                          particles_positions, boundary_particles_positions);
-
-                learnSPH::pbf::update_positions(particles_positions, pbf_dx);
+                acceleration.accelerations(
+                    particles_accelerations, particles_densities, particles_pressure,
+                    point_set_id_fluid, point_set_id_boundary, ps_fluid, ps_boundary,
+                    particles_positions, boundary_particles_positions, particles_velocities,
+                    boundary_particles_masses, sim_setup.fluid_rest_density, fluid_particle_mass);
+            } else if (pressure_solver_method == 1) {
+                acceleration.pbf_accelerations(particles_accelerations, particles_densities,
+                                            point_set_id_fluid, point_set_id_boundary, ps_fluid,
+                                            particles_positions, boundary_particles_positions,
+                                            particles_velocities, boundary_particles_masses,
+                                            sim_setup.fluid_rest_density, fluid_particle_mass);
+                last_particles_positions = particles_positions;
             }
 
-            learnSPH::pbf::update_velocities(particles_positions, last_particles_positions,
-                                             particles_velocities, dt);
+            for (int i = 0; i < emit_mark.size(); ++i) {
+                double d = (emitters[emit_mark[i][2]].dir.dot(particles_positions[emit_mark[i][0]] -
+                                                              emitters[emit_mark[i][2]].origin)) /
+                           emitters[emit_mark[i][2]].dir.norm();
+                if (d > 3 * particle_diameter)
+                    emit_mark.erase(emit_mark.begin() + i);
+            }
+
+            // std::cout << "after emitter 1 " << "\n";
+
+            for (int i = 0; i < emit_mark.size(); i++) {
+                for (int j = emit_mark[i][0]; j < emit_mark[i][1]; j++) {
+                    particles_accelerations[j] = {0, 0, 0};
+                }
+            }
+
+            // Surface tension
+            if (sim_setup.surface_tension) {
+                learnSPH::surface_tension::compute_smoothed_color_field(
+                    smoothed_color_field, beta, fluid_particle_mass, cubic_kernel,
+                    particles_densities, point_set_id_fluid, ps_fluid, particles_positions);
+
+                learnSPH::surface_tension::compute_forces(
+                    surface_tension_forces, sim_setup.cohesion_coefficient,
+                    sim_setup.adhesion_coefficient, fluid_particle_mass,
+                    sim_setup.fluid_rest_density, smoothed_color_field, cubic_kernel,
+                    particles_positions, boundary_particles_positions, particles_densities,
+                    point_set_id_fluid, ps_fluid, point_set_id_boundary, boundary_particles_masses);
+
+                for (int j = 0; j < particles_accelerations.size(); j++) {
+                    particles_accelerations[j] += surface_tension_forces[j];
+                }
+            }
+
+            // Integrate
+            semImpEuler.integrationStep(particles_positions, particles_velocities,
+                                        particles_accelerations, deleteFlag, dt, count_del,
+                                        min_fluid_reco, max_fluid_reco);
+
+
+            emit_particle_pos_backup = particles_positions;
+
+            // Find neighbors
+            nsearch.find_neighbors();
+
+            if (pressure_solver_method == 1) {
+                for (int i = 0; i < n_iteractions_pbf; i++) {
+                    learnSPH::densities::compute_fluid_density(
+                        particles_densities, particles_positions, boundary_particles_positions,
+                        boundary_particles_masses, point_set_id_fluid, ps_fluid, point_set_id_boundary,
+                        fluid_particle_mass, cubic_kernel);
+
+                    learnSPH::pbf::compute_c(pbf_c, particles_densities, sim_setup.fluid_rest_density);
+
+                    learnSPH::pbf::compute_s(pbf_s, particles_positions, boundary_particles_positions,
+                                            fluid_particle_mass, sim_setup.fluid_rest_density,
+                                            boundary_particles_masses, sim_setup.fluid_rest_density,
+                                            cubic_kernel, point_set_id_fluid, ps_fluid,
+                                            point_set_id_boundary);
+
+                    learnSPH::pbf::compute_lambda(pbf_lambda, pbf_c, pbf_s, epsilon);
+
+                    learnSPH::pbf::compute_dx(pbf_dx, sim_setup.fluid_rest_density, fluid_particle_mass,
+                                            pbf_lambda, cubic_kernel, boundary_particles_masses,
+                                            point_set_id_fluid, ps_fluid, point_set_id_boundary,
+                                            particles_positions, boundary_particles_positions);
+
+                    learnSPH::pbf::update_positions(particles_positions, pbf_dx);
+                }
+
+                learnSPH::pbf::update_velocities(particles_positions, last_particles_positions,
+                                                particles_velocities, dt);
+
+                for (int i = 0; i < emit_mark.size(); i++) {
+                    for (int j = emit_mark[i][0]; j < emit_mark[i][1]; j++) {
+                        particles_accelerations[j] = {0, 0, 0};
+                        particles_positions[j] = emit_particle_pos_backup[j];
+                    }
+                }
+            }
+
+        } else {
+            dt = sim_setup.t_between_frames;
         }
+
         if (count_del > 0 && (sim_setup.objects.size() > 0 || sim_setup.simbound_active)) {
             learnSPH::utils::deleteOutOfBounds(particles_positions, particles_velocities,
                                                particles_accelerations, particles_densities,

@@ -251,7 +251,6 @@ void learnSPH::surface::MarchingCubes::compute_normals()
     if (this->intersections.size() == 0) {
         std::cout << "No mesh vertices to compute normals for!"
                   << "\n";
-        exit(-1);
     }
 
     Eigen::Vector3d normal;
