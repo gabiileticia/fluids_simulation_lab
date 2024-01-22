@@ -5,7 +5,7 @@
 #include <array>
 #include <cmath>
 #include <limits>
-#include <vector>
+
 
 learnSPH::emitter::Emitter::Emitter(
     const Eigen::Vector3d dir, const Eigen::Vector3d origin, const double r,

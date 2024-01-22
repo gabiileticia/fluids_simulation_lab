@@ -253,8 +253,8 @@ void learnSPH::surface::MarchingCubes::get_Isosurface_sparse(
 void learnSPH::surface::MarchingCubes::compute_normals()
 {
     if (this->intersections.size() == 0) {
-        std::cout << "Warning: No mesh vertices to compute normals for!\n";
-        return;
+        std::cout << "No mesh vertices to compute normals for!"
+                  << "\n";
     }
 
     Eigen::Vector3d normal;

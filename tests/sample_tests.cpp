@@ -218,7 +218,7 @@ TEST_CASE( "Tests for our kernel function", "[kernel]" )
 
     SECTION("Testing the branches of the kernel function") {
 
-        learnSPH::kernel::CubicSplineKernel cubicSpline(2.0, 2*2.0);
+        learnSPH::kernel::CubicSplineKernel cubicSpline(2.0, 4.0);
 
         REQUIRE(kernel.branch01_00(cubicSpline, EPSILON));
         REQUIRE(kernel.branch01_05(cubicSpline, EPSILON));
