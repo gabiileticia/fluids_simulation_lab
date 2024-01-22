@@ -365,7 +365,7 @@ void learnSPH::simulations_setup::Simulations::fountain(){
     this->simbound_active = true;
 
     this->surface_reco_method = 1;  // 0: dense; 1: sparse
-    this->pressure_solver_method = 0;   // 0: wcsph, 1: pbf
+    this->pressure_solver_method = 1;   // 0: wcsph, 1: pbf
     this->n_iterations_pbf = 10;
 
     this->dt_default = 0.00025;

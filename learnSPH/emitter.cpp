@@ -4,6 +4,7 @@
 #include "utils.h"
 #include <array>
 #include <cmath>
+#include <limits>
 #include <vector>
 
 learnSPH::emitter::Emitter::Emitter(
@@ -33,7 +34,7 @@ learnSPH::emitter::Emitter::Emitter(
     this->alt_pattern = false;
 
     this->particle_diameter = this->particle_radius * 2;
-    this->last_emit         = 0;
+    this->last_emit         = std::numeric_limits<double>::min();
     this->r_squared         = this->r * this->r;
     if (emit_counter == 0) {
         this->continous    = true;
