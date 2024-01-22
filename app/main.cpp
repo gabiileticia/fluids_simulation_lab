@@ -32,7 +32,6 @@
 #include "../learnSPH/utils.h"
 
 #include "../learnSPH/simulations_setup.h"
-#include "Eigen/src/Core/Matrix.h"
 
 int main(int argc, char **argv)
 {
@@ -176,9 +175,7 @@ int main(int argc, char **argv)
         "./res/" + sim_setup.assignment + "/" + simulation_timestamp + "/log.txt";
 
     kernel::CubicSplineKernel cubic_kernel(h, beta);
-    acceleration::Acceleration acceleration(sim_setup.B, sim_setup.v_f, sim_setup.v_b, h,
-                                            sim_setup.fluid_rest_density, sim_setup.gravity,
-                                            cubic_kernel);
+
     timeIntegration::semiImplicitEuler semImpEuler(
         sim_setup.particle_radius, sim_setup.objects,
         {sim_setup.sim_boundary_min, sim_setup.sim_boundary_max});
@@ -248,6 +245,13 @@ int main(int argc, char **argv)
     densities::compute_boundary_masses(boundary_particles_masses, boundary_particles_positions,
                                        point_set_id_boundary, ps_boundary,
                                        sim_setup.fluid_rest_density, cubic_kernel);
+
+    acceleration::Acceleration acceleration(
+        sim_setup.B, sim_setup.v_f, sim_setup.v_b, h, sim_setup.fluid_rest_density,
+        sim_setup.gravity, cubic_kernel, point_set_id_fluid, point_set_id_boundary, ps_fluid,
+        ps_boundary, particles_positions, particles_accelerations, boundary_particles_positions,
+        particles_velocities, boundary_particles_masses, particles_densities, particles_pressure);
+
     // keeping track of number of elements which will be deleted
     int count_del   = 0;
     int maxSteps    = 5 / sim_setup.t_between_frames;
@@ -289,20 +293,11 @@ int main(int argc, char **argv)
 
             // Compute acceleration
             if (pressure_solver_method == 0) {
-                acceleration.pressure(particles_pressure, particles_densities,
-                                      sim_setup.fluid_rest_density);
+                acceleration.pressure(sim_setup.fluid_rest_density);
 
-                acceleration.accelerations(
-                    particles_accelerations, particles_densities, particles_pressure,
-                    point_set_id_fluid, point_set_id_boundary, ps_fluid, ps_boundary,
-                    particles_positions, boundary_particles_positions, particles_velocities,
-                    boundary_particles_masses, sim_setup.fluid_rest_density, fluid_particle_mass);
+                acceleration.wcsph_accelerations(sim_setup.fluid_rest_density, fluid_particle_mass);
             } else if (pressure_solver_method == 1) {
-                acceleration.pbf_accelerations(particles_accelerations, particles_densities,
-                                               point_set_id_fluid, point_set_id_boundary, ps_fluid,
-                                               particles_positions, boundary_particles_positions,
-                                               particles_velocities, boundary_particles_masses,
-                                               sim_setup.fluid_rest_density, fluid_particle_mass);
+                acceleration.pbf_accelerations(sim_setup.fluid_rest_density, fluid_particle_mass);
                 last_particles_positions = particles_positions;
             }
 

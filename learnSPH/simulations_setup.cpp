@@ -181,7 +181,7 @@ void learnSPH::simulations_setup::Simulations::dam_break()
     this->pressure_solver_method = 1;   // 0: wcsph, 1: pbf
     this->n_iterations_pbf = 5;
 
-    this->dt_default = 0.00025;
+    this->dt_default = 0.001;
     this->t_between_frames =  0.008;
     this->B = 1000 * 1.02;
     this->v_f = 0.0025;

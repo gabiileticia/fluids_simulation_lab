@@ -6,36 +6,35 @@
 #include <stdlib.h> // rand
 #include <vector>
 
-learnSPH::acceleration::Acceleration::Acceleration(double B, double v_f, double v_b, double h,
-                                                   double roh_0, Eigen::Vector3d gravity,
-                                                   learnSPH::kernel::CubicSplineKernel &kernel)
-    : B(B), v_f(v_f), v_b(v_b), h(h), kernel(kernel), roh_0(roh_0), gravity(gravity)
+learnSPH::acceleration::Acceleration::Acceleration(
+    double B, double v_f, double v_b, double h, double roh_0, Eigen::Vector3d gravity,
+    learnSPH::kernel::CubicSplineKernel &kernel, unsigned int ps_id_fluid,
+    unsigned int ps_id_boundary, CompactNSearch::PointSet const& fluid_neighbors,
+    CompactNSearch::PointSet const& boundary_neighbors, std::vector<Eigen::Vector3d> &fluid_particles,
+    std::vector<Eigen::Vector3d> &accelerations, std::vector<Eigen::Vector3d> &boundary_particles,
+    std::vector<Eigen::Vector3d> &velocity, std::vector<double> &boundary_mass,
+    std::vector<double> &particle_density, std::vector<double> &particles_pressure)
+    : B(B), v_f(v_f), v_b(v_b), h(h), kernel(kernel), roh_0(roh_0), gravity(gravity),
+      ps_id_fluid(ps_id_fluid), ps_id_boundary(ps_id_boundary), fluid_neighbors(fluid_neighbors),
+      boundary_neighbors(boundary_neighbors), accelerations(accelerations),
+      boundary_particles(boundary_particles), fluid_particles(fluid_particles), velocity(velocity),
+      roh(particle_density), p(particles_pressure), boundary_mass(boundary_mass)
 {
     this->h_square = h * h;
 }
 
-void learnSPH::acceleration::Acceleration::pressure(std::vector<double> &particles_pressure,
-                                                    std::vector<double> &particles_density,
-                                                    double rest_density)
+void learnSPH::acceleration::Acceleration::pressure(double rest_density)
 {
     double delta_density;
 
-    for (int i = 0; i < particles_density.size(); i++) {
-        delta_density         = this->B * (particles_density[i] - rest_density);
-        particles_pressure[i] = std::max(0.0, delta_density);
+    for (int i = 0; i < roh.size(); i++) {
+        delta_density = this->B * (roh[i] - rest_density);
+        p[i]          = std::max(0.0, delta_density);
     }
 }
 
-void learnSPH::acceleration::Acceleration::accelerations(
-    std::vector<Eigen::Vector3d> &accelerations,
-    std::vector<double> &roh, // density
-    std::vector<double> &p,   // pressure
-    unsigned int ps_id_fluid, unsigned int ps_id_boundary,
-    CompactNSearch::PointSet const &fluid_neighbors,
-    CompactNSearch::PointSet const &boundary_neighbors,
-    std::vector<Eigen::Vector3d> &fluid_particles, std::vector<Eigen::Vector3d> &boundary_particles,
-    std::vector<Eigen::Vector3d> &velocity, std::vector<double> boundary_mass,
-    double boundary_density, const double fluid_particle_mass)
+void learnSPH::acceleration::Acceleration::wcsph_accelerations(double boundary_density,
+                                                               const double fluid_particle_mass)
 {
 
     Eigen::Vector3d ap, av, ae; // pressure, velocity and mass forces
@@ -94,22 +93,11 @@ void learnSPH::acceleration::Acceleration::accelerations(
     }
 }
 
-
-void learnSPH::acceleration::Acceleration::pbf_accelerations(
-    std::vector<Eigen::Vector3d> &accelerations,
-    std::vector<double> &roh, // density
-    unsigned int ps_id_fluid,
-    unsigned int ps_id_boundary,
-    CompactNSearch::PointSet const &fluid_neighbors,
-    std::vector<Eigen::Vector3d> &fluid_particles, 
-    std::vector<Eigen::Vector3d> &boundary_particles,
-    std::vector<Eigen::Vector3d> &velocity, 
-    std::vector<double> boundary_mass,
-    double boundary_density, 
-    const double fluid_particle_mass)
+void learnSPH::acceleration::Acceleration::pbf_accelerations(double boundary_density,
+                                                             const double fluid_particle_mass)
 {
 
-    Eigen::Vector3d av, ae; // pressure, velocity and mass forces
+    Eigen::Vector3d av, ae;                               // pressure, velocity and mass forces
     Eigen::Vector3d ff_inter_velocity, fs_inter_velocity; // fluid fluid and fluid solid interaction
     Eigen::Vector3d dx;
     Eigen::Vector3d kernel_grad;
@@ -119,8 +107,8 @@ void learnSPH::acceleration::Acceleration::pbf_accelerations(
 
     for (int i = 0; i < fluid_neighbors.n_points(); ++i) {
 
-        ff_inter_velocity    = {0, 0, 0};
-        fs_inter_velocity    = {0, 0, 0};
+        ff_inter_velocity = {0, 0, 0};
+        fs_inter_velocity = {0, 0, 0};
 
         for (size_t j = 0; j < fluid_neighbors.n_neighbors(ps_id_fluid, i); j++) {
 

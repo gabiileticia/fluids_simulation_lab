@@ -44,3 +44,30 @@ Eigen::Vector3d learnSPH::kernel::CubicSplineKernel::kernel_gradient(Eigen::Vect
 
     return cubic * gama * x;
   }
+
+double learnSPH::kernel::CubicSplineKernel::cohesion_kernel_function(double r){
+
+    assert(r >= 0.0);
+    double aux = 32.0/(learnSPH::kernel::PI * std::pow(this->c, 9));
+    double kernel_branch = 0.0;
+  
+    if (r < (this->c / 2.0)) {
+      kernel_branch = 2.0 * std::pow((this->c - r), 3) * std::pow(r, 3) - std::pow(c, 6) / 64;
+    } else if (r < this->c) {
+      kernel_branch = std::pow((this->c - r), 3) * std::pow(r,3);
+    }
+    return aux * kernel_branch;
+}
+
+
+double learnSPH::kernel::CubicSplineKernel::adhesion_kernel_function(double r){
+
+    double aux = 0.007/std::pow(this->c, 3.25);
+    double kernel_branch = 0.0;
+  
+    if (r >= (this->c / 2.0) && r<= this->c) {
+      kernel_branch = std::pow(- 4.0 * r * r / c + 6.0 * r - 2.0 * c, 1.0/4.0);
+    }
+
+    return aux * kernel_branch;
+}
