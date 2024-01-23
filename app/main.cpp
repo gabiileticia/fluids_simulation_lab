@@ -137,8 +137,8 @@ int main(int argc, char **argv)
     std::vector<double> fluid_densities_for_surface_reco;
 
     // PBF setup
-    int pressure_solver_method = 1; // 0:wcsph 1:pbf
-    int n_iteractions_pbf      = 5;
+    int pressure_solver_method = sim_setup.pressure_solver_method; // 0:wcsph 1:pbf
+    int n_iteractions_pbf      = sim_setup.n_iterations_pbf;
     std::vector<double> pbf_s;
     std::vector<double> pbf_c;
     std::vector<double> pbf_lambda;
@@ -405,9 +405,13 @@ int main(int argc, char **argv)
         if (t_simulation >= t_next_frame) {
             stepCounter++;
 
-            const std::string filename = "./res/" + sim_setup.assignment + "/" +
-                                         simulation_timestamp + "/sim_" +
+            const std::string mesh_filename = "./res/" + sim_setup.assignment + "/" +
+                                         simulation_timestamp + "/mesh_" +
                                          std::to_string((int)(t_simulation * 1000000)) + ".vtk";
+
+            const std::string particles_filename = "./res/" + sim_setup.assignment + "/" +
+                                         simulation_timestamp + "/particles_" +
+                                         std::to_string((int)(t_simulation * 1000000)) + ".vtk";                                         
 
             uint nx = ((max_fluid_reco.x() + bborder.x()) - (min_fluid_reco.x() - bborder.x())) /
                           cell_width +
@@ -443,8 +447,10 @@ int main(int argc, char **argv)
             }
 
             mcubes.compute_normals();
-            write_tri_mesh_to_vtk(filename, mcubes.intersections, mcubes.triangles,
+            write_tri_mesh_to_vtk(mesh_filename, mcubes.intersections, mcubes.triangles,
                                   mcubes.intersectionNormals);
+            
+            write_particles_to_vtk(particles_filename, particles_positions, particles_densities, particles_velocities);
 
             t_next_frame += sim_setup.t_between_frames;
 
