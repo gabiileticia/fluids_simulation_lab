@@ -10,9 +10,9 @@
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <fstream>
 #include <sstream>
 #include <stdlib.h> // rand
 #include <sys/stat.h>
@@ -20,14 +20,14 @@
 #include <vector>
 
 int learnSPH::utils::deleteOutOfBounds(std::vector<Eigen::Vector3d> &positions,
-                                        std::vector<Eigen::Vector3d> &velocity,
-                                        std::vector<Eigen::Vector3d> &accelerations,
-                                        std::vector<double> &densities,
-                                        std::vector<double> &pressure,
-                                        std::vector<bool> &deleteFlag, int &count_del)
+                                       std::vector<Eigen::Vector3d> &velocity,
+                                       std::vector<Eigen::Vector3d> &accelerations,
+                                       std::vector<double> &densities,
+                                       std::vector<double> &pressure, std::vector<bool> &deleteFlag,
+                                       int &count_del)
 {
 
-    //std::cout << "Deleting " << count_del << " elements from particle vectors." << std::endl;
+    // std::cout << "Deleting " << count_del << " elements from particle vectors." << std::endl;
     int counter = 0;
     for (int i = 0; i < positions.size(); i++) {
         // skip marked for deletion element and don't increase conter
@@ -36,11 +36,11 @@ int learnSPH::utils::deleteOutOfBounds(std::vector<Eigen::Vector3d> &positions,
         }
         // copy only if element has to be shifted
         if (counter != i) {
-            positions[counter]            = positions[i];
-            velocity[counter]             = velocity[i];
-            accelerations[counter]        = accelerations[i];
-            densities[counter]            = densities[i];
-            pressure[counter]             = pressure[i];
+            positions[counter]     = positions[i];
+            velocity[counter]      = velocity[i];
+            accelerations[counter] = accelerations[i];
+            densities[counter]     = densities[i];
+            pressure[counter]      = pressure[i];
         }
         counter++;
     }
@@ -88,7 +88,8 @@ void learnSPH::utils::create_simulation_folder(const std::string assign_number,
     }
 }
 
-std::ostringstream learnSPH::utils::updateProgressBar(int currentStep, int maxSteps, const int barWidth)
+std::ostringstream learnSPH::utils::updateProgressBar(int currentStep, int maxSteps,
+                                                      const int barWidth)
 {
     std::ostringstream output_msg;
 
@@ -124,11 +125,11 @@ std::ostringstream learnSPH::utils::updateProgressBar(int currentStep, int maxSt
     int remainingSecs  = static_cast<int>(remainingSeconds) % 60;
 
     output_msg << "Elapsed Time: " << std::setfill('0') << std::setw(2) << elapsedHours << ":"
-              << std::setfill('0') << std::setw(2) << elapsedMins << ":" << std::setfill('0')
-              << std::setw(2) << elapsedSecs;
-    output_msg << " | Remaining Time: " << std::setfill('0') << std::setw(2) << remainingHours << ":"
-              << std::setfill('0') << std::setw(2) << remainingMins << ":" << std::setfill('0')
-              << std::setw(2) << remainingSecs;
+               << std::setfill('0') << std::setw(2) << elapsedMins << ":" << std::setfill('0')
+               << std::setw(2) << elapsedSecs;
+    output_msg << " | Remaining Time: " << std::setfill('0') << std::setw(2) << remainingHours
+               << ":" << std::setfill('0') << std::setw(2) << remainingMins << ":"
+               << std::setfill('0') << std::setw(2) << remainingSecs;
 
     return output_msg;
 }
@@ -324,27 +325,83 @@ Eigen::Vector3d learnSPH::utils::index2coord(uint vertexIndex, double cellwidth,
     return coords;
 }
 
-void learnSPH::utils::logMessage(const std::string& message, const std::string& filename) {
+void learnSPH::utils::logMessage(const std::string &message, const std::string &filename)
+{
     std::ofstream logfile;
     logfile.open(filename, std::ios_base::app); // Open file in append mode
 
     if (logfile.is_open()) {
         logfile << message << std::endl; // Write message to the file
-        logfile.close(); // Close the file
+        logfile.close();                 // Close the file
     } else {
         std::cerr << "Error opening the file." << std::endl;
     }
 }
 
-double learnSPH::utils::particle_mass(const double fluid_rest_density, const double sampling_distance)
-{   
+double learnSPH::utils::particle_mass(const double fluid_rest_density,
+                                      const double sampling_distance)
+{
     double pack_density, particle_volume, fluid_mass, sample_volume;
 
     // sample volume is 1 cubic meter
-    sample_volume = 1.0;
-    pack_density = learnSPH::kernel::PI * std::sqrt(2) / 6;
-    particle_volume = (1.0/6.0)* learnSPH::kernel::PI * sampling_distance*sampling_distance*sampling_distance;
+    sample_volume   = 1.0;
+    pack_density    = learnSPH::kernel::PI * std::sqrt(2) / 6;
+    particle_volume = (1.0 / 6.0) * learnSPH::kernel::PI * sampling_distance * sampling_distance *
+                      sampling_distance;
     fluid_mass = 1.0 * fluid_rest_density;
 
     return fluid_mass / (sample_volume * pack_density / particle_volume);
+}
+
+void learnSPH::utils::create_emitter_shield(const Eigen::Matrix3d &rotationMatrix,
+                                            const Eigen::Vector3d emitOrigin,
+                                            const double emitRadius,
+                                            std::vector<Eigen::Vector3d> &boundaryParticles,
+                                            const double particleRadius,
+                                            unsigned int &point_set_id_boundary,
+                                            CompactNSearch::NeighborhoodSearch &nsearch)
+{
+    double shieldRadius, squaredShieldRadius, corner, x, y, z, particleDiameter;
+    int l, new_part_counter, old_boundary_size;
+
+    std::vector<Eigen::Vector3d> shield_particles;
+
+    particleDiameter    = particleRadius * 2;
+    shieldRadius        = emitRadius + 1.25 * particleDiameter;
+    new_part_counter    = 0;
+    l                   = (int)(shieldRadius / particleRadius);
+    x                   = 0;
+    y                   = 0;
+    z                   = -1.25 * particleDiameter;
+    corner              = -emitRadius;
+    squaredShieldRadius = shieldRadius * shieldRadius;
+
+    for (int k = 0; k < 3; k++) {
+        z += particleDiameter * k;
+        for (int i = 0; i < l; i++) {
+            x = corner + particleDiameter + i;
+            for (int j = 0; j < l; j++) {
+                y = corner + particleDiameter * j;
+                if ((k == 0) && ((x * x + y * y) - shieldRadius < 0)) {
+                    shield_particles.push_back(rotationMatrix * Eigen::Vector3d({x, y, z}) +
+                                               emitOrigin);
+                    new_part_counter++;
+                } else if (x * x + y * y - shieldRadius < 1e-5) {
+                    shield_particles.push_back(rotationMatrix * Eigen::Vector3d({x, y, z}) +
+                                               emitOrigin);
+                    new_part_counter++;
+                }
+            }
+        }
+    }
+    old_boundary_size = boundaryParticles.size();
+
+    boundaryParticles.resize(old_boundary_size + new_part_counter);
+
+    nsearch.resize_point_set(point_set_id_boundary, boundaryParticles.front().data(),
+                             boundaryParticles.size());
+
+    for (int i = 0; i < new_part_counter; i++) {
+        boundaryParticles[old_boundary_size + i] = shield_particles[i];
+    }
 }

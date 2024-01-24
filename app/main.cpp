@@ -30,13 +30,13 @@
 
 int main(int argc, char **argv)
 {
-    
+
     if (argc != 2) {
         std::cout << "ERROR: The program accepts only one argument! received " << argc
                   << " instead!";
         exit(-1);
     }
-    
+
     int foo_select = std::stoi(argv[1]);
 
     learnSPH::simulations_setup::Simulations sim_setup;
@@ -240,8 +240,14 @@ int main(int argc, char **argv)
                 particles_accelerations, particles_velocities, particles_densities,
                 particles_pressure, deleteFlag, point_set_id_fluid, nsearch);
             emitters.push_back(em);
+            
+            learnSPH::utils::create_emitter_shield(em.rotation_matrix, em.origin, em.r,
+                                                   boundary_particles_positions, em.particle_radius,
+                                                   point_set_id_boundary, nsearch);
         }
 
+    nsearch.find_neighbors();
+    
     // Compute boundary masses
     std::vector<double> boundary_particles_masses(boundary_particles_positions.size());
     densities::compute_boundary_masses(boundary_particles_masses, boundary_particles_positions,
@@ -277,8 +283,8 @@ int main(int argc, char **argv)
         if (particles_positions.size() > 0) {
 
             // Compute dt
-            dt_cfl =
-                0.5 * sim_setup.particle_radius * (1 / std::min(100.0, std::sqrt(semImpEuler.v_max)));
+            dt_cfl = 0.5 * sim_setup.particle_radius *
+                     (1 / std::min(100.0, std::sqrt(semImpEuler.v_max)));
             dt = std::min(dt_cfl, sim_setup.dt_default);
 
             // Compute fluid particles densities
@@ -290,7 +296,7 @@ int main(int argc, char **argv)
             // Compute acceleration
             if (pressure_solver_method == 0) {
                 acceleration.pressure(particles_pressure, particles_densities,
-                                    sim_setup.fluid_rest_density);
+                                      sim_setup.fluid_rest_density);
 
                 acceleration.accelerations(
                     particles_accelerations, particles_densities, particles_pressure,
@@ -299,10 +305,10 @@ int main(int argc, char **argv)
                     boundary_particles_masses, sim_setup.fluid_rest_density, fluid_particle_mass);
             } else if (pressure_solver_method == 1) {
                 acceleration.pbf_accelerations(particles_accelerations, particles_densities,
-                                            point_set_id_fluid, point_set_id_boundary, ps_fluid,
-                                            particles_positions, boundary_particles_positions,
-                                            particles_velocities, boundary_particles_masses,
-                                            sim_setup.fluid_rest_density, fluid_particle_mass);
+                                               point_set_id_fluid, point_set_id_boundary, ps_fluid,
+                                               particles_positions, boundary_particles_positions,
+                                               particles_velocities, boundary_particles_masses,
+                                               sim_setup.fluid_rest_density, fluid_particle_mass);
                 last_particles_positions = particles_positions;
             }
 
@@ -345,7 +351,6 @@ int main(int argc, char **argv)
                                         particles_accelerations, deleteFlag, dt, count_del,
                                         min_fluid_reco, max_fluid_reco);
 
-
             emit_particle_pos_backup = particles_positions;
 
             // Find neighbors
@@ -355,34 +360,35 @@ int main(int argc, char **argv)
                 for (int i = 0; i < n_iteractions_pbf; i++) {
                     learnSPH::densities::compute_fluid_density(
                         particles_densities, particles_positions, boundary_particles_positions,
-                        boundary_particles_masses, point_set_id_fluid, ps_fluid, point_set_id_boundary,
-                        fluid_particle_mass, cubic_kernel);
+                        boundary_particles_masses, point_set_id_fluid, ps_fluid,
+                        point_set_id_boundary, fluid_particle_mass, cubic_kernel);
 
-                    learnSPH::pbf::compute_c(pbf_c, particles_densities, sim_setup.fluid_rest_density);
+                    learnSPH::pbf::compute_c(pbf_c, particles_densities,
+                                             sim_setup.fluid_rest_density);
 
-                    learnSPH::pbf::compute_s(pbf_s, particles_positions, boundary_particles_positions,
-                                            fluid_particle_mass, sim_setup.fluid_rest_density,
-                                            boundary_particles_masses, sim_setup.fluid_rest_density,
-                                            cubic_kernel, point_set_id_fluid, ps_fluid,
-                                            point_set_id_boundary);
+                    learnSPH::pbf::compute_s(
+                        pbf_s, particles_positions, boundary_particles_positions,
+                        fluid_particle_mass, sim_setup.fluid_rest_density,
+                        boundary_particles_masses, sim_setup.fluid_rest_density, cubic_kernel,
+                        point_set_id_fluid, ps_fluid, point_set_id_boundary);
 
                     learnSPH::pbf::compute_lambda(pbf_lambda, pbf_c, pbf_s, epsilon);
 
-                    learnSPH::pbf::compute_dx(pbf_dx, sim_setup.fluid_rest_density, fluid_particle_mass,
-                                            pbf_lambda, cubic_kernel, boundary_particles_masses,
-                                            point_set_id_fluid, ps_fluid, point_set_id_boundary,
-                                            particles_positions, boundary_particles_positions);
+                    learnSPH::pbf::compute_dx(
+                        pbf_dx, sim_setup.fluid_rest_density, fluid_particle_mass, pbf_lambda,
+                        cubic_kernel, boundary_particles_masses, point_set_id_fluid, ps_fluid,
+                        point_set_id_boundary, particles_positions, boundary_particles_positions);
 
                     learnSPH::pbf::update_positions(particles_positions, pbf_dx);
                 }
 
                 learnSPH::pbf::update_velocities(particles_positions, last_particles_positions,
-                                                particles_velocities, dt);
+                                                 particles_velocities, dt);
 
                 for (int i = 0; i < emit_mark.size(); i++) {
                     for (int j = emit_mark[i][0]; j < emit_mark[i][1]; j++) {
                         particles_accelerations[j] = {0, 0, 0};
-                        particles_positions[j] = emit_particle_pos_backup[j];
+                        particles_positions[j]     = emit_particle_pos_backup[j];
                     }
                 }
             }
@@ -405,13 +411,13 @@ int main(int argc, char **argv)
         if (t_simulation >= t_next_frame) {
             stepCounter++;
 
-            const std::string mesh_filename = "./res/" + sim_setup.assignment + "/" +
-                                         simulation_timestamp + "/mesh_" +
-                                         std::to_string((int)(t_simulation * 1000000)) + ".vtk";
+            const std::string mesh_filename =
+                "./res/" + sim_setup.assignment + "/" + simulation_timestamp + "/mesh_" +
+                std::to_string((int)(t_simulation * 1000000)) + ".vtk";
 
-            const std::string particles_filename = "./res/" + sim_setup.assignment + "/" +
-                                         simulation_timestamp + "/particles_" +
-                                         std::to_string((int)(t_simulation * 1000000)) + ".vtk";                                         
+            const std::string particles_filename =
+                "./res/" + sim_setup.assignment + "/" + simulation_timestamp + "/particles_" +
+                std::to_string((int)(t_simulation * 1000000)) + ".vtk";
 
             uint nx = ((max_fluid_reco.x() + bborder.x()) - (min_fluid_reco.x() - bborder.x())) /
                           cell_width +
@@ -447,10 +453,13 @@ int main(int argc, char **argv)
             }
 
             mcubes.compute_normals();
-            write_tri_mesh_to_vtk(mesh_filename, mcubes.intersections, mcubes.triangles,
-                                  mcubes.intersectionNormals);
-            
-            write_particles_to_vtk(particles_filename, particles_positions, particles_densities, particles_velocities);
+            // write_tri_mesh_to_vtk(mesh_filename, mcubes.intersections, mcubes.triangles,
+            //                       mcubes.intersectionNormals);
+
+            // write_particles_to_vtk(particles_filename, particles_positions, particles_densities,
+            //                        particles_velocities);
+
+            write_particles_to_vtk(particles_filename, boundary_particles_positions);
 
             t_next_frame += sim_setup.t_between_frames;
 
