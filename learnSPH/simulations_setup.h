@@ -29,6 +29,7 @@ namespace learnSPH {
             double B;
             double v_f;
             double v_b;
+            double simTime = 5;
             Eigen::Vector3d gravity;
             std::string assignment;
             bool simbound_active;

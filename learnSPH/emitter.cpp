@@ -1,5 +1,4 @@
 #include "emitter.h"
-#include "Eigen/src/Core/Matrix.h"
 #include "Eigen/src/Geometry/AngleAxis.h"
 #include "utils.h"
 #include <array>
@@ -116,7 +115,7 @@ void learnSPH::emitter::Emitter::emit_particles_alternating(double t_sim, int id
     this->last_emit = t_sim;
 
     int new_part_counter = 0;
-    int l                = (int)(this->r/ this->particle_diameter);
+    int l                = (int)(this->r/ this->particle_radius);
     std::vector<Eigen::Vector3d> new_particles;
     double new_r_squared = l * this->particle_radius * l * this->particle_radius;
     new_particles.resize(l * l * 4);
@@ -126,7 +125,7 @@ void learnSPH::emitter::Emitter::emit_particles_alternating(double t_sim, int id
 
     x      = 0;
     y      = 0;
-    corner = -l * this->particle_diameter;
+    corner = -l * this->particle_radius;
 
     for (int i = 0; i < 2*l; i++) {
         for (int j = 0; j < 2*l; j++) {

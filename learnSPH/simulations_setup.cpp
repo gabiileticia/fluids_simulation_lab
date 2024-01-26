@@ -346,7 +346,7 @@ void learnSPH::simulations_setup::Simulations::simple_emitter_test(){
     this->emitters.resize(1);
     this->emitters[0].dir = {0,1,0};
     this->emitters[0].origin = {.5,.1,.4};
-    this->emitters[0].r = 0.1;
+    this->emitters[0].r = 0.05;
     this->emitters[0].velocity = 1;
     this->emitters[0].alternating = false;
     this->emitters[0].emission_freq = 1;
@@ -385,7 +385,7 @@ void learnSPH::simulations_setup::Simulations::fountain(){
     this->emitters.resize(1);
     this->emitters[0].dir = {0,0,1};
     this->emitters[0].origin = {.5,.5,.125};
-    this->emitters[0].r = 0.1;
+    this->emitters[0].r = 0.04;
     this->emitters[0].velocity = 2.5;
     this->emitters[0].alternating = true;
     this->emitters[0].emission_freq = 1;
@@ -405,15 +405,16 @@ void learnSPH::simulations_setup::Simulations::water_droplet_no_gravity(){
     this->fluid_velocities[0] = Eigen::Vector3d(0.0, 0.0, 0.0);
 
     this->surface_reco_method = 1;  // 0: dense; 1: sparse
-    this->pressure_solver_method = 0;   // 0: wcsph, 1: pbf
+    this->pressure_solver_method = 1;   // 0: wcsph, 1: pbf
 
     this->dt_default = 0.0001;
-    this->t_between_frames = 0.1;
+    this->t_between_frames = 0.05;
     this->B = 1000 * 1.02;
     this->v_f = 0.1;
     this->v_b = 0;
     this->gravity = Eigen::Vector3d(0.0, 0.0, 0.0);
     this->assignment = "assignment5/water_droplet";
+    this->simTime = 20;
 
     this->surface_tension = true;
     this->cohesion_coefficient = 0.05;

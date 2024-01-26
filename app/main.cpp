@@ -240,14 +240,14 @@ int main(int argc, char **argv)
                 particles_accelerations, particles_velocities, particles_densities,
                 particles_pressure, deleteFlag, point_set_id_fluid, nsearch);
             emitters.push_back(em);
-            
-            learnSPH::utils::create_emitter_shield(em.rotation_matrix, em.origin, em.r,
-                                                   boundary_particles_positions, em.particle_radius,
-                                                   point_set_id_boundary, nsearch);
+
+            learnSPH::utils::create_emitter_shield(
+                em.rotation_matrix, sim_setup.emitters[i].origin, sim_setup.emitters[i].r,
+                boundary_particles_positions, sim_setup.particle_radius, point_set_id_boundary, nsearch);
         }
 
     nsearch.find_neighbors();
-    
+
     // Compute boundary masses
     std::vector<double> boundary_particles_masses(boundary_particles_positions.size());
     densities::compute_boundary_masses(boundary_particles_masses, boundary_particles_positions,
@@ -256,7 +256,7 @@ int main(int argc, char **argv)
     // keeping track of number of elements which will be deleted
     int count_del = 0;
 
-    int maxSteps    = 5 / sim_setup.t_between_frames;
+    int maxSteps    = sim_setup.simTime / sim_setup.t_between_frames;
     int stepCounter = 0;
 
     utils::logMessage(msg.str(), log_file);
@@ -264,18 +264,19 @@ int main(int argc, char **argv)
 
     double hcp_z = sim_setup.particle_radius * (2 * std::sqrt(6)) / 3;
 
+    const std::string boundary_file =
+        "./res/" + sim_setup.assignment + "/" + simulation_timestamp + "/boundary_particles.vtk";
+    
+    write_particles_to_vtk(boundary_file, boundary_particles_positions);
+
     // Simulation loop
-    while (t_simulation < 5) {
+    while (t_simulation < sim_setup.simTime) {
 
         for (int i = 0; i < emitters.size(); i++) {
             if ((t_simulation - emitters[i].last_emit) * emitters[i].emit_velocity >
                     (hcp_z * sim_setup.emitters[i].emission_freq) &&
                 emitters[i].emit_counter > 0) {
                 emitters[i].emit_particles_alternating(t_simulation, i);
-                // deprecated
-                // } else {
-                //     emitters[i].emit_particles(t_simulation, i);
-                // }
                 nsearch.find_neighbors();
             }
         }
@@ -374,6 +375,7 @@ int main(int argc, char **argv)
 
                     learnSPH::pbf::compute_lambda(pbf_lambda, pbf_c, pbf_s, epsilon);
 
+
                     learnSPH::pbf::compute_dx(
                         pbf_dx, sim_setup.fluid_rest_density, fluid_particle_mass, pbf_lambda,
                         cubic_kernel, boundary_particles_masses, point_set_id_fluid, ps_fluid,
@@ -453,13 +455,11 @@ int main(int argc, char **argv)
             }
 
             mcubes.compute_normals();
-            // write_tri_mesh_to_vtk(mesh_filename, mcubes.intersections, mcubes.triangles,
-            //                       mcubes.intersectionNormals);
+            write_tri_mesh_to_vtk(mesh_filename, mcubes.intersections, mcubes.triangles,
+                                  mcubes.intersectionNormals);
 
-            // write_particles_to_vtk(particles_filename, particles_positions, particles_densities,
-            //                        particles_velocities);
-
-            write_particles_to_vtk(particles_filename, boundary_particles_positions);
+            write_particles_to_vtk(particles_filename, particles_positions, particles_densities,
+                                   particles_velocities);
 
             t_next_frame += sim_setup.t_between_frames;
 

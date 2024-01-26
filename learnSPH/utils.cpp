@@ -361,32 +361,38 @@ void learnSPH::utils::create_emitter_shield(const Eigen::Matrix3d &rotationMatri
                                             unsigned int &point_set_id_boundary,
                                             CompactNSearch::NeighborhoodSearch &nsearch)
 {
-    double shieldRadius, squaredShieldRadius, corner, x, y, z, particleDiameter;
+    double shieldRadius, squaredShieldRadius, corner, x, y, z, particleDiameter, z_origin;
     int l, new_part_counter, old_boundary_size;
 
     std::vector<Eigen::Vector3d> shield_particles;
 
-    particleDiameter    = particleRadius * 2;
-    shieldRadius        = emitRadius + 1.25 * particleDiameter;
-    new_part_counter    = 0;
-    l                   = (int)(shieldRadius / particleRadius);
-    x                   = 0;
-    y                   = 0;
-    z                   = -1.25 * particleDiameter;
-    corner              = -emitRadius;
-    squaredShieldRadius = shieldRadius * shieldRadius;
+    particleDiameter      = particleRadius * 2;
+    shieldRadius          = emitRadius + 1.5 * particleDiameter;
+    new_part_counter      = 0;
+    l                     = (int)(shieldRadius / particleRadius);
+    x                     = 0;
+    y                     = 0;
+    z                     = 0;
+    z_origin              = -1.5 * particleDiameter;
+    corner                = -l * particleRadius;
+    squaredShieldRadius   = l * particleRadius * l * particleRadius;
+    const double sqrt3    = std::sqrt(3);
+    const double onethird = 1. / 3.;
+    const double twothird = 2. / 3.;
+    const double sqrt6    = std::sqrt(6);
+    const double epsilon = 1e-3;
 
-    for (int k = 0; k < 3; k++) {
-        z += particleDiameter * k;
-        for (int i = 0; i < l; i++) {
-            x = corner + particleDiameter + i;
-            for (int j = 0; j < l; j++) {
-                y = corner + particleDiameter * j;
-                if ((k == 0) && ((x * x + y * y) - shieldRadius < 0)) {
+    for (int k = 0; k < 4; k++) {
+        z = z_origin + particleRadius * k * twothird * sqrt6;
+        for (int i = 0; i < 2*l; i++) {
+            for (int j = 0; j < 2*l; j++) {
+                x = corner + particleRadius * (2 * i + ((j + k) % 2));
+                y = corner + particleRadius * (sqrt3 * (j + onethird * (k % 2)));
+                if ((k == 0) && ((x * x + y * y - squaredShieldRadius) < 0)) {
                     shield_particles.push_back(rotationMatrix * Eigen::Vector3d({x, y, z}) +
                                                emitOrigin);
                     new_part_counter++;
-                } else if (x * x + y * y - shieldRadius < 1e-5) {
+                } else if ((k!=0) && (std::abs((x * x + y * y - squaredShieldRadius)) < epsilon)) {
                     shield_particles.push_back(rotationMatrix * Eigen::Vector3d({x, y, z}) +
                                                emitOrigin);
                     new_part_counter++;
