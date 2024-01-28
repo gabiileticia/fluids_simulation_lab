@@ -447,6 +447,8 @@ int main(int argc, char **argv)
                           cell_width +
                       1;
 
+            nsearch.find_neighbors();
+
             learnSPH::densities::compute_fluid_density_surface_reco(
                 fluid_densities_for_surface_reco, particles_positions, point_set_id_fluid, ps_fluid,
                 cubic_kernel);

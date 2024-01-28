@@ -169,4 +169,4 @@ void learnSPH::emitter::Emitter::emit_particles_alternating(double t_sim, int id
     }
     if (!(this->continous))
         this->emit_counter--;
-};
+}
