@@ -380,7 +380,7 @@ void learnSPH::utils::create_emitter_shield(const Eigen::Matrix3d &rotationMatri
     const double onethird = 1. / 3.;
     const double twothird = 2. / 3.;
     const double sqrt6    = std::sqrt(6);
-    const double epsilon = 1e-3;
+    const double epsilon = 5e-4;
 
     for (int k = 0; k < 4; k++) {
         z = z_origin + particleRadius * k * twothird * sqrt6;
