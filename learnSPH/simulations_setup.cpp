@@ -371,7 +371,7 @@ void learnSPH::simulations_setup::Simulations::fountain(){
     this->simbound_active = true;
 
     this->surface_reco_method = 1;  // 0: dense; 1: sparse
-    this->pressure_solver_method = 0;   // 0: wcsph, 1: pbf
+    this->pressure_solver_method = 1;   // 0: wcsph, 1: pbf
     this->n_iterations_pbf = 10;
 
     this->dt_default = 0.00025;
@@ -629,14 +629,14 @@ void learnSPH::simulations_setup::Simulations::boundary_wetting_cohesion_and_adh
 
 void learnSPH::simulations_setup::Simulations::galton_board(){
     this->particle_radius = 0.005;
-    this->fluid_rest_density = 1000.0;
+    this->fluid_rest_density = 1000.0 * 1.02;
 
     this->fluid_begin.resize(0);
     this->fluid_velocities.resize(0);
     this->fluid_end.resize(0);
 
-    // this->fluid_begin[0] = Eigen::Vector3d(0.054674, -0.18376, 1.5343);
-    // this->fluid_end[0] = Eigen::Vector3d(-0.09, 0.18445, 1.7432);
+    // this->fluid_begin[0] = Eigen::Vector3d(-0.09, -0.18376, 1.5343);
+    // this->fluid_end[0] = Eigen::Vector3d(0.054674, 0.18445, 1.7432);
     // this->fluid_velocities[0] = Eigen::Vector3d({0,0,0});
 
     this->objects.resize(3);
@@ -655,12 +655,12 @@ void learnSPH::simulations_setup::Simulations::galton_board(){
     this->simbound_active = true;
 
     this->surface_reco_method = 1;  // 0: dense; 1: sparse
-    this->pressure_solver_method = 1;   // 0: wcsph, 1: pbf
-    this->n_iterations_pbf = 10;
+    this->pressure_solver_method = 0;   // 0: wcsph, 1: pbf
+    this->n_iterations_pbf = 5;
 
-    this->dt_default = 0.001;
+    this->dt_default = 0.0005;
     this->t_between_frames = 0.008;
-    this->B = 1000 * 1.02;
+    this->B = 1000;
     this->v_f = 0.0025;
     this->v_b = 0.0;
     this->gravity = Eigen::Vector3d(0.0, 0.0, -9.81);
@@ -681,7 +681,7 @@ void learnSPH::simulations_setup::Simulations::galton_board(){
     this->emitters[1].emission_freq = 1;
     this->emitters[1].emit_counter = 500;   
 
-    this->surface_tension = true;
-    this->cohesion_coefficient = 0.05; //0.05;
-    this->adhesion_coefficient = 0.01; //0.01;
+    this->surface_tension = false;
+    this->cohesion_coefficient = 0.0; //0.05;
+    this->adhesion_coefficient = 0.0; //0.01;
 }

@@ -38,11 +38,13 @@ void learnSPH::timeIntegration::semiImplicitEuler::integrationStep(
     std::vector<Eigen::Vector3d> &accelerations, std::vector<bool> &deleteFlag, double dt,
     int &count_del, Eigen::Vector3d &min_fluid_reco, Eigen::Vector3d &max_fluid_reco)
 {
-    v_max          = 0;
-    bool copyFlag  = false;
-    count_del      = 0;
-    max_fluid_reco = positions[0];
-    min_fluid_reco = positions[0];
+    v_max         = 0;
+    bool copyFlag = false;
+    count_del     = 0;
+    if (positions.size() > 0) {
+        max_fluid_reco = positions[0];
+        min_fluid_reco = positions[0];
+    }
 
     for (int i = 0; i < positions.size(); i++) {
         velocity[i]  = velocity[i] + dt * accelerations[i];
@@ -74,7 +76,7 @@ void learnSPH::timeIntegration::semiImplicitEuler::integrationStep(
                 copyFlag      = true;
                 count_del++;
             }
-            
+
             for (int k = 0; k < boundaries.size(); k++) {
                 if (positions[i].x() < boundaries[k].max.x() &&
                     positions[i].x() > boundaries[k].min.x() &&
@@ -82,6 +84,7 @@ void learnSPH::timeIntegration::semiImplicitEuler::integrationStep(
                     positions[i].y() > boundaries[k].min.y() &&
                     positions[i].z() < boundaries[k].max.z() &&
                     positions[i].z() > boundaries[k].min.z() && !(boundaries[k].noCheck)) {
+                    std::cout << "What happened here?\n";
                     deleteFlag[i] = true;
                     copyFlag      = true;
                     count_del++;

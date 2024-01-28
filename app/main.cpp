@@ -400,6 +400,8 @@ int main(int argc, char **argv)
         }
 
         if (count_del > 0 && (sim_setup.objects.size() > 0 || sim_setup.simbound_active)) {
+            std::cout << "vmax: " << semImpEuler.v_max << "\n";
+            std::cout << "countdel: " << count_del << "\n";
             learnSPH::utils::deleteOutOfBounds(particles_positions, particles_velocities,
                                                particles_accelerations, particles_densities,
                                                particles_pressure, deleteFlag, count_del);
@@ -465,6 +467,14 @@ int main(int argc, char **argv)
 
             t_next_frame += sim_setup.t_between_frames;
 
+            std::ostringstream fluidinfo;
+
+            fluidinfo << "vMax: " << semImpEuler.v_max << "\n";
+            fluidinfo << "minFluidrecon: " << min_fluid_reco << "\n";
+            fluidinfo << "maxFluidrecon: " << max_fluid_reco << "\n";
+            fluidinfo << "numParticles: " << particles_positions.size() << "\n";
+            utils::logMessage(fluidinfo.str(), log_file);
+            std::cout << fluidinfo.str();
             auto progress_msg = utils::updateProgressBar(stepCounter, maxSteps, 75);
             std::cout << progress_msg.str() << "\n";
             utils::logMessage(progress_msg.str(), log_file);
