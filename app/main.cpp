@@ -96,6 +96,12 @@ int main(int argc, char **argv)
     case 17:
         sim_setup.fountain();
         break;
+    case 18:
+        sim_setup.fountain_with_path();
+        break;
+    case 19:
+        sim_setup.multiple_fountains_with_path();
+        break;
     default:
         std::cout << "Selected undefined function index. Closing program.";
         exit(-1);
@@ -161,26 +167,16 @@ int main(int argc, char **argv)
     // log simsetup settings
     msg << "delta t default: " << sim_setup.dt_default << "\n";
     msg << "frame time: " << sim_setup.t_between_frames << "\n";
-    msg << "Rest density: " << sim_setup.B << "\n",
-        msg << "viscosity fluid: " << sim_setup.v_f << "\n";
+    msg << "Rest density: " << sim_setup.fluid_rest_density << "\n",
+    msg << "B: " << sim_setup.B << "\n",
+    msg << "viscosity fluid: " << sim_setup.v_f << "\n";
     msg << "viscosity boundaries: " << sim_setup.v_b << "\n";
+    msg << "surface tension: " << sim_setup.surface_tension << "\n";
+    msg << "cohesion coefficient: " << sim_setup.cohesion_coefficient << "\n";
+    msg << "adhesion coefficient: " << sim_setup.adhesion_coefficient << "\n";
     msg << "gravity: " << sim_setup.gravity.x() << ", " << sim_setup.gravity.y() << ", "
         << sim_setup.gravity.z() << "\n";
     msg << "Sim boundary active: " << (sim_setup.simbound_active ? "yes" : "no") << "\n";
-
-    // instantiating some classes
-    utils::create_simulation_folder(sim_setup.assignment, simulation_timestamp);
-
-    const std::string log_file =
-        "./res/" + sim_setup.assignment + "/" + simulation_timestamp + "/log.txt";
-
-    kernel::CubicSplineKernel cubic_kernel(h, beta);
-    acceleration::Acceleration acceleration(sim_setup.B, sim_setup.v_f, sim_setup.v_b, h,
-                                            sim_setup.fluid_rest_density, sim_setup.gravity,
-                                            cubic_kernel);
-    timeIntegration::semiImplicitEuler semImpEuler(
-        sim_setup.particle_radius, sim_setup.objects,
-        {sim_setup.sim_boundary_min, sim_setup.sim_boundary_max});
 
     // Load simulation geometry
     std::vector<Eigen::Vector3d> boundary_particles_positions;
@@ -204,10 +200,27 @@ int main(int argc, char **argv)
     msg << particles_positions.size() << "\n";
 
     msg << "fluid particles mass: " << fluid_particle_mass << "\n";
+    // sim_setup.fluid_rest_density = sim_setup.fluid_rest_density * 1.02;
+
+    msg << "Rest density after sampling: " << sim_setup.fluid_rest_density << "\n";
 
     std::vector<double> particles_densities(particles_positions.size());
     std::vector<Eigen::Vector3d> particles_accelerations(particles_positions.size());
     std::vector<double> particles_pressure(particles_positions.size());
+
+    // instantiating some classes
+    utils::create_simulation_folder(sim_setup.assignment, simulation_timestamp);
+
+    const std::string log_file =
+        "./res/" + sim_setup.assignment + "/" + simulation_timestamp + "/log.txt";
+
+    kernel::CubicSplineKernel cubic_kernel(h, beta);
+    acceleration::Acceleration acceleration(sim_setup.B, sim_setup.v_f, sim_setup.v_b, h,
+                                            sim_setup.fluid_rest_density, sim_setup.gravity,
+                                            cubic_kernel);
+    timeIntegration::semiImplicitEuler semImpEuler(
+        sim_setup.particle_radius, sim_setup.objects,
+        {sim_setup.sim_boundary_min, sim_setup.sim_boundary_max});
 
     // Setting up neighborhood search
     CompactNSearch::NeighborhoodSearch nsearch(beta);
@@ -271,7 +284,8 @@ int main(int argc, char **argv)
 
     // Simulation loop
     while (t_simulation < sim_setup.simTime) {
-
+        // std::cout << t_simulation << std::endl;
+        // std::cout << "Simulation loop" << std::endl;
         for (int i = 0; i < emitters.size(); i++) {
             if ((t_simulation - emitters[i].last_emit) * emitters[i].emit_velocity >
                     (hcp_z * sim_setup.emitters[i].emission_freq) &&
@@ -281,11 +295,12 @@ int main(int argc, char **argv)
             }
         }
 
-        if (particles_positions.size() > 0) {
 
+        if (particles_positions.size() > 0) {
+            // std::cout << "Particles available" << std::endl;
             // Compute dt
             dt_cfl = 0.5 * sim_setup.particle_radius *
-                     (1 / std::min(100.0, std::sqrt(semImpEuler.v_max)));
+                     (1 / std::min(80.0, std::sqrt(semImpEuler.v_max)));
             dt = std::min(dt_cfl, sim_setup.dt_default);
 
             // Compute fluid particles densities
@@ -405,6 +420,7 @@ int main(int argc, char **argv)
                                                particles_pressure, deleteFlag, count_del);
             nsearch.resize_point_set(point_set_id_fluid, particles_positions.front().data(),
                                      particles_positions.size());
+                                     
         }
         // Increment t
         t_simulation += dt;
@@ -465,7 +481,8 @@ int main(int argc, char **argv)
 
             auto progress_msg = utils::updateProgressBar(stepCounter, maxSteps, 75);
             std::cout << progress_msg.str() << "\n";
-            utils::logMessage(progress_msg.str(), log_file);
+            utils::logMessage(progress_msg.str() + "; " + std::to_string(particles_positions.size()), log_file);
+            
         }
     }
     return 0;

@@ -430,16 +430,16 @@ void learnSPH::simulations_setup::Simulations::boundary_wetting_no_surface_tensi
     this->fluid_end.resize(0);
     this->fluid_velocities.resize(0);
 
-    this->objects.resize(2);
+    this->objects.resize(1);
     this->objects[0].filename = "./res/boundary_cube.obj";
     this->objects[0].min = Eigen::Vector3d(-0.02,-0.02,-0.02);
     this->objects[0].max = Eigen::Vector3d(1.,1.,1.);
     this->objects[0].noCheck = true;
 
-    this->objects[1].filename = "./res/inner_box.obj";
-    this->objects[1].min = Eigen::Vector3d(0.05, 0.3, 0.2);
-    this->objects[1].max = Eigen::Vector3d(0.1, 0.5, 0.3);
-    this->objects[1].noCheck = false;
+    // this->objects[1].filename = "./res/inner_box.obj";
+    // this->objects[1].min = Eigen::Vector3d(0.05, 0.3, 0.2);
+    // this->objects[1].max = Eigen::Vector3d(0.1, 0.5, 0.3);
+    // this->objects[1].noCheck = false;
 
     // simulation domain boundary
     this->sim_boundary_min = Eigen::Vector3d(-1,-1,-1);
@@ -460,7 +460,7 @@ void learnSPH::simulations_setup::Simulations::boundary_wetting_no_surface_tensi
 
     this->emitters.resize(1);
     this->emitters[0].dir = {0,1,0};
-    this->emitters[0].origin = {.06,0.15,.4};
+    this->emitters[0].origin = {.1,0.15,.4};
     this->emitters[0].r = 0.1;
     this->emitters[0].velocity = 0.7;
     this->emitters[0].alternating = false;
@@ -613,7 +613,7 @@ void learnSPH::simulations_setup::Simulations::boundary_wetting_cohesion_and_adh
 
     this->emitters.resize(1);
     this->emitters[0].dir = {0,1,0};
-    this->emitters[0].origin = {.06,0.15,.4};
+    this->emitters[0].origin = {.1,0.15,.4};
     this->emitters[0].r = 0.1;
     this->emitters[0].velocity = 0.7;
     this->emitters[0].alternating = false;
@@ -707,4 +707,120 @@ void learnSPH::simulations_setup::Simulations::galton_board(){
     this->surface_tension = false;
     this->cohesion_coefficient = 0.0; //0.05;
     this->adhesion_coefficient = 0.0; //0.01;
+}
+
+
+void learnSPH::simulations_setup::Simulations::fountain_with_path(){
+    this->particle_radius = 0.005;
+    this->fluid_rest_density = 1000.0;
+
+    this->fluid_begin.resize(1);
+    this->fluid_end.resize(1);
+    this->fluid_velocities.resize(1);
+
+    this->fluid_begin[0] = Eigen::Vector3d(-0.2, -0.2, -0.35);
+    this->fluid_end[0] = Eigen::Vector3d(0.2, .2, -0.3);
+    this->fluid_velocities[0] = Eigen::Vector3d(0.0, 0.0, 0.0);
+
+    this->surface_reco_method = 1;  // 0: dense; 1: sparse
+    this->pressure_solver_method = 1;   // 0: wcsph, 1: pbf
+    this->n_iterations_pbf = 10;
+
+    this->dt_default = 0.005;
+    this->t_between_frames = 0.008;
+    this->B = 1000 * 1.02;
+    this->v_f = 0.0025;
+    this->v_b = 0.0;
+    this->gravity = Eigen::Vector3d(0.0, 0.0, -9.8);
+    this->assignment = "assignment5/fountain_with_path";
+    this->simTime = 5;
+
+    this->surface_tension = true;
+    this->cohesion_coefficient = 0.01;
+    this->adhesion_coefficient = 0.01;
+
+    this->emitters.resize(1);
+    this->emitters[0].dir = {0,1,0};
+    this->emitters[0].origin = {0.0,-0.2,-.2};
+    this->emitters[0].r = 0.05;
+    this->emitters[0].velocity = .7;
+    this->emitters[0].alternating = false;
+    this->emitters[0].emission_freq = 1;
+    this->emitters[0].emit_counter = 1000;  
+
+    this->objects.resize(1);
+    this->objects[0].filename = "./res/boxes_connected.obj";
+    this->objects[0].min = Eigen::Vector3d(-0.3, -0.3, -0.8);
+    this->objects[0].max = Eigen::Vector3d(0.3, 2.0, 0.4);
+    this->objects[0].noCheck = true;
+
+    this->sim_boundary_min = this->objects[0].min;
+    this->sim_boundary_max = this->objects[0].max;
+    this->simbound_active = true;
+
+}
+
+void learnSPH::simulations_setup::Simulations::multiple_fountains_with_path(){
+    this->particle_radius = 0.005;
+    this->fluid_rest_density = 1000.0;
+
+    this->fluid_begin.resize(1);
+    this->fluid_end.resize(1);
+    this->fluid_velocities.resize(1);
+
+    this->fluid_begin[0] = Eigen::Vector3d(-0.48, 0.02,-0.34);
+    this->fluid_end[0] = Eigen::Vector3d(0.6, .23, -0.25);
+    this->fluid_velocities[0] = Eigen::Vector3d(0.0, 0.0, 0.0);
+
+    this->surface_reco_method = 1;  // 0: dense; 1: sparse
+    this->pressure_solver_method = 1;   // 0: wcsph, 1: pbf
+    this->n_iterations_pbf = 10;
+
+    this->dt_default = 0.00025;
+    this->t_between_frames = 0.004;
+    this->B = 1000 * 1.02;
+    this->v_f = 0.0025;
+    this->v_b = 0.0;
+    this->gravity = Eigen::Vector3d(0.0, 0.0, -9.8);
+    this->assignment = "assignment5/maze";
+    this->simTime = 5;
+
+    this->surface_tension = false;
+    this->cohesion_coefficient = 0.05;
+    this->adhesion_coefficient = 0.01;
+
+    this->emitters.resize(1);
+    this->emitters[0].dir = {0,1,0};
+    this->emitters[0].origin = {0.0,-0.1,0.};
+    this->emitters[0].r = 0.05;
+    this->emitters[0].velocity = 1.;
+    this->emitters[0].alternating = false;
+    this->emitters[0].emission_freq = 1;
+    this->emitters[0].emit_counter = 10000;  
+
+    // this->emitters[1].dir = {0,1,0};
+    // this->emitters[1].origin = {0.37,-0.1,0.};
+    // this->emitters[1].r = 0.05;
+    // this->emitters[1].velocity = 1.;
+    // this->emitters[1].alternating = false;
+    // this->emitters[1].emission_freq = 1;
+    // this->emitters[1].emit_counter = 10000;  
+
+    // this->emitters[2].dir = {0,1,0};
+    // this->emitters[2].origin = {-0.3,-0.1,0.};
+    // this->emitters[2].r = 0.05;
+    // this->emitters[2].velocity = 1.;
+    // this->emitters[2].alternating = false;
+    // this->emitters[2].emission_freq = 1;
+    // this->emitters[2].emit_counter = 10000;  
+
+    this->objects.resize(1);
+    this->objects[0].filename = "./res/maze.obj";
+    this->objects[0].min = Eigen::Vector3d(-1., -0.15, -0.75);
+    this->objects[0].max = Eigen::Vector3d(1., 2.0, .2);
+    this->objects[0].noCheck = true;
+
+    this->sim_boundary_min = this->objects[0].min;
+    this->sim_boundary_max = this->objects[0].max;
+    this->simbound_active = true;
 }

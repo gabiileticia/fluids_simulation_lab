@@ -66,6 +66,8 @@ namespace learnSPH {
             void boundary_wetting_only_cohesion();
             void galton_board();
             void fountain();
+            void fountain_with_path();
+            void multiple_fountains_with_path();
 
         };
     }
