@@ -200,7 +200,7 @@ int main(int argc, char **argv)
     msg << particles_positions.size() << "\n";
 
     msg << "fluid particles mass: " << fluid_particle_mass << "\n";
-    // sim_setup.fluid_rest_density = sim_setup.fluid_rest_density * 1.02;
+    sim_setup.fluid_rest_density = sim_setup.fluid_rest_density * 1.02;
 
     msg << "Rest density after sampling: " << sim_setup.fluid_rest_density << "\n";
 
@@ -336,14 +336,6 @@ int main(int argc, char **argv)
                     emit_mark.erase(emit_mark.begin() + i);
             }
 
-            // std::cout << "after emitter 1 " << "\n";
-
-            for (int i = 0; i < emit_mark.size(); i++) {
-                for (int j = emit_mark[i][0]; j < emit_mark[i][1]; j++) {
-                    particles_accelerations[j] = {0, 0, 0};
-                }
-            }
-
             // Surface tension
             if (sim_setup.surface_tension) {
                 learnSPH::surface_tension::compute_smoothed_color_field(
@@ -359,6 +351,12 @@ int main(int argc, char **argv)
 
                 for (int j = 0; j < particles_accelerations.size(); j++) {
                     particles_accelerations[j] += surface_tension_forces[j];
+                }
+            }
+
+            for (int i = 0; i < emit_mark.size(); i++) {
+                for (int j = emit_mark[i][0]; j < emit_mark[i][1]; j++) {
+                    particles_accelerations[j] = {0, 0, 0};
                 }
             }
 

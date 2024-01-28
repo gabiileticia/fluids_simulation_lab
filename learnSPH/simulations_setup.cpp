@@ -760,13 +760,13 @@ void learnSPH::simulations_setup::Simulations::multiple_fountains_with_path(){
     this->v_b = 0.0;
     this->gravity = Eigen::Vector3d(0.0, 0.0, -9.8);
     this->assignment = "assignment5/maze";
-    this->simTime = 5;
+    this->simTime = 20;
 
-    this->surface_tension = false;
+    this->surface_tension = true;
     this->cohesion_coefficient = 0.05;
     this->adhesion_coefficient = 0.01;
 
-    this->emitters.resize(1);
+    this->emitters.resize(3);
     this->emitters[0].dir = {0,1,0};
     this->emitters[0].origin = {0.0,-0.1,0.};
     this->emitters[0].r = 0.05;
@@ -775,24 +775,24 @@ void learnSPH::simulations_setup::Simulations::multiple_fountains_with_path(){
     this->emitters[0].emission_freq = 1;
     this->emitters[0].emit_counter = 10000;  
 
-    // this->emitters[1].dir = {0,1,0};
-    // this->emitters[1].origin = {0.37,-0.1,0.};
-    // this->emitters[1].r = 0.05;
-    // this->emitters[1].velocity = 1.;
-    // this->emitters[1].alternating = false;
-    // this->emitters[1].emission_freq = 1;
-    // this->emitters[1].emit_counter = 10000;  
+    this->emitters[1].dir = {0,1,0};
+    this->emitters[1].origin = {0.37,-0.1,0.};
+    this->emitters[1].r = 0.05;
+    this->emitters[1].velocity = 1.;
+    this->emitters[1].alternating = false;
+    this->emitters[1].emission_freq = 1;
+    this->emitters[1].emit_counter = 10000;  
 
-    // this->emitters[2].dir = {0,1,0};
-    // this->emitters[2].origin = {-0.3,-0.1,0.};
-    // this->emitters[2].r = 0.05;
-    // this->emitters[2].velocity = 1.;
-    // this->emitters[2].alternating = false;
-    // this->emitters[2].emission_freq = 1;
-    // this->emitters[2].emit_counter = 10000;  
+    this->emitters[2].dir = {0,1,0};
+    this->emitters[2].origin = {-0.3,-0.1,0.};
+    this->emitters[2].r = 0.05;
+    this->emitters[2].velocity = 1.;
+    this->emitters[2].alternating = false;
+    this->emitters[2].emission_freq = 1;
+    this->emitters[2].emit_counter = 10000;  
 
     this->objects.resize(1);
-    this->objects[0].filename = "./res/maze.obj";
+    this->objects[0].filename = "./res/maze4.obj";
     this->objects[0].min = Eigen::Vector3d(-1., -0.15, -0.75);
     this->objects[0].max = Eigen::Vector3d(1., 2.0, .2);
     this->objects[0].noCheck = true;
