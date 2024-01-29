@@ -13,6 +13,7 @@ if( NOT EIGEN3_INCLUDE_DIR )
     message( FATAL_ERROR "Please point the environment variable EIGEN3_INCLUDE_DIR to the include directory of your Eigen3 installation.")
 endif()
 
+
 set(SOURCE_FILES
 	io.h
 	io.cpp
@@ -53,3 +54,4 @@ add_library(learnSPH ${SOURCE_FILES})
 target_link_libraries(learnSPH CompactNSearch)
 target_include_directories(learnSPH PUBLIC ${EIGEN3_INCLUDE_DIR} )
 target_include_directories(learnSPH PUBLIC ${PROJECT_SOURCE_DIR}/extern ) # So you can include header files under learnSPH/extern
+# target_link_libraries(learnSPH PRIVATE nlohmann_json::nlohmann_json)
