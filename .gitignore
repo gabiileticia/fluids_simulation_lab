@@ -24,6 +24,8 @@ _deps
 log.txt
 dam_break.sh
 slope_to_box.sh
+*.sh
+
 
 ## From the course
 tests/learnSPH_tests

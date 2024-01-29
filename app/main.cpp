@@ -2,6 +2,7 @@
 #include <array>
 #include <chrono>
 #include <cstdint>
+#include <cstdio>
 #include <cstdlib>
 #include <iostream>
 #include <memory>
@@ -162,14 +163,19 @@ int main(int argc, char **argv)
     msg << "c: " << c << "\n";
     msg << "cell width: " << cell_width << "\n";
     // log simsetup settings
-    msg << "delta t default: " << sim_setup.dt_default << "\n";
-    msg << "frame time: " << sim_setup.t_between_frames << "\n";
-    msg << "Rest density: " << sim_setup.B << "\n",
-        msg << "viscosity fluid: " << sim_setup.v_f << "\n";
-    msg << "viscosity boundaries: " << sim_setup.v_b << "\n";
-    msg << "gravity: " << sim_setup.gravity.x() << ", " << sim_setup.gravity.y() << ", "
-        << sim_setup.gravity.z() << "\n";
-    msg << "Sim boundary active: " << (sim_setup.simbound_active ? "yes" : "no") << "\n";
+    msg << "delta t default: " << sim_setup.dt_default << "\n"
+        << "frame time: " << sim_setup.t_between_frames << "\n"
+        << "Rest density: " << sim_setup.B << "\n"
+        << "viscosity fluid: " << sim_setup.v_f << "\n"
+        << "viscosity boundaries: " << sim_setup.v_b << "\n"
+        << "gravity: " << sim_setup.gravity.x() << ", " << sim_setup.gravity.y() << ", "
+        << sim_setup.gravity.z() << "\n"
+        << "Sim boundary active: " << (sim_setup.simbound_active ? "yes" : "no") << "\n";
+
+    if (sim_setup.surface_tension) {
+        msg << "Cohesion value: " << sim_setup.cohesion_coefficient
+            << "\nAdhesion value: " << sim_setup.adhesion_coefficient << "\n";
+    }
 
     // instantiating some classes
     utils::create_simulation_folder(sim_setup.assignment, simulation_timestamp);
@@ -448,8 +454,8 @@ int main(int argc, char **argv)
         }
 
         // checking where the particles get assigned to origin
-        // utils::zeroCheck(particles_positions, "Found zero after deletion step!", zecheck_epsilon);
-        // Increment t
+        // utils::zeroCheck(particles_positions, "Found zero after deletion step!",
+        // zecheck_epsilon); Increment t
         t_simulation += dt;
 
         // Save output
