@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <cstdint>
 #include <ctime>
@@ -60,6 +61,7 @@ int main()
     double h                          = 1.2 * particle_diameter;
     double beta                       = 2.0 * h;
     double epsilon                    = 1e-6;
+    std::vector<std::array<int, 2>> boundaries;
 
     double fluid_volume = 0.0;
     for (int i = 0; i < sim_setup.fluid_begin.size(); ++i) {
@@ -93,7 +95,7 @@ int main()
 
     // Load simulation geometry
     std::vector<Eigen::Vector3d> boundary_particles_positions;
-    geometry::load_n_sample_boundary(boundary_particles_positions, sim_setup.objects,
+    geometry::load_n_sample_boundary(boundary_particles_positions, sim_setup.objects, boundaries,
                                      boundary_sampling_distance);
 
     std::cout << "Number of boundary particles" << std::endl;
