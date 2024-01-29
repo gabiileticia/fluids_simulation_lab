@@ -1,4 +1,5 @@
 #include <Eigen/Dense>
+#include <array>
 #include <cmath>
 #include <iostream>
 #include <math.h>
@@ -11,9 +12,12 @@
 
 void learnSPH::geometry::load_n_sample_boundary(std::vector<Eigen::Vector3d> &output,
                                                 std::vector<types::object> objects,
+                                                std::vector<std::array<int, 2>> &boundaries,
                                                 double boundary_sampling_distance)
 {
     std::vector<Eigen::Vector3d> aux_positions_vector;
+    boundaries.resize(objects.size());
+    
     for (int i = 0; i < objects.size(); ++i) {
         const std::vector<learnSPH::TriMesh> boundary_meshes =
             learnSPH::read_tri_meshes_from_obj(objects[i].filename);
@@ -21,6 +25,13 @@ void learnSPH::geometry::load_n_sample_boundary(std::vector<Eigen::Vector3d> &ou
 
         learnSPH::sampling::triangle_mesh(output, boundary.vertices, boundary.triangles,
                                           boundary_sampling_distance);
+        if (i == 0) {
+            boundaries[i][0] = 0;
+            boundaries[i][1] = output.size();
+        } else {
+            boundaries[i][0] = boundaries[i - 1][1];
+            boundaries[i][1] = output.size();
+        }
     }
 }
 

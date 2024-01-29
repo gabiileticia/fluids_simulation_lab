@@ -639,49 +639,52 @@ void learnSPH::simulations_setup::Simulations::galton_board(){
     // this->fluid_end[0] = Eigen::Vector3d(0.054674, 0.18445, 1.7432);
     // this->fluid_velocities[0] = Eigen::Vector3d({0,0,0});
 
-    this->objects.resize(3);
+    this->objects.resize(4);
 
     this->objects[0].filename = "./res/galton-board-cylinders.obj";
     this->objects[1].filename = "./res/galton-board-front.obj";
     this->objects[2].filename = "./res/galton-board.obj";
+    this->objects[3].filename = "./res/galton-board-door.obj";
     this->objects[0].noCheck = true;
     this->objects[1].noCheck = true;
     this->objects[2].noCheck = true;
+    this->objects[3].noCheck = true;
+    this->objects[3].lifetime = 2;
 
 
     // simulation domain boundary
-    this->sim_boundary_min = Eigen::Vector3d(-0.2,-0.5,0);
+    this->sim_boundary_min = Eigen::Vector3d(-0.12,-0.5,0);
     this->sim_boundary_max = Eigen::Vector3d(0.2,0.5,2);
     this->simbound_active = true;
 
     this->surface_reco_method = 1;  // 0: dense; 1: sparse
-    this->pressure_solver_method = 0;   // 0: wcsph, 1: pbf
+    this->pressure_solver_method = 1;   // 0: wcsph, 1: pbf
     this->n_iterations_pbf = 5;
 
     this->dt_default = 0.0005;
     this->t_between_frames = 0.008;
-    this->B = 1000;
+    this->B = 1000 * 1.02;
     this->v_f = 0.0025;
     this->v_b = 0.0;
     this->gravity = Eigen::Vector3d(0.0, 0.0, -9.81);
     this->assignment = "final/galton_board";
 
     this->emitters.resize(2);
-    this->emitters[0].dir = {0,-1,0};
+    this->emitters[0].dir = {0,-1,-.5};
     this->emitters[0].origin = {0.00157, 0.48307, 1.9};
-    this->emitters[0].r = 0.035;
+    this->emitters[0].r = 0.05;
     this->emitters[0].velocity = 1;
     this->emitters[0].emission_freq = 1;
-    this->emitters[0].emit_counter = 500;   
+    this->emitters[0].emit_counter = 200;   
 
-    this->emitters[1].dir = {0,1,0};
+    this->emitters[1].dir = {0,1,-.5};
     this->emitters[1].origin = {0.00157, -0.48307, 1.9};
-    this->emitters[1].r = 0.035;
+    this->emitters[1].r = 0.05;
     this->emitters[1].velocity = 1;
     this->emitters[1].emission_freq = 1;
-    this->emitters[1].emit_counter = 500;   
+    this->emitters[1].emit_counter = 200;   
 
-    this->surface_tension = false;
+    this->surface_tension = true;
     this->cohesion_coefficient = 0.0; //0.05;
-    this->adhesion_coefficient = 0.0; //0.01;
+    this->adhesion_coefficient = 0.6; //0.01;
 }

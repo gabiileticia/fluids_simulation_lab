@@ -15,6 +15,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdlib.h> // rand
+#include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <vector>
@@ -380,19 +381,20 @@ void learnSPH::utils::create_emitter_shield(const Eigen::Matrix3d &rotationMatri
     const double onethird = 1. / 3.;
     const double twothird = 2. / 3.;
     const double sqrt6    = std::sqrt(6);
-    const double epsilon = 5e-4;
+    const double epsilon  = 5e-4;
 
     for (int k = 0; k < 4; k++) {
         z = z_origin + particleRadius * k * twothird * sqrt6;
-        for (int i = 0; i < 2*l; i++) {
-            for (int j = 0; j < 2*l; j++) {
+        for (int i = 0; i < 2 * l; i++) {
+            for (int j = 0; j < 2 * l; j++) {
                 x = corner + particleRadius * (2 * i + ((j + k) % 2));
                 y = corner + particleRadius * (sqrt3 * (j + onethird * (k % 2)));
                 if ((k == 0) && ((x * x + y * y - squaredShieldRadius) < 0)) {
                     shield_particles.push_back(rotationMatrix * Eigen::Vector3d({x, y, z}) +
                                                emitOrigin);
                     new_part_counter++;
-                } else if ((k!=0) && (std::abs((x * x + y * y - squaredShieldRadius)) < epsilon)) {
+                } else if ((k != 0) &&
+                           (std::abs((x * x + y * y - squaredShieldRadius)) < epsilon)) {
                     shield_particles.push_back(rotationMatrix * Eigen::Vector3d({x, y, z}) +
                                                emitOrigin);
                     new_part_counter++;
@@ -410,4 +412,36 @@ void learnSPH::utils::create_emitter_shield(const Eigen::Matrix3d &rotationMatri
     for (int i = 0; i < new_part_counter; i++) {
         boundaryParticles[old_boundary_size + i] = shield_particles[i];
     }
+}
+
+void learnSPH::utils::zeroCheck(std::vector<Eigen::Vector3d> &particles, std::string msg,
+                                double epsilon)
+{
+    for (int i = 0; i < particles.size(); i++) {
+        if ((particles[i].norm() - 0.0) < epsilon) {
+            std::cout << msg;
+            exit(-1);
+        }
+    }
+}
+
+void learnSPH::utils::checkBoundaryLifetimes(
+    std::vector<Eigen::Vector3d> &boundary_particles, unsigned int &ps_id_boundary,
+    CompactNSearch::NeighborhoodSearch &nsearch,
+    std::vector<std::array<int, 2>> &boundary_particle_info,
+    std::vector<learnSPH::types::object> &object_info, double currentTime)
+{
+    for (int i = 0; i < object_info.size(); i++) {
+        if ((object_info[i].lifetime <= currentTime) && (object_info[i].lifetime != 0)) {
+            boundary_particles.erase(boundary_particles.begin() + boundary_particle_info[i][0],
+                                     boundary_particles.begin() + boundary_particle_info[i][1]);
+                                     
+            boundary_particle_info.erase(boundary_particle_info.begin() + i);
+            object_info.erase(object_info.begin() + i);
+        }
+    }
+    nsearch.resize_point_set(ps_id_boundary, boundary_particles.front().data(),
+                             boundary_particles.size());
+
+    nsearch.find_neighbors();
 }

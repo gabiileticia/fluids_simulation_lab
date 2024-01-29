@@ -13,6 +13,7 @@ struct object
     bool noCheck; // activate only if its a rectangular volume
     Eigen::Vector3d min;
     Eigen::Vector3d max;
+    double lifetime = 0;
 };
 typedef double (*ImplicitSurface)(Eigen::Vector3d position, void *args);
 struct emitter_data

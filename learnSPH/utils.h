@@ -45,6 +45,14 @@ void create_emitter_shield(const Eigen::Matrix3d &rotationMatrix, const Eigen::V
                            const double emitRadius, std::vector<Eigen::Vector3d> &boundaryParticles,
                            const double particlesRadius, unsigned int &point_set_id_boundary,
                            CompactNSearch::NeighborhoodSearch &nsearch);
+void zeroCheck(std::vector<Eigen::Vector3d> &particles, std::string msg, double epsilon);
+
+void checkBoundaryLifetimes(std::vector<Eigen::Vector3d> &boundary_particles,
+                            unsigned int &ps_id_boundary,
+                            CompactNSearch::NeighborhoodSearch &nsearch,
+                            std::vector<std::array<int, 2>> &boundary_info,
+                            std::vector<learnSPH::types::object> &object_info,
+                            double currentTime);
 } // namespace utils
 } // namespace learnSPH
 
