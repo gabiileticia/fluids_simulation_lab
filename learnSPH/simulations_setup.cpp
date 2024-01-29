@@ -157,7 +157,7 @@ void learnSPH::simulations_setup::Simulations::gravity_with_floor_boundary_visco
 void learnSPH::simulations_setup::Simulations::dam_break()
 {
     this->particle_radius = 0.005;
-    this->fluid_rest_density = 1000.0;
+    this->fluid_rest_density = 1000.0 * 1.02;
 
     this->fluid_begin.resize(1);
     this->fluid_end.resize(1);
@@ -177,8 +177,8 @@ void learnSPH::simulations_setup::Simulations::dam_break()
     this->sim_boundary_max = this->objects[0].max;
     this->simbound_active = true;
 
-    this->surface_reco_method = 1;  // 0: dense; 1: sparse
-    this->pressure_solver_method = 1;   // 0: wcsph, 1: pbf
+    this->surface_reco_method = 0;  // 0: dense; 1: sparse
+    this->pressure_solver_method = 0;   // 0: wcsph, 1: pbf
     this->n_iterations_pbf = 5;
 
     this->dt_default = 0.00025;
@@ -187,7 +187,11 @@ void learnSPH::simulations_setup::Simulations::dam_break()
     this->v_f = 0.0025;
     this->v_b = 0.0;
     this->gravity = Eigen::Vector3d(0.0, 0.0, -9.81);
-    this->assignment = "assignment4/dam_break";
+    this->assignment = "final/dam_break";
+
+    this->surface_tension = false;
+
+    this->simTime = 10;
 }
 
 void learnSPH::simulations_setup::Simulations::our_simulation_scene(){
@@ -685,6 +689,6 @@ void learnSPH::simulations_setup::Simulations::galton_board(){
     this->emitters[1].emit_counter = 200;   
 
     this->surface_tension = true;
-    this->cohesion_coefficient = 0.0; //0.05;
-    this->adhesion_coefficient = 0.6; //0.01;
+    this->cohesion_coefficient = 0.05; //0.05;
+    this->adhesion_coefficient = 3; //0.01;
 }
