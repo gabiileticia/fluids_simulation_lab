@@ -288,7 +288,7 @@ int main(int argc, char **argv)
         if (boundary_size > boundary_particles_positions.size()) {
             std::string boundary_file_new = "./res/" + sim_setup.assignment + "/" +
                                             simulation_timestamp + "/boundary_particles.vtk";
-            write_particles_to_vtk(boundary_file_new, boundary_particles_positions);
+            //write_particles_to_vtk(boundary_file_new, boundary_particles_positions);
             std::ostringstream b_change;
             b_change << "Removed boundary elements\n"
                      << "Old size: " << boundary_size
@@ -301,12 +301,11 @@ int main(int argc, char **argv)
                     (hcp_z * sim_setup.emitters[i].emission_freq) &&
                 emitters[i].emit_counter > 0) {
                 emitters[i].emit_particles_alternating(t_simulation, i);
-                nsearch.find_neighbors();
             }
         }
 
         if (particles_positions.size() > 0) {
-
+            nsearch.find_neighbors();
             // Compute dt
             dt_cfl = 0.5 * sim_setup.particle_radius *
                      (1 / std::min(100.0, std::sqrt(semImpEuler.v_max)));

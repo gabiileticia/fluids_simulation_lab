@@ -359,7 +359,7 @@ void learnSPH::simulations_setup::Simulations::simple_emitter_test(){
 
 void learnSPH::simulations_setup::Simulations::fountain(){
     this->particle_radius = 0.005;
-    this->fluid_rest_density = 1000.0;
+    this->fluid_rest_density = 1000.0 * 1.02;
 
     this->fluid_begin.resize(0);
     this->fluid_end.resize(0);
@@ -376,9 +376,9 @@ void learnSPH::simulations_setup::Simulations::fountain(){
 
     this->surface_reco_method = 1;  // 0: dense; 1: sparse
     this->pressure_solver_method = 1;   // 0: wcsph, 1: pbf
-    this->n_iterations_pbf = 10;
+    this->n_iterations_pbf = 5;
 
-    this->dt_default = 0.00025;
+    this->dt_default = 0.0005;
     this->t_between_frames = 0.008;
     this->B = 1000 * 1.02;
     this->v_f = 0.0025;
@@ -394,6 +394,10 @@ void learnSPH::simulations_setup::Simulations::fountain(){
     this->emitters[0].alternating = true;
     this->emitters[0].emission_freq = 1;
     this->emitters[0].emit_counter = 2000;
+
+    this->surface_tension = true;
+    this->cohesion_coefficient = 0.05;
+    this->adhesion_coefficient = 0.6;
 }
 
 void learnSPH::simulations_setup::Simulations::water_droplet_no_gravity(){
@@ -632,7 +636,7 @@ void learnSPH::simulations_setup::Simulations::boundary_wetting_cohesion_and_adh
 
 
 void learnSPH::simulations_setup::Simulations::galton_board(){
-    this->particle_radius = 0.005;
+    this->particle_radius = 0.00329;
     this->fluid_rest_density = 1000.0 * 1.02;
 
     this->fluid_begin.resize(0);
@@ -645,7 +649,7 @@ void learnSPH::simulations_setup::Simulations::galton_board(){
 
     this->objects.resize(4);
 
-    this->objects[0].filename = "./res/galton-board-cylinders.obj";
+    this->objects[0].filename = "./res/galton-board-cylinders2.obj";
     this->objects[1].filename = "./res/galton-board-front.obj";
     this->objects[2].filename = "./res/galton-board.obj";
     this->objects[3].filename = "./res/galton-board-door.obj";
@@ -665,7 +669,7 @@ void learnSPH::simulations_setup::Simulations::galton_board(){
     this->pressure_solver_method = 1;   // 0: wcsph, 1: pbf
     this->n_iterations_pbf = 5;
 
-    this->dt_default = 0.0005;
+    this->dt_default = 0.001;
     this->t_between_frames = 0.008;
     this->B = 1000 * 1.02;
     this->v_f = 0.0025;
@@ -690,5 +694,5 @@ void learnSPH::simulations_setup::Simulations::galton_board(){
 
     this->surface_tension = true;
     this->cohesion_coefficient = 0.05; //0.05;
-    this->adhesion_coefficient = 3; //0.01;
+    this->adhesion_coefficient = 0.6; //0.01;
 }
