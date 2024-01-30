@@ -177,7 +177,7 @@ void learnSPH::simulations_setup::Simulations::dam_break()
     this->sim_boundary_max = this->objects[0].max;
     this->simbound_active = true;
 
-    this->surface_reco_method = 0;  // 0: dense; 1: sparse
+    this->surface_reco_method = 1;  // 0: dense; 1: sparse
     this->pressure_solver_method = 0;   // 0: wcsph, 1: pbf
     this->n_iterations_pbf = 5;
 
@@ -190,8 +190,8 @@ void learnSPH::simulations_setup::Simulations::dam_break()
     this->assignment = "final/dam_break";
 
     this->surface_tension = false;
-
-    this->simTime = 10;
+    this->sampleMassbyFluid = true;
+    this->simTime = 7;
 }
 
 void learnSPH::simulations_setup::Simulations::our_simulation_scene(){

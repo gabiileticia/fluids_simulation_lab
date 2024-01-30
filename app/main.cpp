@@ -119,9 +119,6 @@ int main(int argc, char **argv)
     double epsilon                    = 1e-6;
     double zecheck_epsilon            = 1e-3;
 
-    double fluid_particle_mass =
-        learnSPH::utils::particle_mass(sim_setup.fluid_rest_density, fluid_sampling_distance);
-
     using namespace learnSPH;
 
     std::ostringstream msg;
@@ -162,6 +159,7 @@ int main(int argc, char **argv)
 
     msg << "c: " << c << "\n";
     msg << "cell width: " << cell_width << "\n";
+    msg << "particle radius: " << sim_setup.particle_radius << "\n";
     // log simsetup settings
     msg << "delta t default: " << sim_setup.dt_default << "\n"
         << "frame time: " << sim_setup.t_between_frames << "\n"
@@ -208,6 +206,18 @@ int main(int argc, char **argv)
                                    sim_setup.fluid_end, fluid_sampling_distance,
                                    sim_setup.fluid_velocities);
 
+    double fluid_particle_mass;
+
+    if (sim_setup.sampleMassbyFluid) {
+        double fluid_volume = (sim_setup.fluid_end[0].x() - sim_setup.fluid_begin[0].x()) *
+                              (sim_setup.fluid_end[0].y() - sim_setup.fluid_begin[0].y()) *
+                              (sim_setup.fluid_end[0].z() - sim_setup.fluid_begin[0].z());
+
+        fluid_particle_mass = fluid_volume * sim_setup.fluid_rest_density / particles_positions.size();
+    } else {
+        fluid_particle_mass =
+            learnSPH::utils::particle_mass(sim_setup.fluid_rest_density, fluid_sampling_distance);
+    }
     msg << "Number of fluid particles"
         << "\n";
     msg << particles_positions.size() << "\n";
@@ -288,7 +298,7 @@ int main(int argc, char **argv)
         if (boundary_size > boundary_particles_positions.size()) {
             std::string boundary_file_new = "./res/" + sim_setup.assignment + "/" +
                                             simulation_timestamp + "/boundary_particles.vtk";
-            //write_particles_to_vtk(boundary_file_new, boundary_particles_positions);
+            // write_particles_to_vtk(boundary_file_new, boundary_particles_positions);
             std::ostringstream b_change;
             b_change << "Removed boundary elements\n"
                      << "Old size: " << boundary_size

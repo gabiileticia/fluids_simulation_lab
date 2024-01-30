@@ -33,6 +33,7 @@ namespace learnSPH {
             Eigen::Vector3d gravity;
             std::string assignment;
             bool simbound_active;
+            bool sampleMassbyFluid = false;
             Eigen::Vector3d sim_boundary_min;
             Eigen::Vector3d sim_boundary_max;
 
