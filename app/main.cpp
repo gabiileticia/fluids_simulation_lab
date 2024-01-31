@@ -98,6 +98,9 @@ int main(int argc, char **argv)
     case 17:
         sim_setup.fountain();
         break;
+    case 18:
+        sim_setup.adhesion_table();
+        break;
     default:
         std::cout << "Selected undefined function index. Closing program.";
         exit(-1);
