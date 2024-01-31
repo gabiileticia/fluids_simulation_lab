@@ -217,6 +217,8 @@ int main()
                           cell_width +
                       1;
 
+            nsearch.find_neighbors();
+
             learnSPH::densities::compute_fluid_density_surface_reco(
                 fluid_densities_for_surface_reco, particles_positions, point_set_id_fluid, ps_fluid,
                 cubic_kernel);
@@ -331,7 +333,8 @@ int main()
                           << std::endl;
                 count_del_it_sum = 0;
             }
-            utils::updateProgressBar(stepCounter, maxSteps, 75);
+            auto progress_msg = utils::updateProgressBar(stepCounter, maxSteps, 75);
+            std::cout << progress_msg.str();
         }
     }
     return 0;
