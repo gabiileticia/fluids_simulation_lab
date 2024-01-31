@@ -213,7 +213,8 @@ int main(int argc, char **argv)
                               (sim_setup.fluid_end[0].y() - sim_setup.fluid_begin[0].y()) *
                               (sim_setup.fluid_end[0].z() - sim_setup.fluid_begin[0].z());
 
-        fluid_particle_mass = fluid_volume * sim_setup.fluid_rest_density / particles_positions.size();
+        fluid_particle_mass =
+            fluid_volume * sim_setup.fluid_rest_density / particles_positions.size();
     } else {
         fluid_particle_mass =
             learnSPH::utils::particle_mass(sim_setup.fluid_rest_density, fluid_sampling_distance);
@@ -260,10 +261,12 @@ int main(int argc, char **argv)
                 particles_pressure, deleteFlag, point_set_id_fluid, nsearch);
             emitters.push_back(em);
 
-            learnSPH::utils::create_emitter_shield(
-                em.rotation_matrix, sim_setup.emitters[i].origin, sim_setup.emitters[i].r,
-                boundary_particles_positions, sim_setup.particle_radius, point_set_id_boundary,
-                nsearch);
+            if (sim_setup.emitter_shield) {
+                learnSPH::utils::create_emitter_shield(
+                    em.rotation_matrix, sim_setup.emitters[i].origin, sim_setup.emitters[i].r,
+                    boundary_particles_positions, sim_setup.particle_radius, point_set_id_boundary,
+                    nsearch);
+            }
         }
 
     nsearch.find_neighbors();

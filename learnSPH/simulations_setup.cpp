@@ -694,5 +694,50 @@ void learnSPH::simulations_setup::Simulations::galton_board(){
 
     this->surface_tension = true;
     this->cohesion_coefficient = 0.05; //0.05;
-    this->adhesion_coefficient = 0.6; //0.01;
+    this->adhesion_coefficient = 1; //0.01;
+}
+
+void learnSPH::simulations_setup::Simulations::adhesion_table(){
+
+    this->particle_radius = 0.0005;
+    this->fluid_rest_density = 1000.0 * 1.02;
+
+    this->fluid_begin.resize(0);
+    this->fluid_velocities.resize(0);
+    this->fluid_end.resize(0);
+
+    this->objects.resize(1);
+
+    this->objects[0].filename = "./res/adhesion_table.obj";
+    this->objects[0].noCheck = true;
+
+    this->simbound_active = true;
+    this->sim_boundary_min = Eigen::Vector3d(-0.5, -0.5, 0);
+    this->sim_boundary_max = Eigen::Vector3d(1.5, 1.5, 2);
+
+    this->surface_reco_method = 1;
+    this->pressure_solver_method = 1;
+    this->n_iterations_pbf = 5;
+
+    this->dt_default = 0.001;
+    this->t_between_frames = 0.008;
+    this->B = 1000 * 1.02;
+    this->v_f = 0.0025;
+    this->v_b = 0.0;
+    this->gravity = Eigen::Vector3d(0,0,-9.81);
+    this->assignment = "final/adhesion_table"
+
+    this->emitters.resize(1);
+    this->emitters[0].dir = {0,0,-1};
+    this->emitters[0].origin = {0,0,1.5};
+    this->emitters[0].r = 0.15;
+    this->emitters[0].velocity = 1;
+    this->emitters[0].emission_freq = 1;
+    this->emitters[0].emit_counter = 50;
+
+    this.surface_tension = true;
+    this->cohesion_coefficient = 0.05;
+    this->adhesion_coefficient = 1;
+
+    this->emitter_shield = false;
 }

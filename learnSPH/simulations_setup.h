@@ -46,6 +46,8 @@ namespace learnSPH {
             double cohesion_coefficient;
             double adhesion_coefficient;
 
+            bool emitter_shield = true;
+
             Simulations();
 
             void simple_cube();
@@ -67,6 +69,7 @@ namespace learnSPH {
             void boundary_wetting_only_cohesion();
             void galton_board();
             void fountain();
+            void adhesion_table();
 
         };
     }
