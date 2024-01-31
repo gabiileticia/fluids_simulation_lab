@@ -179,19 +179,36 @@ int main(int argc, char **argv)
     }
 
     // instantiating some classes
+    std::string init_msgs;
+    init_msgs = "Creating sim folder...\n";
+    std::cout << init_msgs;
     utils::create_simulation_folder(sim_setup.assignment, simulation_timestamp);
-
     const std::string log_file =
         "./res/" + sim_setup.assignment + "/" + simulation_timestamp + "/log.txt";
+    utils::logMessage(init_msgs, log_file);
 
+    init_msgs = "Setting up kernel function class...\n";
+    std::cout << init_msgs;
+    utils::logMessage(init_msgs, log_file);
     kernel::CubicSplineKernel cubic_kernel(h, beta);
+
+    init_msgs = "Settings up acceleration function class...\n";
+    std::cout << init_msgs;
+    utils::logMessage(init_msgs, log_file);
     acceleration::Acceleration acceleration(sim_setup.B, sim_setup.v_f, sim_setup.v_b, h,
                                             sim_setup.fluid_rest_density, sim_setup.gravity,
                                             cubic_kernel);
+
+    init_msgs = "Setting up time integration function class..\n";
+    std::cout << init_msgs;
+    utils::logMessage(init_msgs, log_file);
     timeIntegration::semiImplicitEuler semImpEuler(
         sim_setup.particle_radius, sim_setup.objects,
         {sim_setup.sim_boundary_min, sim_setup.sim_boundary_max});
 
+    init_msgs = "Setting up boundary geometry...\n";
+    std::cout << init_msgs;
+    utils::logMessage(init_msgs, log_file);
     // Load simulation geometry
     std::vector<Eigen::Vector3d> boundary_particles_positions;
     geometry::load_n_sample_boundary(boundary_particles_positions, sim_setup.objects, boundaries,
@@ -205,12 +222,20 @@ int main(int argc, char **argv)
     std::vector<Eigen::Vector3d> particles_positions;
     std::vector<Eigen::Vector3d> particles_velocities;
 
+    if (sim_setup.fluid_begin.size() > 0) {
+        init_msgs = "Settings up preset fluid particles...\n";
+        std::cout << init_msgs;
+        utils::logMessage(init_msgs, log_file);
+    }
     geometry::load_n_sample_fluids(particles_positions, particles_velocities, sim_setup.fluid_begin,
                                    sim_setup.fluid_end, fluid_sampling_distance,
                                    sim_setup.fluid_velocities);
 
     double fluid_particle_mass;
 
+    init_msgs = "Calculating fluid particles mass...\n";
+    std::cout << init_msgs;
+    utils::logMessage(init_msgs, log_file);
     if (sim_setup.sampleMassbyFluid) {
         double fluid_volume = (sim_setup.fluid_end[0].x() - sim_setup.fluid_begin[0].x()) *
                               (sim_setup.fluid_end[0].y() - sim_setup.fluid_begin[0].y()) *
@@ -232,6 +257,9 @@ int main(int argc, char **argv)
     std::vector<Eigen::Vector3d> particles_accelerations(particles_positions.size());
     std::vector<double> particles_pressure(particles_positions.size());
 
+    init_msgs = "Setting up neighborhood search...\n";
+    std::cout << init_msgs;
+    utils::logMessage(init_msgs, log_file);
     // Setting up neighborhood search
     CompactNSearch::NeighborhoodSearch nsearch(beta);
     unsigned int point_set_id_boundary = nsearch.add_point_set(
@@ -253,6 +281,9 @@ int main(int argc, char **argv)
     std::vector<std::array<int, 3>> emit_mark;
     std::vector<bool> deleteFlag(particles_positions.size());
 
+    init_msgs = "Setting up emitter...\n";
+    std::cout << init_msgs;
+    utils::logMessage(init_msgs, log_file);
     // setting up emitters if defined in simsetup
     if (sim_setup.emitters.size() > 0)
         for (int i = 0; i < sim_setup.emitters.size(); i++) {
@@ -274,6 +305,9 @@ int main(int argc, char **argv)
 
     nsearch.find_neighbors();
 
+    init_msgs = "Computing boundary particles masses...\n";
+    std::cout << init_msgs;
+    utils::logMessage(init_msgs, log_file);
     // Compute boundary masses
     std::vector<double> boundary_particles_masses(boundary_particles_positions.size());
     densities::compute_boundary_masses(boundary_particles_masses, boundary_particles_positions,
@@ -370,7 +404,7 @@ int main(int argc, char **argv)
                     point_set_id_fluid, ps_fluid, point_set_id_boundary, boundary_particles_masses);
 
                 for (int j = 0; j < particles_accelerations.size(); j++) {
-                    particles_accelerations[j] += surface_tension_forces[j];
+                    particles_accelerations[j] += surface_tension_forces[j] / fluid_particle_mass;
                 }
             }
 
