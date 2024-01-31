@@ -98,8 +98,14 @@ int main(int argc, char **argv)
     case 17:
         sim_setup.fountain();
         break;
-    case 18:
+    case 20:
         sim_setup.adhesion_table();
+        break;
+    case 18:
+        sim_setup.fountain_with_path();
+        break;
+    case 19:
+        sim_setup.multiple_fountains_with_path();
         break;
     default:
         std::cout << "Selected undefined function index. Closing program.";
@@ -252,6 +258,9 @@ int main(int argc, char **argv)
     msg << particles_positions.size() << "\n";
 
     msg << "fluid particles mass: " << fluid_particle_mass << "\n";
+    sim_setup.fluid_rest_density = sim_setup.fluid_rest_density * 1.02;
+
+    msg << "Rest density after sampling: " << sim_setup.fluid_rest_density << "\n";
 
     std::vector<double> particles_densities(particles_positions.size());
     std::vector<Eigen::Vector3d> particles_accelerations(particles_positions.size());
@@ -354,11 +363,12 @@ int main(int argc, char **argv)
             }
         }
 
+
         if (particles_positions.size() > 0) {
             nsearch.find_neighbors();
             // Compute dt
             dt_cfl = 0.5 * sim_setup.particle_radius *
-                     (1 / std::min(100.0, std::sqrt(semImpEuler.v_max)));
+                     (1 / std::min(80.0, std::sqrt(semImpEuler.v_max)));
             dt = std::min(dt_cfl, sim_setup.dt_default);
 
             // Compute fluid particles densities
@@ -500,6 +510,7 @@ int main(int argc, char **argv)
                                                particles_pressure, deleteFlag, count_del);
             nsearch.resize_point_set(point_set_id_fluid, particles_positions.front().data(),
                                      particles_positions.size());
+                                     
         }
 
         // checking where the particles get assigned to origin
@@ -581,7 +592,8 @@ int main(int argc, char **argv)
             // std::cout << fluidinfo.str();
             auto progress_msg = utils::updateProgressBar(stepCounter, maxSteps, 75);
             std::cout << progress_msg.str() << "\n";
-            utils::logMessage(progress_msg.str(), log_file);
+            utils::logMessage(progress_msg.str() + "; " + std::to_string(particles_positions.size()), log_file);
+            
         }
     }
     return 0;

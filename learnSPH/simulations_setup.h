@@ -70,6 +70,8 @@ namespace learnSPH {
             void galton_board();
             void fountain();
             void adhesion_table();
+            void fountain_with_path();
+            void multiple_fountains_with_path();
 
         };
     }
