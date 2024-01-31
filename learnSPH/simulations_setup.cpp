@@ -634,9 +634,8 @@ void learnSPH::simulations_setup::Simulations::boundary_wetting_cohesion_and_adh
     this->adhesion_coefficient = 0.1; //0.01;
 }
 
-
 void learnSPH::simulations_setup::Simulations::galton_board(){
-    this->particle_radius = 0.00329;
+    this->particle_radius = 0.005;
     this->fluid_rest_density = 1000.0 * 1.02;
 
     this->fluid_begin.resize(0);
@@ -649,7 +648,7 @@ void learnSPH::simulations_setup::Simulations::galton_board(){
 
     this->objects.resize(4);
 
-    this->objects[0].filename = "./res/galton-board-cylinders2.obj";
+    this->objects[0].filename = "./res/galton-board-cylinders.obj";
     this->objects[1].filename = "./res/galton-board-front.obj";
     this->objects[2].filename = "./res/galton-board.obj";
     this->objects[3].filename = "./res/galton-board-door.obj";
@@ -658,7 +657,6 @@ void learnSPH::simulations_setup::Simulations::galton_board(){
     this->objects[2].noCheck = true;
     this->objects[3].noCheck = true;
     this->objects[3].lifetime = 2;
-
 
     // simulation domain boundary
     this->sim_boundary_min = Eigen::Vector3d(-0.12,-0.5,0);
@@ -669,7 +667,7 @@ void learnSPH::simulations_setup::Simulations::galton_board(){
     this->pressure_solver_method = 1;   // 0: wcsph, 1: pbf
     this->n_iterations_pbf = 5;
 
-    this->dt_default = 0.001;
+    this->dt_default = 0.00025;
     this->t_between_frames = 0.008;
     this->B = 1000 * 1.02;
     this->v_f = 0.0025;
@@ -692,9 +690,11 @@ void learnSPH::simulations_setup::Simulations::galton_board(){
     this->emitters[1].emission_freq = 1;
     this->emitters[1].emit_counter = 200;   
 
+    this->emitter_shield = false;
+
     this->surface_tension = true;
-    this->cohesion_coefficient = 0.05; //0.05;
-    this->adhesion_coefficient = 1; //0.01;
+    this->cohesion_coefficient = 0.0; //0.05;
+    this->adhesion_coefficient = 0.01; //0.01;
 }
 
 void learnSPH::simulations_setup::Simulations::adhesion_table(){
@@ -855,4 +855,46 @@ void learnSPH::simulations_setup::Simulations::multiple_fountains_with_path(){
     this->sim_boundary_min = this->objects[0].min;
     this->sim_boundary_max = this->objects[0].max;
     this->simbound_active = true;
+}
+
+void learnSPH::simulations_setup::Simulations::dam_overspill(){
+    this->particle_radius = 0.005;
+    this->fluid_rest_density = 1000.0 * 1.02;
+
+    this->fluid_begin.resize(0);
+    this->fluid_end.resize(0);
+    this->fluid_velocities.resize(0);
+
+    this->objects.resize(1);
+    this->objects[0].filename = "./res/dam_spill.obj";
+    this->objects[0].noCheck = true;
+
+    // simulation domain boundary
+    this->sim_boundary_min = Eigen::Vector3d(-0.55,-2.6,-0.6);
+    this->sim_boundary_max = Eigen::Vector3d(.55, 2.5, 1);
+    this->simbound_active = true;
+
+    this->surface_reco_method = 1;  // 0: dense; 1: sparse
+    this->pressure_solver_method = 1;   // 0: wcsph, 1: pbf
+    this->n_iterations_pbf = 5;
+
+    this->dt_default = 0.001;
+    this->t_between_frames = 0.008;
+    this->B = 1000 * 1.02;
+    this->v_f = 0.0025;
+    this->v_b = 0;
+    this->gravity = Eigen::Vector3d(0.0, 0.0, -9.81);
+    this->assignment = "final/dam_overspill";
+
+    this->emitters.resize(1);
+    this->emitters[0].dir = {0,1,0};
+    this->emitters[0].origin = {0,-2.5,0.8};
+    this->emitters[0].r = 0.01;
+    this->emitters[0].velocity = 2.5;
+    this->emitters[0].alternating = true;
+    this->emitters[0].emission_freq = .5;
+
+    this->surface_tension = true;
+    this->cohesion_coefficient = 0.05;
+    this->adhesion_coefficient = 0.6;
 }
