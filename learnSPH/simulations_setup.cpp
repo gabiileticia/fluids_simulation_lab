@@ -870,8 +870,8 @@ void learnSPH::simulations_setup::Simulations::dam_overspill(){
     this->objects[0].noCheck = true;
 
     // simulation domain boundary
-    this->sim_boundary_min = Eigen::Vector3d(-0.55,-2.6,-0.6);
-    this->sim_boundary_max = Eigen::Vector3d(.55, 2.5, 1);
+    this->sim_boundary_min = Eigen::Vector3d(0,-2,0);
+    this->sim_boundary_max = Eigen::Vector3d(1, 3, 1.4);
     this->simbound_active = true;
 
     this->surface_reco_method = 1;  // 0: dense; 1: sparse
@@ -888,13 +888,14 @@ void learnSPH::simulations_setup::Simulations::dam_overspill(){
 
     this->emitters.resize(1);
     this->emitters[0].dir = {0,1,0};
-    this->emitters[0].origin = {0,-2.5,0.8};
-    this->emitters[0].r = 0.01;
-    this->emitters[0].velocity = 2.5;
+    this->emitters[0].origin = {.5,-2, 1.3};
+    this->emitters[0].r = 0.05;
+    this->emitters[0].velocity = .5;
     this->emitters[0].alternating = true;
-    this->emitters[0].emission_freq = .5;
+    this->emitters[0].emission_freq = 1;
+    this->emitter_shield = false;
 
     this->surface_tension = true;
-    this->cohesion_coefficient = 0.05;
+    this->cohesion_coefficient = 0.01;
     this->adhesion_coefficient = 0.6;
 }
