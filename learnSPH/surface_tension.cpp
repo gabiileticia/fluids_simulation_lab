@@ -17,15 +17,14 @@ void learnSPH::surface_tension::compute_forces(
                             std::vector<double> boundary_mass)
 {
 
-    Eigen::Vector3d ff_cohesion, ff_curvature, surface_tension_sum, ff_adhesion; 
+    Eigen::Vector3d ff_cohesion, ff_adhesion, ff_curvature, surface_tension_sum, sum_ff_adhesion; 
     double k_ij;
 
     surface_tension_forces.resize(particles_densities.size());
     for (int i = 0; i < ps_fluid.n_points(); ++i) {
 
         surface_tension_sum = {0,0,0};
-        ff_adhesion = {0,0,0};
-        int a =0;
+        sum_ff_adhesion = {0,0,0};
 
         // Get fluid neighbors of fluid point set.
         for (size_t j = 0; j < ps_fluid.n_neighbors(point_set_id_fluid, i); ++j) {
@@ -45,13 +44,14 @@ void learnSPH::surface_tension::compute_forces(
         for (size_t j = 0; j < ps_fluid.n_neighbors(point_set_id_boundary, i); ++j) {
             const unsigned int pid = ps_fluid.neighbor(point_set_id_boundary, i, j);
 
-            ff_adhesion -= adhesion_coefficient * fluid_mass * boundary_mass[pid] 
+            ff_adhesion = - adhesion_coefficient * boundary_mass[pid] 
                 * cubic_kernel.adhesion_kernel_function((particles[i] - boundary_particles[pid]).norm())
                 * (particles[i] - boundary_particles[pid])
                 / (particles[i] - boundary_particles[pid]).norm();
+            sum_ff_adhesion += ff_adhesion;
         }
 
-        surface_tension_forces[i] = surface_tension_sum + ff_adhesion;
+        surface_tension_forces[i] = surface_tension_sum + sum_ff_adhesion;
     }
 
 }
