@@ -18,9 +18,9 @@ learnSPH::timeIntegration::semiImplicitEuler::semiImplicitEuler(
     this->v_max  = 0;
     if (simBoundary.size() > 0) {
         this->simBoundary_min = simBoundary[0];
-        std::cout << "t_integ sim min: " << this->simBoundary_min << "\n";
+        //std::cout << "t_integ sim min: " << this->simBoundary_min << "\n";
         this->simBoundary_max = simBoundary[1];
-        std::cout << "t_integ sim max: " << this->simBoundary_max << "\n";
+        //std::cout << "t_integ sim max: " << this->simBoundary_max << "\n";
         this->boundary_checking = true;
     } else {
         this->boundary_checking = false;
