@@ -129,7 +129,6 @@ int main(int argc, char **argv)
     double h                          = 1.2 * particle_diameter;
     double beta                       = 2.0 * h;
     double epsilon                    = 1e-6;
-    double zecheck_epsilon            = 1e-3;
 
     using namespace learnSPH;
 
