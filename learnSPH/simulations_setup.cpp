@@ -886,13 +886,29 @@ void learnSPH::simulations_setup::Simulations::dam_overspill(){
     this->gravity = Eigen::Vector3d(0.0, 0.0, -9.81);
     this->assignment = "final/dam_overspill";
 
-    this->emitters.resize(1);
+    this->emitters.resize(3);
+
     this->emitters[0].dir = {0,1,0};
-    this->emitters[0].origin = {.5,-2, 1.3};
+    this->emitters[0].origin = {.25,-2, 1.3};
     this->emitters[0].r = 0.05;
     this->emitters[0].velocity = .5;
     this->emitters[0].alternating = true;
     this->emitters[0].emission_freq = 1;
+
+    this->emitters[1].dir = {0,1,0};
+    this->emitters[1].origin = {.5,-2, 1.3};
+    this->emitters[1].r = 0.05;
+    this->emitters[1].velocity = .5;
+    this->emitters[1].alternating = true;
+    this->emitters[1].emission_freq = 1;
+
+    this->emitters[2].dir = {0,1,0};
+    this->emitters[2].origin = {.75,-2, 1.3};
+    this->emitters[2].r = 0.05;
+    this->emitters[2].velocity = .5;
+    this->emitters[2].alternating = true;
+    this->emitters[2].emission_freq = 1;
+
     this->emitter_shield = false;
 
     this->surface_tension = true;
