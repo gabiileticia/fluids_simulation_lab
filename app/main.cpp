@@ -239,7 +239,6 @@ int main(int argc, char **argv)
     geometry::load_n_sample_fluids(particles_positions, particles_velocities, sim_setup.fluid_begin,
                                    sim_setup.fluid_end, fluid_sampling_distance,
                                    sim_setup.fluid_velocities);
-
     double fluid_particle_mass;
 
     init_msgs = "Calculating fluid particles mass...\n";
@@ -398,10 +397,6 @@ int main(int argc, char **argv)
                 last_particles_positions = particles_positions;
             }
 
-            // checking where the particles get assigned to origin
-            // utils::zeroCheck(particles_positions, "Found zero before adhesion+cohesion step!",
-            //                  zecheck_epsilon);
-
             // Surface tension
             if (sim_setup.surface_tension) {
                 learnSPH::surface_tension::compute_smoothed_color_field(
@@ -434,20 +429,10 @@ int main(int argc, char **argv)
                 }
             }
 
-            // checking where the particles get assigned to origin
-            // utils::zeroCheck(
-            //     particles_positions,
-            //     "Found zero after cohesion+adhesion and before euler integration step!",
-            //     zecheck_epsilon);
-
             // Integrate
             semImpEuler.integrationStep(particles_positions, particles_velocities,
                                         particles_accelerations, deleteFlag, dt, count_del,
                                         min_fluid_reco, max_fluid_reco);
-
-            // checking where the particles get assigned to origin
-            // utils::zeroCheck(particles_positions, "Found zero after euler integration step!",
-            //                  zecheck_epsilon);
 
             emit_particle_pos_backup = particles_positions;
 
@@ -483,21 +468,12 @@ int main(int argc, char **argv)
                 learnSPH::pbf::update_velocities(particles_positions, last_particles_positions,
                                                  particles_velocities, dt);
 
-                // checking where the particles get assigned to origin
-                // utils::zeroCheck(particles_positions, "Found zero after pbf integration step!",
-                //                  zecheck_epsilon);
-
                 for (int i = 0; i < emit_mark.size(); i++) {
                     for (int j = emit_mark[i][0]; j < emit_mark[i][1]; j++) {
                         particles_accelerations[j] = {0, 0, 0};
                         particles_positions[j]     = emit_particle_pos_backup[j];
                     }
                 }
-
-                // checking where the particles get assigned to origin
-                // utils::zeroCheck(particles_positions,
-                //                  "Found zero after pbf integration and emitter reset!",
-                //                  zecheck_epsilon);
             }
 
         } else {
@@ -514,9 +490,6 @@ int main(int argc, char **argv)
                                      particles_positions.size());
         }
 
-        // checking where the particles get assigned to origin
-        // utils::zeroCheck(particles_positions, "Found zero after deletion step!",
-        // zecheck_epsilon); Increment t
         t_simulation += dt;
 
         // Save output
@@ -547,10 +520,6 @@ int main(int argc, char **argv)
                 fluid_densities_for_surface_reco, particles_positions, point_set_id_fluid, ps_fluid,
                 cubic_kernel);
 
-            // checking where the particles get assigned to origin
-            // utils::zeroCheck(particles_positions, "Found zero after recon-density step!",
-            //                  zecheck_epsilon);
-
             learnSPH::theta_functions::FluidThetaFunction fluidSDF(cubic_kernel, c, cell_width,
                                                                    beta, nx + 1, ny + 1, nz + 1);
             learnSPH::surface::MarchingCubes mcubes(cell_width, nx, ny, nz,
@@ -569,10 +538,6 @@ int main(int argc, char **argv)
                                          min_fluid_reco - bborder);
                 mcubes.get_Isosurface_sparse(level_map);
             }
-
-            // checking where the particles get assigned to origin
-            // utils::zeroCheck(particles_positions, "Found zero after isosurface step!",
-            //                  zecheck_epsilon);
 
             mcubes.compute_normals();
             write_tri_mesh_to_vtk(mesh_filename, mcubes.intersections, mcubes.triangles,
