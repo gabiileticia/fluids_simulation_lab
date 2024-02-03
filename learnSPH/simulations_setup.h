@@ -1,7 +1,9 @@
-#include <Eigen/Dense>
+// #include <Eigen/Dense>
 #include <vector>
 
+#include <Eigen/Dense>
 #include "types.h"
+#include "../learnSPH/emitter.h"
 
 
 #ifndef SIMULATION
@@ -20,17 +22,28 @@ namespace learnSPH {
             std::vector<Eigen::Vector3d> fluid_velocities;
             std::vector<types::object> objects;
 
+            std::vector<learnSPH::types::emitter_data> emitters;
 
             double dt_default;
             double t_between_frames;
             double B;
             double v_f;
             double v_b;
+            double simTime = 5;
             Eigen::Vector3d gravity;
             std::string assignment;
             bool simbound_active;
             Eigen::Vector3d sim_boundary_min;
             Eigen::Vector3d sim_boundary_max;
+
+            bool no_fluid = false;
+            int pressure_solver_method;
+            int n_iterations_pbf;
+            int surface_reco_method;
+            
+            bool surface_tension = false;
+            double cohesion_coefficient;
+            double adhesion_coefficient;
 
             Simulations();
 
@@ -44,13 +57,32 @@ namespace learnSPH {
             void our_simulation_scene();
             void mcubes_stress_test_scene();
             void slope_ramp_wall_vessel();
+            void empty_scene_test();
+            void simple_emitter_test();
+            void water_droplet_no_gravity();
+            void boundary_wetting_cohesion_and_adhesion();
+            void boundary_wetting_no_surface_tension();
+            void boundary_wetting_only_adhesion();
+            void boundary_wetting_only_cohesion();
+            void galton_board();
+            void fountain();
+            void fountain_with_path();
+            void multiple_fountains_with_path();
+            void simple_emitter_mid_cohesion();
+            void simple_emitter_high_cohesion();
+            void water_droplet_no_adhesion();
+            void water_droplet_mid_adhesion();
+            void water_droplet_high_adhesion();
+            void water_droplet_on_surface();
+            void droplets_on_leaf();
+            void single_flow();
+            void puzzle();
 
         };
     }
 }
 
 #endif
-
 
 
 

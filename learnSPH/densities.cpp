@@ -1,9 +1,9 @@
 #include "densities.h"
+#include <exception>
 #include <iostream>
 
 #include "../extern/CompactNSearch/include/CompactNSearch/CompactNSearch"
 #include "../learnSPH/kernel.h"
-
 
 void learnSPH::densities::compute_boundary_masses(std::vector<double> &output,
                                                   std::vector<Eigen::Vector3d> &boundary_particles,
@@ -16,9 +16,9 @@ void learnSPH::densities::compute_boundary_masses(std::vector<double> &output,
         double kernel_sum = 0.0;
         kernel_sum += cubic_kernel.kernel_function(boundary_particles[i] - boundary_particles[i]);
 
-        for (size_t j = 0; j < pointset.n_neighbors(point_set_id, i); ++j)
-        {
+        for (size_t j = 0; j < pointset.n_neighbors(point_set_id, i); ++j) {
             const unsigned int pid = pointset.neighbor(point_set_id, i, j);
+
             kernel_sum +=
                 cubic_kernel.kernel_function(boundary_particles[i] - boundary_particles[pid]);
         }
@@ -27,14 +27,11 @@ void learnSPH::densities::compute_boundary_masses(std::vector<double> &output,
 }
 
 void learnSPH::densities::compute_fluid_density(
-    std::vector<double> &particles_densities,
-    std::vector<Eigen::Vector3d> &particles,
+    std::vector<double> &particles_densities, std::vector<Eigen::Vector3d> &particles,
     std::vector<Eigen::Vector3d> &boundary_particles,
-    std::vector<double> &boundary_particles_masses,
-    unsigned int point_set_id_fluid,
+    std::vector<double> &boundary_particles_masses, unsigned int point_set_id_fluid,
     CompactNSearch::PointSet const &ps_fluid, unsigned int point_set_id_boundary,
-    const double fluid_mass,
-    learnSPH::kernel::CubicSplineKernel &cubic_kernel)
+    const double fluid_mass, learnSPH::kernel::CubicSplineKernel &cubic_kernel)
 {
     for (int i = 0; i < ps_fluid.n_points(); ++i) {
         double density_sum = 0.0;
@@ -57,11 +54,9 @@ void learnSPH::densities::compute_fluid_density(
     }
 }
 
-
-void learnSPH::densities::compute_fluid_density_surface_reco(std::vector<double> &fluid_densities_for_surface_reco,
-    std::vector<Eigen::Vector3d> &particles,
-    unsigned int point_set_id_fluid,
-    CompactNSearch::PointSet const &ps_fluid,
+void learnSPH::densities::compute_fluid_density_surface_reco(
+    std::vector<double> &fluid_densities_for_surface_reco, std::vector<Eigen::Vector3d> &particles,
+    unsigned int point_set_id_fluid, CompactNSearch::PointSet const &ps_fluid,
     learnSPH::kernel::CubicSplineKernel &cubic_kernel)
 {
     fluid_densities_for_surface_reco.resize(particles.size());

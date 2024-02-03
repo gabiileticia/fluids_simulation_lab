@@ -83,7 +83,7 @@ int main()
     std::cout << sim_setup.assignment << ", " << simulation_timestamp << "\n";
     utils::create_simulation_folder(sim_setup.assignment, simulation_timestamp);
 
-    learnSPH::kernel::CubicSplineKernel cubic_kernel(h);
+    learnSPH::kernel::CubicSplineKernel cubic_kernel(h, beta);
     learnSPH::acceleration::Acceleration acceleration(sim_setup.B, sim_setup.v_f, sim_setup.v_b, h,
                                                       sim_setup.fluid_rest_density,
                                                       sim_setup.gravity, cubic_kernel);
