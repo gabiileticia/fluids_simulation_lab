@@ -102,6 +102,30 @@ int main(int argc, char **argv)
     case 19:
         sim_setup.multiple_fountains_with_path();
         break;
+    case 20:
+        sim_setup.simple_emitter_mid_cohesion();
+        break;
+    case 21:
+        sim_setup.simple_emitter_high_cohesion();
+        break;
+    case 22:
+        sim_setup.water_droplet_no_adhesion();
+        break;
+    case 23:
+        sim_setup.water_droplet_mid_adhesion();
+        break;
+    case 24:
+        sim_setup.water_droplet_high_adhesion();
+        break;
+    case 25:
+        sim_setup.droplets_on_leaf();
+        break;
+    case 26:
+        sim_setup.single_flow();
+        break;
+    case 27:
+        sim_setup.puzzle();
+        break;
     default:
         std::cout << "Selected undefined function index. Closing program.";
         exit(-1);
@@ -120,13 +144,26 @@ int main(int argc, char **argv)
     double h                          = 1.2 * particle_diameter;
     double beta                       = 2.0 * h;
     double epsilon                    = 1e-6;
+    double fluid_mass, fluid_particle_mass;
 
-    double fluid_particle_mass =
-        learnSPH::utils::particle_mass(sim_setup.fluid_rest_density, fluid_sampling_distance);
+
+    if (sim_setup.emitters.size() > 0){
+        double fluid_particle_mass =
+            learnSPH::utils::particle_mass(sim_setup.fluid_rest_density, fluid_sampling_distance);
+    }
+    else {
+        double fluid_volume = 0.0;
+        for (int i = 0; i < sim_setup.fluid_begin.size(); ++i) {
+            fluid_volume += (sim_setup.fluid_end[i].x() - sim_setup.fluid_begin[i].x()) *
+                            (sim_setup.fluid_end[i].y() - sim_setup.fluid_begin[i].y()) *
+                            (sim_setup.fluid_end[i].z() - sim_setup.fluid_begin[i].z());
+        }
+        fluid_mass = fluid_volume * sim_setup.fluid_rest_density;
+    }
 
     using namespace learnSPH;
 
-    std::ostringstream msg;
+    std::ostringstream msg, logging;
 
     // Marching cubes setup
     int surface_reco_method = 1; // 0:dense 1:sparse
@@ -199,8 +236,12 @@ int main(int argc, char **argv)
         << "\n";
     msg << particles_positions.size() << "\n";
 
+    if (sim_setup.emitters.size() == 0){
+        fluid_particle_mass = fluid_mass / particles_positions.size();
+    }
+
     msg << "fluid particles mass: " << fluid_particle_mass << "\n";
-    sim_setup.fluid_rest_density = sim_setup.fluid_rest_density * 1.02;
+    // sim_setup.fluid_rest_density = sim_setup.fluid_rest_density * 1.02;
 
     msg << "Rest density after sampling: " << sim_setup.fluid_rest_density << "\n";
 
@@ -280,7 +321,8 @@ int main(int argc, char **argv)
     const std::string boundary_file =
         "./res/" + sim_setup.assignment + "/" + simulation_timestamp + "/boundary_particles.vtk";
     
-    write_particles_to_vtk(boundary_file, boundary_particles_positions);
+    std::vector<double> boundary_particles_densities(boundary_particles_positions.size(), sim_setup.fluid_rest_density); 
+    write_particles_to_vtk(boundary_file, boundary_particles_positions, boundary_particles_densities);
 
     // Simulation loop
     while (t_simulation < sim_setup.simTime) {
@@ -295,12 +337,11 @@ int main(int argc, char **argv)
             }
         }
 
-
         if (particles_positions.size() > 0) {
             // std::cout << "Particles available" << std::endl;
             // Compute dt
             dt_cfl = 0.5 * sim_setup.particle_radius *
-                     (1 / std::min(80.0, std::sqrt(semImpEuler.v_max)));
+                     (1 / std::min(100.0, std::sqrt(semImpEuler.v_max)));
             dt = std::min(dt_cfl, sim_setup.dt_default);
 
             // Compute fluid particles densities
@@ -418,8 +459,12 @@ int main(int argc, char **argv)
                                                particles_pressure, deleteFlag, count_del);
             nsearch.resize_point_set(point_set_id_fluid, particles_positions.front().data(),
                                      particles_positions.size());
+
+            nsearch.find_neighbors();
                                      
         }
+        
+
         // Increment t
         t_simulation += dt;
 
@@ -450,7 +495,7 @@ int main(int argc, char **argv)
             learnSPH::densities::compute_fluid_density_surface_reco(
                 fluid_densities_for_surface_reco, particles_positions, point_set_id_fluid, ps_fluid,
                 cubic_kernel);
-
+            
             learnSPH::theta_functions::FluidThetaFunction fluidSDF(cubic_kernel, c, cell_width,
                                                                    beta, nx + 1, ny + 1, nz + 1);
             learnSPH::surface::MarchingCubes mcubes(cell_width, nx, ny, nz,
@@ -477,10 +522,37 @@ int main(int argc, char **argv)
             write_particles_to_vtk(particles_filename, particles_positions, particles_densities,
                                    particles_velocities);
 
+            // int m_100=0, m_200=0, m_300=0, m_400=0, m_500=0, m_600=0, m_700=0, m_800=0, m_900=0, m_1000=0, m_1100=0;
+            // for(int m=0; m<particles_densities.size() ;m++){
+            //     if(particles_densities[m]>0 & particles_densities[m]<100)
+            //         m_100+=1;
+            //     else if(particles_densities[m]<200)
+            //         m_200+=1;
+            //     else if(particles_densities[m]<300)
+            //         m_300+=1;
+            //     else if(particles_densities[m]<400)
+            //         m_400+=1;
+            //     else if(particles_densities[m]<500)
+            //         m_500+=1;
+            //     else if(particles_densities[m]<600)
+            //         m_600+=1;
+            //     else if(particles_densities[m]<700)
+            //         m_700+=1;
+            //     else if(particles_densities[m]<800)
+            //         m_800+=1;
+            //     else if(particles_densities[m]<900)
+            //         m_900+=1;
+            //     else if(particles_densities[m]<1000)
+            //         m_1000+=1;
+            //     else
+            //         m_1100+=1;
+            // }
+            // std::cout << m_100 << ";" << m_200 << ";" << m_300 << ";" << m_400 << ";" << m_500 << ";" << m_600 << ";" << m_700 << ";" << m_800 << ";" << m_900 << ";" << m_1000 << ";" << m_1100 << std::endl;
+
             t_next_frame += sim_setup.t_between_frames;
 
             auto progress_msg = utils::updateProgressBar(stepCounter, maxSteps, 75);
-            std::cout << progress_msg.str() << "\n";
+            std::cout << progress_msg.str() << ";" << std::to_string(particles_positions.size()) << "\n";
             utils::logMessage(progress_msg.str() + "; " + std::to_string(particles_positions.size()), log_file);
             
         }

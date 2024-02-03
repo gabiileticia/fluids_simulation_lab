@@ -40,8 +40,8 @@ namespace learnSPH {
             int pressure_solver_method;
             int n_iterations_pbf;
             int surface_reco_method;
+            
             bool surface_tension = false;
-
             double cohesion_coefficient;
             double adhesion_coefficient;
 
@@ -68,6 +68,15 @@ namespace learnSPH {
             void fountain();
             void fountain_with_path();
             void multiple_fountains_with_path();
+            void simple_emitter_mid_cohesion();
+            void simple_emitter_high_cohesion();
+            void water_droplet_no_adhesion();
+            void water_droplet_mid_adhesion();
+            void water_droplet_high_adhesion();
+            void water_droplet_on_surface();
+            void droplets_on_leaf();
+            void single_flow();
+            void puzzle();
 
         };
     }
