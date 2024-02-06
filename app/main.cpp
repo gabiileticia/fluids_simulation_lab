@@ -278,7 +278,6 @@ int main(int argc, char **argv)
     geometry::load_n_sample_fluids(particles_positions, particles_velocities, sim_setup.fluid_begin,
                                    sim_setup.fluid_end, fluid_sampling_distance,
                                    sim_setup.fluid_velocities);
-    double fluid_particle_mass;
 
     init_msgs = "Calculating fluid particles mass...\n";
     std::cout << init_msgs;
