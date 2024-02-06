@@ -283,17 +283,6 @@ int main(int argc, char **argv)
     init_msgs = "Calculating fluid particles mass...\n";
     std::cout << init_msgs;
     utils::logMessage(init_msgs, log_file);
-    if (sim_setup.sampleMassbyFluid) {
-        double fluid_volume = (sim_setup.fluid_end[0].x() - sim_setup.fluid_begin[0].x()) *
-                              (sim_setup.fluid_end[0].y() - sim_setup.fluid_begin[0].y()) *
-                              (sim_setup.fluid_end[0].z() - sim_setup.fluid_begin[0].z());
-
-        fluid_particle_mass =
-            fluid_volume * sim_setup.fluid_rest_density / particles_positions.size();
-    } else {
-        fluid_particle_mass =
-            learnSPH::utils::particle_mass(sim_setup.fluid_rest_density, fluid_sampling_distance);
-    }
     msg << "Number of fluid particles"
         << "\n";
     msg << particles_positions.size() << "\n";
