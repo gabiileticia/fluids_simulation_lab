@@ -278,7 +278,7 @@ int main(int argc, char **argv)
                                    sim_setup.fluid_velocities);
 
     for (int i = 0; i < sim_setup.fluid_spheres.size(); ++i) {
-        std::cout << "smapling sphere fluid\n";
+        std::cout << "sampling sphere fluid\n";
         learnSPH::sampling::fluid_sphere(particles_positions, sim_setup.fluid_spheres[i].origin,
                                          sim_setup.fluid_spheres[i].radius,
                                          sim_setup.particle_radius);

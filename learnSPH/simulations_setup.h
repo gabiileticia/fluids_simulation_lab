@@ -21,6 +21,7 @@ namespace learnSPH {
             std::vector<Eigen::Vector3d> fluid_end;
             std::vector<Eigen::Vector3d> fluid_velocities;
             std::vector<types::object> objects;
+            std::vector<types::fluid_sphere> fluid_spheres;
 
             std::vector<learnSPH::types::emitter_data> emitters;
 

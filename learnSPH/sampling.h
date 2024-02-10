@@ -2,7 +2,7 @@
 #include <vector>
 #include <array>
 
-#include <Eigen/Dense>
+#include "../extern/Eigen/Eigen/Dense"
 
 namespace learnSPH
 {
@@ -14,5 +14,6 @@ namespace learnSPH
 		std::vector<std::array<int, 2>> _find_edges(const std::vector<std::array<int, 3>>& triangles);
 		void _sample_triangle(std::vector<Eigen::Vector3d>& particles, const Eigen::Vector3d& a, const Eigen::Vector3d& b, const Eigen::Vector3d& c, const double sampling_distance);
 		bool _point_on_triangle(const Eigen::Vector3d& a, const Eigen::Vector3d& b, const Eigen::Vector3d& c, const Eigen::Vector3d& n, const Eigen::Vector3d& p);
+		void fluid_sphere(std::vector<Eigen::Vector3d> &particles, const Eigen::Vector3d origin,const double radius,const double particle_radius);
 	}
 }

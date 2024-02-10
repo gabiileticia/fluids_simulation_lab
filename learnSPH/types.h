@@ -26,6 +26,11 @@ struct emitter_data
     double emission_freq;
     int emit_counter;
 };
+struct fluid_sphere
+{
+    Eigen::Vector3d origin;
+    double radius;
+};
 } // namespace types
 } // namespace learnSPH
 

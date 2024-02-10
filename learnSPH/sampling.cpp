@@ -1,4 +1,5 @@
 #include "sampling.h"
+#include <cmath>
 
 void learnSPH::sampling::fluid_box(std::vector<Eigen::Vector3d>& particles, const Eigen::Vector3d& bottom, const Eigen::Vector3d& top, const double sampling_distance)
 {
@@ -152,4 +153,36 @@ bool learnSPH::sampling::_point_on_triangle(const Eigen::Vector3d& a, const Eige
 	if (pca.dot(n) < 0.0) { return false; }
 
 	return true;
+}
+
+void learnSPH::sampling::fluid_sphere(
+	std::vector<Eigen::Vector3d> &particles, 
+	const Eigen::Vector3d origin,
+	const double radius,
+	const double particle_radius
+	){
+	double x, y, z, corner, radius_squared, l;
+	const double sqrt3 = std::sqrt(3);
+	const double sqrt6 = std::sqrt(6);
+	const double onethird = 1.0 / 3.0;
+	const double twothird = 2.0 / 3.0;
+	x = 0;
+	y = 0;
+	z = 0;
+	l = radius * 2 / (particle_radius * 2);
+	corner = -l/2.;
+	radius_squared = radius * radius;
+
+	for (int k = 0; k < l; ++k) {
+		z = corner + particle_radius * k * twothird * sqrt6;
+		for (int i = 0; i < l; ++i) {
+			for (int j = 0; j < l; ++j) {
+				x = corner + particle_radius * (2 * i + ((j + k) % 2));
+				y = corner + particle_radius * (sqrt3 * (j + onethird * (k % 2)));
+				if (x * x + y * y + z * z - radius_squared <= 0){
+					particles.push_back(Eigen::Vector3d(x, y, z));
+				}
+			}
+		}
+	}
 }
