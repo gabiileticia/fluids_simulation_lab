@@ -155,12 +155,10 @@ int main(int argc, char **argv)
     double epsilon                    = 1e-6;
     double fluid_mass, fluid_particle_mass;
 
-
-    if (sim_setup.emitters.size() > 0){
-        double fluid_particle_mass =
+    if (sim_setup.emitters.size() > 0) {
+        fluid_particle_mass =
             learnSPH::utils::particle_mass(sim_setup.fluid_rest_density, fluid_sampling_distance);
-    }
-    else {
+    } else {
         double fluid_volume = 0.0;
         for (int i = 0; i < sim_setup.fluid_begin.size(); ++i) {
             fluid_volume += (sim_setup.fluid_end[i].x() - sim_setup.fluid_begin[i].x()) *
@@ -279,6 +277,13 @@ int main(int argc, char **argv)
                                    sim_setup.fluid_end, fluid_sampling_distance,
                                    sim_setup.fluid_velocities);
 
+    for (int i = 0; i < sim_setup.fluid_spheres.size(); ++i) {
+        std::cout << "smapling sphere fluid\n";
+        learnSPH::sampling::fluid_sphere(particles_positions, sim_setup.fluid_spheres[i].origin,
+                                         sim_setup.fluid_spheres[i].radius,
+                                         sim_setup.particle_radius);
+    }
+
     init_msgs = "Calculating fluid particles mass...\n";
     std::cout << init_msgs;
     utils::logMessage(init_msgs, log_file);
@@ -286,7 +291,7 @@ int main(int argc, char **argv)
         << "\n";
     msg << particles_positions.size() << "\n";
 
-    if (sim_setup.emitters.size() == 0){
+    if (sim_setup.emitters.size() == 0) {
         fluid_particle_mass = fluid_mass / particles_positions.size();
     }
 
@@ -368,9 +373,11 @@ int main(int argc, char **argv)
 
     const std::string boundary_file =
         "./res/" + sim_setup.assignment + "/" + simulation_timestamp + "/boundary_particles.vtk";
-    
-    std::vector<double> boundary_particles_densities(boundary_particles_positions.size(), sim_setup.fluid_rest_density); 
-    write_particles_to_vtk(boundary_file, boundary_particles_positions, boundary_particles_densities);
+
+    std::vector<double> boundary_particles_densities(boundary_particles_positions.size(),
+                                                     sim_setup.fluid_rest_density);
+    write_particles_to_vtk(boundary_file, boundary_particles_positions,
+                           boundary_particles_densities);
 
     // Simulation loop
     while (t_simulation < sim_setup.simTime) {
@@ -410,6 +417,15 @@ int main(int argc, char **argv)
                 boundary_particles_masses, point_set_id_fluid, ps_fluid, point_set_id_boundary,
                 fluid_particle_mass, cubic_kernel);
 
+            std::ostringstream log_acc;
+
+            log_acc << "particles density: (" << particles_densities[emit_mark[0][0]] << ")\n";
+            log_acc << "particles density size: (" << particles_densities.size() << ")\n";
+
+            log_acc << "particles acceleration (before acc): (" << particles_accelerations[0].x()
+                    << ", " << particles_accelerations[0].y() << ", "
+                    << particles_accelerations[0].z() << ")\n";
+
             // Compute acceleration
             if (pressure_solver_method == 0) {
                 acceleration.pressure(particles_pressure, particles_densities,
@@ -428,6 +444,9 @@ int main(int argc, char **argv)
                                                sim_setup.fluid_rest_density, fluid_particle_mass);
                 last_particles_positions = particles_positions;
             }
+            log_acc << "particles acceleration (after acc): (" << particles_accelerations[0].x()
+                    << ", " << particles_accelerations[0].y() << ", "
+                    << particles_accelerations[0].z() << ")\n";
 
             // Surface tension
             if (sim_setup.surface_tension) {
@@ -442,9 +461,20 @@ int main(int argc, char **argv)
                     particles_positions, boundary_particles_positions, particles_densities,
                     point_set_id_fluid, ps_fluid, point_set_id_boundary, boundary_particles_masses);
 
+                log_acc << "particles acceleration (before st): (" << particles_accelerations[0].x()
+                        << ", " << particles_accelerations[0].y() << ", "
+                        << particles_accelerations[0].z() << ")\n";
+
                 for (int j = 0; j < particles_accelerations.size(); j++) {
-                    particles_accelerations[j] += surface_tension_forces[j] / fluid_particle_mass;
+                    particles_accelerations[j] += surface_tension_forces[j];
                 }
+                log_acc << "surface_tension_forces: (" << surface_tension_forces[0].x() << ", "
+                        << surface_tension_forces[0].y() << ", " << surface_tension_forces[0].z()
+                        << ")\n";
+
+                log_acc << "particles acceleration (after st): (" << particles_accelerations[0].x()
+                        << ", " << particles_accelerations[0].y() << ", "
+                        << particles_accelerations[0].z() << ")\n";
             }
 
             for (int i = 0; i < emit_mark.size(); ++i) {
@@ -455,18 +485,34 @@ int main(int argc, char **argv)
                     emit_mark.erase(emit_mark.begin() + i);
             }
 
+            log_acc << "particles acceleration (before del): (" << particles_accelerations[0].x()
+                    << ", " << particles_accelerations[0].y() << ", "
+                    << particles_accelerations[0].z() << ")\n";
+
             for (int i = 0; i < emit_mark.size(); i++) {
                 for (int j = emit_mark[i][0]; j < emit_mark[i][1]; j++) {
-                    particles_accelerations[j] = {0, 0, 0};
+                    particles_accelerations[j] = Eigen::Vector3d(0, 0, 0);
                 }
             }
+
+            log_acc << "particles acceleration (after del): (" << particles_accelerations[0].x()
+                    << ", " << particles_accelerations[0].y() << ", "
+                    << particles_accelerations[0].z() << ")\n";
+
+            log_acc << "particles positions (before int): (" << particles_positions[0].x() << ", "
+                    << particles_positions[0].y() << ", " << particles_positions[0].z() << ")\n";
 
             // Integrate
             semImpEuler.integrationStep(particles_positions, particles_velocities,
                                         particles_accelerations, deleteFlag, dt, count_del,
                                         min_fluid_reco, max_fluid_reco);
 
+            log_acc << "particles positions (after int): (" << particles_positions[0].x() << ", "
+                    << particles_positions[0].y() << ", " << particles_positions[0].z() << ")\n";
+
             emit_particle_pos_backup = particles_positions;
+
+            utils::logMessage(log_acc.str(), log_file);
 
             // Find neighbors
             nsearch.find_neighbors();
@@ -522,9 +568,7 @@ int main(int argc, char **argv)
                                      particles_positions.size());
 
             nsearch.find_neighbors();
-                                     
         }
-        
 
         // Increment t
         t_simulation += dt;
@@ -556,7 +600,7 @@ int main(int argc, char **argv)
             learnSPH::densities::compute_fluid_density_surface_reco(
                 fluid_densities_for_surface_reco, particles_positions, point_set_id_fluid, ps_fluid,
                 cubic_kernel);
-            
+
             learnSPH::theta_functions::FluidThetaFunction fluidSDF(cubic_kernel, c, cell_width,
                                                                    beta, nx + 1, ny + 1, nz + 1);
             learnSPH::surface::MarchingCubes mcubes(cell_width, nx, ny, nz,
@@ -583,8 +627,8 @@ int main(int argc, char **argv)
             write_particles_to_vtk(particles_filename, particles_positions, particles_densities,
                                    particles_velocities);
 
-            // int m_100=0, m_200=0, m_300=0, m_400=0, m_500=0, m_600=0, m_700=0, m_800=0, m_900=0, m_1000=0, m_1100=0;
-            // for(int m=0; m<particles_densities.size() ;m++){
+            // int m_100=0, m_200=0, m_300=0, m_400=0, m_500=0, m_600=0, m_700=0, m_800=0, m_900=0,
+            // m_1000=0, m_1100=0; for(int m=0; m<particles_densities.size() ;m++){
             //     if(particles_densities[m]>0 & particles_densities[m]<100)
             //         m_100+=1;
             //     else if(particles_densities[m]<200)
@@ -608,7 +652,9 @@ int main(int argc, char **argv)
             //     else
             //         m_1100+=1;
             // }
-            // std::cout << m_100 << ";" << m_200 << ";" << m_300 << ";" << m_400 << ";" << m_500 << ";" << m_600 << ";" << m_700 << ";" << m_800 << ";" << m_900 << ";" << m_1000 << ";" << m_1100 << std::endl;
+            // std::cout << m_100 << ";" << m_200 << ";" << m_300 << ";" << m_400 << ";" << m_500 <<
+            // ";" << m_600 << ";" << m_700 << ";" << m_800 << ";" << m_900 << ";" << m_1000 << ";"
+            // << m_1100 << std::endl;
 
             t_next_frame += sim_setup.t_between_frames;
 
