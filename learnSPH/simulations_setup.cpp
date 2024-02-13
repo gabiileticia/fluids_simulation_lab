@@ -1,4 +1,5 @@
 #include "simulations_setup.h"
+#include <cstdlib>
 #include <iostream>
 
 learnSPH::simulations_setup::Simulations::Simulations() {}
@@ -310,7 +311,7 @@ void learnSPH::simulations_setup::Simulations::empty_scene_test()
     this->fluid_velocities.resize(0);
 
     this->objects.resize(1);
-    this->objects[0].filename = "./res/scene_slope.obj";
+    this->objects[0].filename = "./res/vessel.obj";
     this->objects[0].noCheck  = true;
 
     // simulation domain boundary
@@ -723,8 +724,11 @@ void learnSPH::simulations_setup::Simulations::adhesion_table()
     // this->fluid_end.resize(0);
 
     this->fluid_spheres.resize(1);
-    this->fluid_spheres[0].origin = Eigen::Vector3d(0,0,2.0);
-    this->fluid_spheres[0].radius = .5;
+    this->fluid_spheres[0].origin = Eigen::Vector3d(0,0,1.5);
+    this->fluid_spheres[0].radius = 0.25;
+
+    this->fluid_velocities.resize(1);
+    this->fluid_velocities[0] = {0,0,0};
 
     this->objects.resize(1);
 
@@ -732,24 +736,24 @@ void learnSPH::simulations_setup::Simulations::adhesion_table()
     this->objects[0].noCheck  = true;
 
     this->simbound_active  = true;
-    this->sim_boundary_min = Eigen::Vector3d(-1, -1, 0);
-    this->sim_boundary_max = Eigen::Vector3d(1, 1, 4);
+    this->sim_boundary_min = Eigen::Vector3d(-1.2, -1.2, 0);
+    this->sim_boundary_max = Eigen::Vector3d(1.2, 1.2, 2);
 
     this->surface_reco_method    = 1;
-    this->pressure_solver_method = 1;
+    this->pressure_solver_method = 0;
     this->n_iterations_pbf       = 5;
 
     this->dt_default       = 0.001;
     this->t_between_frames = 0.008;
     this->B                = 1000 * 1.02;
-    this->v_f              = 0.0025;
+    this->v_f              = 0.01;
     this->v_b              = 0.0;
     this->gravity          = Eigen::Vector3d(0, 0, -9.81);
     this->assignment       = "final/adhesion_table";
 
     this->surface_tension      = true;
-    this->cohesion_coefficient = 1;
-    this->adhesion_coefficient = 0.06;
+    this->cohesion_coefficient = 0.6;
+    this->adhesion_coefficient = 0.6;
 
     this->emitter_shield = false;
 }
