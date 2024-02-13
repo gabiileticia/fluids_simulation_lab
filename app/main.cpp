@@ -69,69 +69,66 @@ int main(int argc, char **argv)
         sim_setup.our_simulation_scene();
         break;
     case 8:
-        sim_setup.slope_ramp_wall_vessel();
-        break;
-    case 9:
         sim_setup.empty_scene_test();
         break;
-    case 10:
+    case 9:
         sim_setup.simple_emitter_test();
         break;
-    case 11:
+    case 10:
         sim_setup.water_droplet_no_gravity();
         break;
-    case 12:
+    case 11:
         sim_setup.boundary_wetting_no_surface_tension();
         break;
-    case 13:
+    case 12:
         sim_setup.boundary_wetting_only_adhesion();
         break;
-    case 14:
+    case 13:
         sim_setup.boundary_wetting_only_cohesion();
         break;
-    case 15:
+    case 14:
         sim_setup.boundary_wetting_cohesion_and_adhesion();
         break;
-    case 16:
+    case 15:
         sim_setup.galton_board();
         break;
-    case 17:
+    case 16:
         sim_setup.fountain();
         break;
-    case 18:
+    case 17:
         sim_setup.fountain_with_path();
         break;
-    case 19:
+    case 18:
         sim_setup.multiple_fountains_with_path();
         break;
-    case 20:
+    case 19:
         sim_setup.adhesion_table();
         break;
-    case 21:
+    case 20:
         sim_setup.dam_overspill();
         break;
-    case 22:
+    case 21:
         sim_setup.simple_emitter_mid_cohesion();
         break;
-    case 23:
+    case 22:
         sim_setup.simple_emitter_high_cohesion();
         break;
-    case 24:
+    case 23:
         sim_setup.water_droplet_no_adhesion();
         break;
-    case 25:
+    case 24:
         sim_setup.water_droplet_mid_adhesion();
         break;
-    case 26:
+    case 25:
         sim_setup.water_droplet_high_adhesion();
         break;
-    case 27:
+    case 26:
         sim_setup.droplets_on_leaf();
         break;
-    case 28:
+    case 27:
         sim_setup.single_flow();
         break;
-    case 29:
+    case 28:
         sim_setup.puzzle();
         break;
     default:
@@ -155,7 +152,7 @@ int main(int argc, char **argv)
     double epsilon                    = 1e-6;
     double fluid_mass, fluid_particle_mass;
 
-    if (sim_setup.emitters.size() > 0) {
+    if (sim_setup.emitters.size() > 0 || sim_setup.fluid_spheres.size() > 0) {
         fluid_particle_mass =
             learnSPH::utils::particle_mass(sim_setup.fluid_rest_density, fluid_sampling_distance);
     } else {
@@ -268,7 +265,7 @@ int main(int argc, char **argv)
     std::vector<Eigen::Vector3d> particles_positions;
     std::vector<Eigen::Vector3d> particles_velocities;
 
-    if (sim_setup.fluid_begin.size() > 0) {
+    if (sim_setup.fluid_begin.size() > 0 || sim_setup.fluid_spheres.size() > 0) {
         init_msgs = "Settings up preset fluid particles...\n";
         std::cout << init_msgs;
         utils::logMessage(init_msgs, log_file);
@@ -277,12 +274,9 @@ int main(int argc, char **argv)
                                    sim_setup.fluid_end, fluid_sampling_distance,
                                    sim_setup.fluid_velocities);
 
-    for (int i = 0; i < sim_setup.fluid_spheres.size(); ++i) {
-        std::cout << "sampling sphere fluid\n";
-        learnSPH::sampling::fluid_sphere(particles_positions, sim_setup.fluid_spheres[i].origin,
-                                         sim_setup.fluid_spheres[i].radius,
-                                         sim_setup.particle_radius);
-    }
+    learnSPH::sampling::fluid_spheres(particles_positions, particles_velocities,
+                                      sim_setup.fluid_spheres, sim_setup.particle_radius,
+                                      sim_setup.fluid_velocities);
 
     init_msgs = "Calculating fluid particles mass...\n";
     std::cout << init_msgs;
@@ -291,12 +285,12 @@ int main(int argc, char **argv)
         << "\n";
     msg << particles_positions.size() << "\n";
 
-    if (sim_setup.emitters.size() == 0) {
+    if (sim_setup.emitters.size() == 0 && sim_setup.fluid_spheres.size() == 0) {
         fluid_particle_mass = fluid_mass / particles_positions.size();
     }
 
     msg << "fluid particles mass: " << fluid_particle_mass << "\n";
-    // sim_setup.fluid_rest_density = sim_setup.fluid_rest_density * 1.02;
+    sim_setup.fluid_rest_density = sim_setup.fluid_rest_density * 1.02;
 
     msg << "Rest density after sampling: " << sim_setup.fluid_rest_density << "\n";
 
@@ -307,6 +301,7 @@ int main(int argc, char **argv)
     init_msgs = "Setting up neighborhood search...\n";
     std::cout << init_msgs;
     utils::logMessage(init_msgs, log_file);
+
     // Setting up neighborhood search
     CompactNSearch::NeighborhoodSearch nsearch(beta);
     unsigned int point_set_id_boundary = nsearch.add_point_set(
@@ -361,8 +356,8 @@ int main(int argc, char **argv)
                                        point_set_id_boundary, ps_boundary,
                                        sim_setup.fluid_rest_density, cubic_kernel);
     // keeping track of number of elements which will be deleted
-    int count_del = 0;
 
+    int count_del   = 0;
     int maxSteps    = sim_setup.simTime / sim_setup.t_between_frames;
     int stepCounter = 0;
 
@@ -388,7 +383,6 @@ int main(int argc, char **argv)
         if (boundary_size > boundary_particles_positions.size()) {
             std::string boundary_file_new = "./res/" + sim_setup.assignment + "/" +
                                             simulation_timestamp + "/boundary_particles.vtk";
-            // write_particles_to_vtk(boundary_file_new, boundary_particles_positions);
             std::ostringstream b_change;
             b_change << "Removed boundary elements\n"
                      << "Old size: " << boundary_size
@@ -417,15 +411,6 @@ int main(int argc, char **argv)
                 boundary_particles_masses, point_set_id_fluid, ps_fluid, point_set_id_boundary,
                 fluid_particle_mass, cubic_kernel);
 
-            std::ostringstream log_acc;
-
-            log_acc << "particles density: (" << particles_densities[emit_mark[0][0]] << ")\n";
-            log_acc << "particles density size: (" << particles_densities.size() << ")\n";
-
-            log_acc << "particles acceleration (before acc): (" << particles_accelerations[0].x()
-                    << ", " << particles_accelerations[0].y() << ", "
-                    << particles_accelerations[0].z() << ")\n";
-
             // Compute acceleration
             if (pressure_solver_method == 0) {
                 acceleration.pressure(particles_pressure, particles_densities,
@@ -444,10 +429,6 @@ int main(int argc, char **argv)
                                                sim_setup.fluid_rest_density, fluid_particle_mass);
                 last_particles_positions = particles_positions;
             }
-            log_acc << "particles acceleration (after acc): (" << particles_accelerations[0].x()
-                    << ", " << particles_accelerations[0].y() << ", "
-                    << particles_accelerations[0].z() << ")\n";
-
             // Surface tension
             if (sim_setup.surface_tension) {
                 learnSPH::surface_tension::compute_smoothed_color_field(
@@ -461,20 +442,9 @@ int main(int argc, char **argv)
                     particles_positions, boundary_particles_positions, particles_densities,
                     point_set_id_fluid, ps_fluid, point_set_id_boundary, boundary_particles_masses);
 
-                log_acc << "particles acceleration (before st): (" << particles_accelerations[0].x()
-                        << ", " << particles_accelerations[0].y() << ", "
-                        << particles_accelerations[0].z() << ")\n";
-
                 for (int j = 0; j < particles_accelerations.size(); j++) {
                     particles_accelerations[j] += surface_tension_forces[j];
                 }
-                log_acc << "surface_tension_forces: (" << surface_tension_forces[0].x() << ", "
-                        << surface_tension_forces[0].y() << ", " << surface_tension_forces[0].z()
-                        << ")\n";
-
-                log_acc << "particles acceleration (after st): (" << particles_accelerations[0].x()
-                        << ", " << particles_accelerations[0].y() << ", "
-                        << particles_accelerations[0].z() << ")\n";
             }
 
             for (int i = 0; i < emit_mark.size(); ++i) {
@@ -485,34 +455,18 @@ int main(int argc, char **argv)
                     emit_mark.erase(emit_mark.begin() + i);
             }
 
-            log_acc << "particles acceleration (before del): (" << particles_accelerations[0].x()
-                    << ", " << particles_accelerations[0].y() << ", "
-                    << particles_accelerations[0].z() << ")\n";
-
             for (int i = 0; i < emit_mark.size(); i++) {
                 for (int j = emit_mark[i][0]; j < emit_mark[i][1]; j++) {
                     particles_accelerations[j] = Eigen::Vector3d(0, 0, 0);
                 }
             }
 
-            log_acc << "particles acceleration (after del): (" << particles_accelerations[0].x()
-                    << ", " << particles_accelerations[0].y() << ", "
-                    << particles_accelerations[0].z() << ")\n";
-
-            log_acc << "particles positions (before int): (" << particles_positions[0].x() << ", "
-                    << particles_positions[0].y() << ", " << particles_positions[0].z() << ")\n";
-
             // Integrate
             semImpEuler.integrationStep(particles_positions, particles_velocities,
                                         particles_accelerations, deleteFlag, dt, count_del,
                                         min_fluid_reco, max_fluid_reco);
 
-            log_acc << "particles positions (after int): (" << particles_positions[0].x() << ", "
-                    << particles_positions[0].y() << ", " << particles_positions[0].z() << ")\n";
-
             emit_particle_pos_backup = particles_positions;
-
-            utils::logMessage(log_acc.str(), log_file);
 
             // Find neighbors
             nsearch.find_neighbors();
@@ -559,8 +513,6 @@ int main(int argc, char **argv)
         }
 
         if (count_del > 0 && (sim_setup.objects.size() > 0 || sim_setup.simbound_active)) {
-            // std::cout << "vmax: " << semImpEuler.v_max << "\n";
-            // std::cout << "countdel: " << count_del << "\n";
             learnSPH::utils::deleteOutOfBounds(particles_positions, particles_velocities,
                                                particles_accelerations, particles_densities,
                                                particles_pressure, deleteFlag, count_del);
@@ -627,45 +579,13 @@ int main(int argc, char **argv)
             write_particles_to_vtk(particles_filename, particles_positions, particles_densities,
                                    particles_velocities);
 
-            // int m_100=0, m_200=0, m_300=0, m_400=0, m_500=0, m_600=0, m_700=0, m_800=0, m_900=0,
-            // m_1000=0, m_1100=0; for(int m=0; m<particles_densities.size() ;m++){
-            //     if(particles_densities[m]>0 & particles_densities[m]<100)
-            //         m_100+=1;
-            //     else if(particles_densities[m]<200)
-            //         m_200+=1;
-            //     else if(particles_densities[m]<300)
-            //         m_300+=1;
-            //     else if(particles_densities[m]<400)
-            //         m_400+=1;
-            //     else if(particles_densities[m]<500)
-            //         m_500+=1;
-            //     else if(particles_densities[m]<600)
-            //         m_600+=1;
-            //     else if(particles_densities[m]<700)
-            //         m_700+=1;
-            //     else if(particles_densities[m]<800)
-            //         m_800+=1;
-            //     else if(particles_densities[m]<900)
-            //         m_900+=1;
-            //     else if(particles_densities[m]<1000)
-            //         m_1000+=1;
-            //     else
-            //         m_1100+=1;
-            // }
-            // std::cout << m_100 << ";" << m_200 << ";" << m_300 << ";" << m_400 << ";" << m_500 <<
-            // ";" << m_600 << ";" << m_700 << ";" << m_800 << ";" << m_900 << ";" << m_1000 << ";"
-            // << m_1100 << std::endl;
-
             t_next_frame += sim_setup.t_between_frames;
 
             std::ostringstream fluidinfo;
 
             fluidinfo << "vMax: " << semImpEuler.v_max << "\n";
-            // fluidinfo << "minFluidrecon: " << min_fluid_reco << "\n";
-            // fluidinfo << "maxFluidrecon: " << max_fluid_reco << "\n";
             fluidinfo << "numParticles: " << particles_positions.size() << "\n";
             utils::logMessage(fluidinfo.str(), log_file);
-            // std::cout << fluidinfo.str();
             auto progress_msg = utils::updateProgressBar(stepCounter, maxSteps, 75);
             std::cout << progress_msg.str() << "\n";
             utils::logMessage(
