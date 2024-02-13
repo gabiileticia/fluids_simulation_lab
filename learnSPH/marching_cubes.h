@@ -28,7 +28,6 @@ class MarchingCubes
     std::vector<Eigen::Vector3d> intersectionNormals;
     std::unordered_map<uint, uint> edgeIntersection;
     std::vector<std::array<int, 3>> triangles;
-    // std::vector<std::array<int, 3>> triangles;
     //  for debuggin
     std::vector<Eigen::Vector3d> debug;
 
