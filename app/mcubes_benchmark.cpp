@@ -52,8 +52,8 @@ int main()
     //     sim_setup.just_gravity();
     //     sim_setup.gravity_with_floor();
     //     sim_setup.gravity_with_floor_boundary_viscosity();
-    // sim_setup.dam_break();
-    sim_setup.dam_overspill();
+    sim_setup.dam_break();
+    // sim_setup.dam_overspill();
     //  sim_setup.our_simulation_scene();
     // sim_setup.mcubes_stress_test_scene();
 
@@ -69,7 +69,7 @@ int main()
 
     // Marching cubes setup
     double c                = 0.55;
-    double cell_width       = 1.25 * sim_setup.particle_radius; // 1.25
+    double cell_width       = 1.25f * sim_setup.particle_radius; // ideal: 1.0 <= cell_width <= 1.25
     Eigen::Vector3d bborder = Eigen::Vector3d(1.5 * beta, 1.5 * beta, 1.5 * beta);
 
     Eigen::Vector3d min_fluid_reco;
@@ -78,6 +78,8 @@ int main()
     // instantiating some classes
     std::cout << sim_setup.assignment << ", " << simulation_timestamp << "\n";
     utils::create_simulation_folder(sim_setup.assignment, simulation_timestamp);
+    const std::string log_file =
+        "./res/" + sim_setup.assignment + "/" + simulation_timestamp + "/log.txt";
 
     learnSPH::kernel::CubicSplineKernel cubic_kernel(h, beta);
     learnSPH::acceleration::Acceleration acceleration(sim_setup.B, sim_setup.v_f, sim_setup.v_b, h,
@@ -184,6 +186,36 @@ int main()
     write_particles_to_vtk(boundary_file, boundary_particles_positions);
 
     double hcp_z = sim_setup.particle_radius * (2 * std::sqrt(6)) / 3;
+
+    std::ostringstream msg;
+
+    msg << "Pressure solver: ";
+    if (sim_setup.pressure_solver_method == 1) {
+        msg << "position based\n";
+        msg << "Iterations pbf: " << sim_setup.n_iterations_pbf << "\n";
+    } else {
+        msg << "weakly compressible\n";
+    }
+
+    msg << "c: " << c << "\n";
+    msg << "cell width: " << cell_width << "\n";
+    msg << "particle radius: " << sim_setup.particle_radius << "\n";
+    // log simsetup settings
+    msg << "delta t default: " << sim_setup.dt_default << "\n"
+        << "frame time: " << sim_setup.t_between_frames << "\n"
+        << "Rest density: " << sim_setup.B << "\n"
+        << "viscosity fluid: " << sim_setup.v_f << "\n"
+        << "viscosity boundaries: " << sim_setup.v_b << "\n"
+        << "gravity: " << sim_setup.gravity.x() << ", " << sim_setup.gravity.y() << ", "
+        << sim_setup.gravity.z() << "\n"
+        << "Sim boundary active: " << (sim_setup.simbound_active ? "yes" : "no") << "\n";
+
+    if (sim_setup.surface_tension) {
+        msg << "Cohesion value: " << sim_setup.cohesion_coefficient
+            << "\nAdhesion value: " << sim_setup.adhesion_coefficient << "\n";
+    }
+
+    utils::logMessage(msg.str(), log_file);
 
     // Simulation loop
     while (t_simulation < sim_setup.simTime) {
@@ -384,12 +416,13 @@ int main()
             logMessage(msg_levelmap.str(), fileprefix + levelmap_logFile);
             logMessage(msg_levelset.str(), fileprefix + levelset_logFile);
 
-            write_tri_mesh_to_vtk(filename_dense, mcubes_dense.intersections,
-                                  mcubes_dense.triangles, mcubes_dense.intersectionNormals);
-            write_tri_mesh_to_vtk(filename_sparse, mcubes_sparse.intersections,
-                                  mcubes_sparse.triangles, mcubes_sparse.intersectionNormals);
-            write_particles_to_vtk(particles_filename, particles_positions, particles_densities,
-                                   particles_velocities);
+            //
+            // write_tri_mesh_to_vtk(filename_dense, mcubes_dense.intersections,
+            //                       mcubes_dense.triangles, mcubes_dense.intersectionNormals);
+            // write_tri_mesh_to_vtk(filename_sparse, mcubes_sparse.intersections,
+            //                       mcubes_sparse.triangles, mcubes_sparse.intersectionNormals);
+            // write_particles_to_vtk(particles_filename, particles_positions, particles_densities,
+            //                        particles_velocities);
             t_next_frame += sim_setup.t_between_frames;
 
             if (count_del_it_sum > 0) {
@@ -399,6 +432,7 @@ int main()
             }
             auto progress_msg = utils::updateProgressBar(stepCounter, maxSteps, 75);
             std::cout << progress_msg.str() << std::endl;
+            logMessage(progress_msg.str(), log_file);
         }
     }
     return 0;
