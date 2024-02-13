@@ -23,7 +23,6 @@ class FluidThetaFunction
 
     FluidThetaFunction(learnSPH::kernel::CubicSplineKernel &kernel, double c, double cell_width,
                        double support_radius, uint n_vx, uint n_vy, uint n_vz);
-    // double ImplicitTorus(Eigen::Vector3d pos, void *args);
     void computeLevelSet(std::vector<double> &level_set, std::vector<Eigen::Vector3d> &positions,
                          std::vector<double> &densities, Eigen::Vector3d bound_min);
     void computeLevelMap(std::unordered_map<uint64_t, double> &level_map,
